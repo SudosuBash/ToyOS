@@ -2,6 +2,18 @@
 bits 16
 
 jmp BL_START
+
+;ax = cursor_position
+next_cursor:
+    add ah,1 ; line + 1
+    cmp ah,50h ; line < 80?
+
+    jl next_cursor_end ; next
+    sub ah,50h ; line -= 50h
+    add al,1
+next_cursor_end:
+    ret
+
 ; ah = col
 ; al = line
 ; bl = char c
@@ -25,8 +37,9 @@ print_char:
     mov bx,ax ; move to bx
 
     mov ax,word [bp-4]
-    mov [fs:bx], al
-    mov [fs:bx+1], ah
+    mov [gs:bx], al
+    mov [gs:bx+1], ah
+
     
     pop cx
     pop bx
@@ -48,12 +61,7 @@ cls:
 
 cls_start:
     call print_char
-    add ah,1 ; line + 1
-    cmp ah,50h ; line < 80?
-
-    jl cls_next ; next
-    sub ah,50h ; ah -= 50h
-    add al,1
+    call next_cursor
 cls_next:
     loop cls_start
 
@@ -67,44 +75,85 @@ cls_next:
 
 ; al = start_col
 ; ah = start_row
-; bx = char* strptr
-; cx = length
+; ds:si = char* strptr
+; the end of string must be zero.
 print_string:
     push bp
     mov bp,sp
     push ax
     push bx
-    push cx
+    push si
 
 print_str_start:
-    
-    
-    pop cx
+    mov bl,[si]
+    mov bh,0x7
+    call print_char
+    inc si
+    call next_cursor
+    cmp bl,0
+    jne print_str_start
+
+    pop si
     pop bx
+    pop ax
+    pop bp
+    ret
+
+bl_panic:
+    call cls
+    mov si,bl_panic_str
+    mov ax,0
+    call print_string
+    jmp $
+
+;al = sector count
+;ds:si = target load position
+;int 13h
+rd_disc_bios:
+    push bp
+    mov bp,sp
+    push ax
+    push dx
+    mov ah,0x02
+    add dl,0x80
+    int 0x13
+    
+    cmp ah,0
+    jne bl_panic
+    pop dx
     pop ax
     pop bp
     ret
     
 BL_START:
-    mov ax,0x1000
+    mov ax,0x7c00
     mov ss,ax
     mov ax,0xb800
-    mov fs,ax
+    mov gs,ax
     
     mov ax,0
     mov bx,0
     mov cx,0
     mov dx,0
-    mov sp,0x7c00
+    mov sp,0
 
-    call cls
-    mov ah,1
-    mov bl,0x48
-    mov bh,0x7
+    call cls ;clear screen
 
-    call print_char
-    jmp $
+    mov al,1
+    mov ch,0
+    mov cl,2
+    mov dh,0
+    mov dl,0
+    mov bx,0x900
+    call rd_disc_bios
 
-hello_toyos db "Hello,ToyOS!",0
+    mov ax,0
+    mov si,hello_toyos
+    
+    call print_string
+    jmp 0:0x900
+
+hello_toyos db "ToyOS Bootloader.",0
+bl_panic_str db "!!!!!!!! Bootloader Panic! !!!!!!!!!",0
 times 510 - ($-$$) db 0
 dw 0xaa55
