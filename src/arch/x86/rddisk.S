@@ -5,10 +5,12 @@ global rd_disc
 rd_disc:
     push ebp
     mov ebp,esp
-    push eax
     push edi
+    push esi
 
     mov eax,[ebp+8] ;rd_count(data)
+    mov esi,eax
+
     mov dx,0x1f2
     out dx,al
 
@@ -33,7 +35,7 @@ rd_disc:
     mov eax, 0x20
     mov dx,0x1f7
     out dx, al
-    
+    mov edi ,[ebp+16] ;addr
 rd_disc_loop:
     mov edx,0x1f7
     in al, dx ;status
@@ -50,21 +52,25 @@ rd_disc_loop:
     mov edx,0x1f1
     mov eax,0
     in al, dx ;error
-    ret
+    jmp rd_disc_end ;ret
 rd_disc_data:
     mov eax,ecx
     and eax,0b00001000
     test eax,eax
     jz rd_disc_loop
-
-    mov edi ,[ebp+16] ;addr
     mov dx,0x1F0 ;es:edi
     mov ecx,256 ;512个扇区, 每次读
     cld 
     rep insw
 
+    dec esi
+    jne rd_disc_loop
+
+    mov eax,0
+
+rd_disc_end:
+    pop esi
     pop edi
-    pop eax
     mov esp,ebp
     pop ebp
     ret

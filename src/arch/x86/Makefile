@@ -21,20 +21,20 @@ prepare.bin: prepare.S
 	$(AS) -f bin $< -o $@
 
 # 编译内核：包含 kstart.c, pgtable.c 以及根目录下的 main.c
-kloader.bin: kloader.c pgtable.c io32.S
+kloader.bin: kloader.c pgtable.c elf_loader.c io32.S
 	$(AS) -f elf32 io32.S -o io32.o
 	$(AS) -f elf32 rddisk.S -o rddisk.o
-	$(CC) $(CFLAGS) -c kloader.c -o kloader.o
-	$(CC) $(CFLAGS) -c pgtable.c -o pgtable.o
-	
-	$(LD) -T linker.lds -m elf_i386 -e _start  kloader.o rddisk.o pgtable.o -o kloader.elf
+	$(CC) $(CFLAGS) -c kloader.c -o kloader.o -g
+	$(CC) $(CFLAGS) -c pgtable.c -o pgtable.o -g
+	$(CC) $(CFLAGS) -c elf_loader.c -o elf_loader.o -g
+	$(LD) -T linker.lds -m elf_i386 -e _start  kloader.o rddisk.o pgtable.o elf_loader.o -o kloader.elf
 
 	$(OBJCOPY) -O binary kloader.elf kloader.bin
 
 kernel.bin:
 	$(CC) $(CFLAGS) -c ../../main.c -o main.o
 	$(CC) $(CFLAGS) -c kstart.c -o kstart.o
-	$(LD) -m elf_i386 -e _start main.o kstart.o -o $@
+	$(LD) -T klinker.lds -m elf_i386 -e _start main.o kstart.o -o $@
 	 
 clean:
 	rm -f *.o *.bin *.elf

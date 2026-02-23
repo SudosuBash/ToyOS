@@ -7,27 +7,22 @@
 
 #include <stdint.h>
 #define EI_NIDENT (16)
+#define PT_LOAD		1	
+#define PAGE_OFFSET 12
+#define PAGE_SZ 4096
+#define PAGE_MASK ~(PAGE_SZ-1)
 
 typedef uint16_t Elf32_Half;
-typedef uint16_t Elf64_Half;
 typedef uint32_t Elf32_Word;
 typedef	int32_t  Elf32_Sword;
-typedef uint32_t Elf64_Word;
-typedef	int32_t  Elf64_Sword;
 typedef uint64_t Elf32_Xword;
 typedef	int64_t  Elf32_Sxword;
-typedef uint64_t Elf64_Xword;
-typedef	int64_t  Elf64_Sxword;
 typedef uint32_t Elf32_Addr;
-typedef uint64_t Elf64_Addr;
 typedef uint32_t Elf32_Off;
-typedef uint64_t Elf64_Off;
 typedef uint16_t Elf32_Section;
-typedef uint16_t Elf64_Section;
 
 /* Type for version symbol information.  */
 typedef Elf32_Half Elf32_Versym;
-typedef Elf64_Half Elf64_Versym;
 
 typedef struct
 {
@@ -58,4 +53,5 @@ typedef struct {
   Elf32_Half	e_shstrndx;		/* Section header string table index */
 } Elf32_Ehdr;
 
+Elf32_Addr load_elf(void* src,void* dst);
 #endif

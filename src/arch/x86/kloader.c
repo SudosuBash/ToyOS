@@ -1,20 +1,21 @@
 #include <pgtable.h>
+#include <kloader.h>
+#define KERNEL_LDR_ADDR 0x300000
+#define KERNEL_FINAL_LDR_ADDR 0x100000
 
-#define KERNEL_LDR_ADDR 0x100000
+#define DISC_SECTOR 10
+#define RD_COUNT 20
+/**
+ * 内核加载器
+*/
 //1. 准备分页
-//2. 加载 内核 ELF
-#include <elf.h>
+//2. 加载内核的 ELF
 extern int rd_disc(int rd_count, int sector, void* data);
 
-static inline void memcpy(void* src, void* dst, int size) {
-    for(int i=0;i<size;i++) {
-        *(char*)dst = *(char*)src;
-    }
-}
-
 int _start() {
-    int r = rd_disc(5,5,(void*)KERNEL_LDR_ADDR);
-    
-    while(1);
+    prepare_pde();
+    int r = rd_disc(RD_COUNT,DISC_SECTOR,(void*)KERNEL_LDR_ADDR);
+    Elf32_Addr addr = load_elf((void*)KERNEL_LDR_ADDR,(void*)KERNEL_FINAL_LDR_ADDR);
+    open_pg_mode(addr);
     return 0;
 }

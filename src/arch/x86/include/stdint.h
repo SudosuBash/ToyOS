@@ -1,6 +1,7 @@
 #ifndef _TOYOS_STDINT
 #define _TOYOS_STDINT
 
+#define uint8_t unsigned char
 #define uint16_t unsigned short
 #define int16_t short
 #define uint32_t unsigned int

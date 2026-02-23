@@ -66,6 +66,4 @@ pt_mode_start:
     call rd_disc
 
     jmp 0x10000
-
-pe_mode_str db "Came into Protection Mode.",0
 times 1024 - ($-$$) db 0
