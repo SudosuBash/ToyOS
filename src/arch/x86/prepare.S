@@ -40,9 +40,9 @@ goto_pr_mode:
     
     jmp 0x08:pt_mode_start
 [bits 32]
-%include "io32.S"
-
+%include "rddisk.S"
 pt_mode_start:
+
     mov ax,0x20
     mov gs,ax ;4
     mov ax,0x10
@@ -57,12 +57,15 @@ pt_mode_start:
     mov esp,0x2000
     mov esi,0
     
-    call cls_32
+    mov eax,0x10000
+    push eax
+    mov eax,4
+    push eax
+    mov eax,6
+    push eax
+    call rd_disc
 
-    mov ax,0
-    mov si,pe_mode_str
-    call print_string_32
-    jmp $
+    jmp 0x10000
 
 pe_mode_str db "Came into Protection Mode.",0
-times 512 - ($-$$) db 0
+times 1024 - ($-$$) db 0

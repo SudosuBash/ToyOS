@@ -139,7 +139,7 @@ BL_START:
 
     call cls ;clear screen
 
-    mov al,1
+    mov al,2
     mov ch,0
     mov cl,2
     mov dh,0

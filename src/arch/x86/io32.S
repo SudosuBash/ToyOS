@@ -1,4 +1,6 @@
 [bits 32]
+global rd_disc
+
 ;ax = cursor_position
 next_cursor_32:
     add ah,1 ; line + 1
