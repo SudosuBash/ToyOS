@@ -6,7 +6,7 @@ OBJCOPY = objcopy
 
 # 编译选项：-m32 开启32位，-I 指定头文件路径
 CFLAGS = -m32 -ffreestanding -fno-stack-protector -nostdlib \
-         -I./include -I../../include -O0
+         -I./include -O0
 LDFLAGS = -m elf_i386 -T link.ld
 
 # 定义目标
@@ -32,7 +32,7 @@ kloader.bin: kloader.c pgtable.c elf_loader.c io32.S
 	$(OBJCOPY) -O binary kloader.elf kloader.bin
 
 kernel.bin:
-	$(CC) $(CFLAGS) -c ../../main.c -o main.o
+	$(CC) $(CFLAGS) -c ../../src/main.c -o main.o
 	$(CC) $(CFLAGS) -c kstart.c -o kstart.o
 	$(LD) -T klinker.lds -m elf_i386 -e _start main.o kstart.o -o $@
 	 

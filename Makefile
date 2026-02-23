@@ -1,4 +1,4 @@
-ARCH_DIR = src/arch/x86
+ARCH_DIR = arch/x86
 KERNEL_BIN = $(ARCH_DIR)/kernel.bin
 BOOT_BIN = $(ARCH_DIR)/bl.bin
 PREPARE_BIN = $(ARCH_DIR)/prepare.bin

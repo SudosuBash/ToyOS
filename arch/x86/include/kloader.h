@@ -8,9 +8,6 @@
 #include <stdint.h>
 #define EI_NIDENT (16)
 #define PT_LOAD		1	
-#define PAGE_OFFSET 12
-#define PAGE_SZ 4096
-#define PAGE_MASK ~(PAGE_SZ-1)
 
 typedef uint16_t Elf32_Half;
 typedef uint32_t Elf32_Word;

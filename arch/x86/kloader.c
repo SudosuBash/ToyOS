@@ -6,7 +6,7 @@
 #define DISC_SECTOR 10
 #define RD_COUNT 20
 /**
- * 内核加载器
+ * 内核加载器(换句话说, 跳板函数)
 */
 //1. 准备分页
 //2. 加载内核的 ELF

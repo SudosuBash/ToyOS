@@ -2,16 +2,10 @@
 #include <stdint.h>
 #include <kloader.h>
 
-#define PDE_OF(addr) ((addr) >> 22)
-#define PTE_OF(addr) (((addr) >> 12) & (0x3FF))
-
-#define GET_PDE_TABLE(pde_index) (struct pagetable*)(KERNEL_TEMP_PG_ADDR + (pde_index) * sizeof(struct pagetable))
-#define KERNEL_STACK_VADDR 0xFFFFFFFF
-#define KERNEL_STACK_PHYS 0x100000
-#define SELF_PADDR 0x10000
-#define SELF_SECTOR 3
 static void* pte_start_addr = (void*)(KERNEL_TEMP_PG_ADDR + sizeof(struct pagetable) * 1024);
 //申请的pte数量(base_addr)
+#define SELF_PADDR 0x10000
+#define SELF_SECTOR 3
 
 #define ALLOC_NEW_PTE() ((pte_start_addr) += PAGE_SZ)
 static struct pagetable pagetable = {
@@ -53,7 +47,7 @@ void prepare_pde() { //准备最基本的页表
     }
     link_new_pte_addr(KERNEL_STACK_PHYS,KERNEL_STACK_VADDR);//内核栈
     link_new_pte_addr(KERNEL_TEMP_PG_ADDR,KERNEL_TEMP_PG_VADDR); //页目录表本身的页目录表
-    link_new_pte_addr(SELF_PADDR, SELF_PADDR);//自己的引导系统也得加上去!
+    link_new_pte_addr(SELF_PADDR, SELF_PADDR);//Triple Fault警告
 }
 
 void open_pg_mode(uint32_t addr) { //临时页表
