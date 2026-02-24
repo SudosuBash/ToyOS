@@ -4,37 +4,41 @@ CC = gcc
 LD = ld
 OBJCOPY = objcopy
 
-# 编译选项：-m32 开启32位，-I 指定头文件路径
-CFLAGS = -m32 -ffreestanding -fno-stack-protector -nostdlib \
-         -I./include -O0
-LDFLAGS = -m elf_i386 -T link.ld
+# 编译选项
+CFLAGS = -ffreestanding -fno-stack-protector -nostdlib \
+         -I. -I./include -I../../include -O0 -g
 
-# 定义目标
-all: bl.bin prepare.bin kloader.bin kernel.bin
+# 注意：这里去掉了最终的链接脚本，因为还没到最终成型的时候
+all: bl.bin prepare.bin kloader.bin pt.o pgtable_kern.o
 
-# 编译 MBR (直接输出纯二进制)
+# 1. 引导扇区
 bl.bin: bl.S
 	$(AS) -f bin $< -o $@
 
-# 编译环境准备段 (直接输出纯二进制)
+# 2. 环境准备
 prepare.bin: prepare.S
 	$(AS) -f bin $< -o $@
 
-# 编译内核：包含 kstart.c, pgtable.c 以及根目录下的 main.c
-kloader.bin: kloader.c pgtable.c elf_loader.c io32.S
-	$(AS) -f elf32 io32.S -o io32.o
+# 3. 加载器
+kloader.bin: rddisk.S kloader/64bit_mode.S kloader/kloader.c kloader/pgtable_kloader.c kloader/elf_loader.c
 	$(AS) -f elf32 rddisk.S -o rddisk.o
-	$(CC) $(CFLAGS) -c kloader.c -o kloader.o -g
-	$(CC) $(CFLAGS) -c pgtable.c -o pgtable.o -g
-	$(CC) $(CFLAGS) -c elf_loader.c -o elf_loader.o -g
-	$(LD) -T linker.lds -m elf_i386 -e _start  kloader.o rddisk.o pgtable.o elf_loader.o -o kloader.elf
-
+	$(CC) -m32 -E -P -I./include kloader/64bit_mode.S > kloader/64bit_mode.asm
+	$(AS) -f elf32 kloader/64bit_mode.asm -o 64bit_mode.o
+	$(CC) -m32 $(CFLAGS) -c kloader/kloader.c -o kloader.o 
+	$(CC) -m32 $(CFLAGS) -c kloader/pgtable_kloader.c -o pgtable.o 
+	$(CC) -m32 $(CFLAGS) -c kloader/elf_loader.c -o elf_loader.o 
+	
+	$(LD) -T linker.lds -m elf_i386 -e _start kloader.o rddisk.o 64bit_mode.o pgtable.o elf_loader.o -o kloader.elf
 	$(OBJCOPY) -O binary kloader.elf kloader.bin
 
-kernel.bin:
-	$(CC) $(CFLAGS) -c ../../src/main.c -o main.o
-	$(CC) $(CFLAGS) -c kstart.c -o kstart.o
-	$(LD) -T klinker.lds -m elf_i386 -e _start main.o kstart.o -o $@
-	 
+# 4. 重点：将 x86_64 相关的内核代码打包成一个 .o 文件
+pt.o: kern_start.c put.c asm.c pgtable_kern.c kstart.S
+	$(CC) $(CFLAGS) -c kern_start.c -o kern_start.o
+	$(AS) -f elf64 kstart.S -o kstart.o
+	$(CC) $(CFLAGS) -c put.c -o put.o
+	$(CC) $(CFLAGS) -c asm.c -o asm.o
+	$(CC) $(CFLAGS) -c pgtable_kern.c -o pgtable_kern.o
+	$(LD) -r kern_start.o kstart.o asm.o put.o pgtable_kern.o -o pt.o 
+
 clean:
-	rm -f *.o *.bin *.elf
+	rm -f *.o *.bin *.elf kloader/*.o kloader/*.asm

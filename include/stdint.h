@@ -7,5 +7,5 @@
 #define uint32_t unsigned int
 #define int32_t int
 #define uint64_t unsigned long long
-#define int64_t long
+#define int64_t long long
 #endif

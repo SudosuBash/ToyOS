@@ -1,7 +1,7 @@
 ENTRY(_start)
 
 SECTIONS {
-    . = 0xC0000000;
+    . = 0xffffffff80000000;
 
     .text : {
         *(.text)
@@ -15,5 +15,12 @@ SECTIONS {
     /* BSS 段 */
     .bss : {
         *(.bss)
+    }
+
+    .stack (NOLOAD): ALIGN(4096)
+    {
+        _stack_bottom = .;
+        . += 0x4000;
+        _stack_top = .;
     }
 }
