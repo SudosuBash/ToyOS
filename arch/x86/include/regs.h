@@ -1,7 +1,7 @@
 #ifndef _TOYOS_REGS
 #define _TOYOS_REGS
 
-#include <stdint.h>
+#include <kernel/stdint.h>
 
 typedef struct {
     uint32_t eax;

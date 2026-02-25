@@ -18,6 +18,9 @@ CFLAGS = -m64 -ffreestanding -fno-stack-protector -nostdlib \
 all: $(IMAGE)
 
 # 编译通用代码
+src/math.o: src/math.c
+	$(CC) $(CFLAGS) -c $< -o $@
+
 src/sched/sched.o: src/sched/sched.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
@@ -28,7 +31,7 @@ src/stdlib.o: src/stdlib.c
 	$(CC) $(CFLAGS) -c $< -o $@
 
 # 核心：最终链接。将 arch 下的增量包和根目录的对象合并
-$(KERNEL_BIN): src/main.o src/stdlib.o src/sched/sched.o $(ARCH_DIR)/pt.o
+$(KERNEL_BIN): src/main.o src/stdlib.o src/sched/sched.o src/math.o $(ARCH_DIR)/pt.o
 	$(LD) -z max-page-size=4096 -m elf_x86_64 -T $(ARCH_DIR)/klinker.lds -e _start $^ -o $(KERNEL_BIN)
 
 # 确保 arch 目录先编译

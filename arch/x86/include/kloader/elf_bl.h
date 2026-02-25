@@ -4,7 +4,8 @@
 /**
  * Simple ELF Loader
 */
-#include <stdint.h>
+#include <kernel/stdint.h>
+#include <kloader/kloader.h>
 #define EI_NIDENT (16)
 #define PT_LOAD		1	
 
@@ -49,5 +50,5 @@ typedef struct
   Elf64_Half	e_shstrndx;		/* Section header string table index */
 } Elf64_Ehdr;
 
-Elf64_Addr load_elf(void* src,void* dst);
+Elf64_Addr load_elf(void* src,void* dst, struct boot_info* info);
 #endif

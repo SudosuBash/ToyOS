@@ -57,7 +57,7 @@ pt_mode_start:
     mov esp,0x2000
     mov esi,0
     
-    mov eax,0x20000
+    mov eax,0x40000
     push eax
     mov eax,4
     push eax
@@ -65,7 +65,7 @@ pt_mode_start:
     push eax
     call rd_disc
 
-    jmp 0x20000
+    jmp 0x40000
     ;立马唤起一个跳板程序, 该跳板程序是用C写的
     ;该跳板程序处理基本分页, 主内核的 ELF 解析和加载
 times 1024 - ($-$$) db 0

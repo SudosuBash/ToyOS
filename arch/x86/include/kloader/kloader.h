@@ -1,14 +1,14 @@
 #ifndef _TOYOS_KLOADER_KLOADER
 #define _TOYOS_KLOADER_KLOADER
 
-#include <stdint.h>
+#include <kernel/stdint.h>
 struct boot_info {
-    uint32_t phys_mem_info_addr; //物理内存信息
-    uint32_t mem_bitmap_addr; //内存位图信息
-    uint32_t kloader_pg_paddr_top; //已经分到的物理内存页的上限地址
-    uint32_t kloader_pg_base_addr; //分页模式基地址
-    uint32_t kern_mem_phys_addr; //内核位于的物理内存
-    uint32_t kern_sz;
+    uint64_t phys_mem_info_addr; //物理内存信息
+    uint64_t mem_bitmap_addr; //内存位图信息
+    uint64_t kloader_pg_base_addr; //分页模式基地址
+    uint64_t kern_sz;
+    uint64_t kern_ldr_addr;
+    uint64_t kern_ldr_vaddr;
 };
 
 
@@ -26,5 +26,4 @@ struct gdtr {
     uint16_t limit;
     uint64_t base;
 }__attribute__((packed));
-const int s = sizeof(struct gdtr);
 #endif

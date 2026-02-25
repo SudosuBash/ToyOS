@@ -1,7 +1,7 @@
 #ifndef _TOYOS_KLOADER_PGTABLE
 #define _TOYOS_KLOADER_PGTABLE
 
-#include <stdint.h>
+#include <kernel/stdint.h>
 #include <config_arch.h>
 
 #define PAGE_OFFSET 12
@@ -13,9 +13,11 @@
 #define PDE_OF(addr) (((addr) >> 21) & 511)
 #define PTE_OF(addr) (((addr) >> 12) & (0x1FF))
 
-#define GET_ENTRY_TABLE(pde, pde_index) ((struct pagetable_64*)(uint32_t)pde + pde_index)
+#define GET_ENTRY_TABLE(pde, pde_index) (&((struct pagetable_64*)(pde))[(pde_index)])
 
 #define KERNEL_PTE_ENTRIES 512
+#define PG_OFFSET 21
+#define PG_BIG_PAGE_SZ 2097152
 
 #pragma pack(push, 1)
 
@@ -37,7 +39,7 @@ struct pagetable_64 {
 
 #define WRITE_PTE_TO_ADDR(addr, pte) (*(struct pagetable_64*)(addr) = (pte))
 
-void prepare_pde();
+void prepare_pde(void* pde_start);
 void link_new_pte_addr(uint64_t paddr, uint64_t vaddr);
-uint64_t get_kern_pte_ptr_top(); //仅用于内核页表!
+void link_new_pte_bigpage_addr(uint64_t paddr,uint64_t vaddr);
 #endif

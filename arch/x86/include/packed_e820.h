@@ -1,7 +1,7 @@
 #ifndef _TOYOS_PACKED_E820
 #define _TOYOS_PACKED_E820
 
-#include <stdint.h>
+#include <kernel/stdint.h>
 #include <config_arch.h>
 
 #define E820_ENTRY_COUNT() ((int)(*KERNEL_MEM_INFO_VADDR))

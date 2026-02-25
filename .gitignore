@@ -3,3 +3,9 @@
 .vscode-ctags
 .vscode
 *.img
+.gdb_history
+arch/*/.gdb_history
+*/*.o
+*.o
+*/*/*.o
+*/**/*.o
