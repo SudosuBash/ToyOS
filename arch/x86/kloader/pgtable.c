@@ -1,4 +1,4 @@
-#include <pgtable.h>
+#include <kloader/pgtable.h>
 #include <kernel/stdint.h>
 
 //申请的pte数量(base_addr)

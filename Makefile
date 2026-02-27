@@ -8,9 +8,9 @@ PREPARE_BIN = $(ARCH_DIR)/prepare.bin
 KLOADER_BIN = $(ARCH_DIR)/kloader.bin
 
 # 编译工具
-CC = gcc
+CC = gcc-7
 LD = ld
-CFLAGS = -m64 -ffreestanding -fno-stack-protector -nostdlib \
+CFLAGS = -m64 -std=gnu11 -ffreestanding -fno-stack-protector -nostdlib \
          -Iinclude -I$(ARCH_DIR)/include -g
 
 .PHONY: all clean run

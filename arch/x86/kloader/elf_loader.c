@@ -1,5 +1,5 @@
 #include <kloader/elf_bl.h>
-#include <pgtable.h>
+#include <kloader/pgtable.h>
 #include <kloader/kloader.h>
 
 static void memcpy(uint8_t* src,uint8_t* dst,uint32_t size) {

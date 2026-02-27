@@ -1,7 +1,7 @@
 global rd_disc
 ;保护模式诶, int 13h就别想用了
 ;32位通过栈传参
-;void rd_disc(u32 rd_count, u32 sector, void* data)
+;void rd_disc(u8 rd_count, u32 sector, void* data)
 rd_disc:
     push ebp
     mov ebp,esp
@@ -11,6 +11,10 @@ rd_disc:
     mov eax,[ebp+8] ;rd_count(data)
     mov esi,eax
 
+    test esi,esi
+    jne rd_disc_next
+    mov esi,256
+rd_disc_next:
     mov dx,0x1f2
     out dx,al
 
@@ -59,7 +63,7 @@ rd_disc_data:
     test eax,eax
     jz rd_disc_loop
     mov dx,0x1F0 ;es:edi
-    mov ecx,256 ;512个扇区, 每次读
+    mov ecx,256 ;一个扇区512字节
     cld 
     rep insw
 

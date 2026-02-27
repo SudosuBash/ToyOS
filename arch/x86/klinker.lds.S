@@ -14,13 +14,22 @@ SECTIONS {
     }
     .stack (NOLOAD): ALIGN(4096)
     {
-        _stack_bottom = .;
+        __stack_bottom = .;
         . += 0x4000;
-        _stack_top = .;
+        __stack_top = .;
     }
     .pgtable (NOLOAD): ALIGN(4096) {
-        _pgtable_bottom = .;
+        __pgtable_bottom = .;
         . += 0x300000;
-        _pgtable_top = .;
+        __pgtable_top = .;
     }
+
+    . = ALIGN(64); //64位对齐
+    __percpu_start = .; 
+    .percpu : {
+        *(.percpu) //所有.percpu段
+        *(.pecpu.shared_aligned) //需要特殊的多核共享的段
+    }
+    __percpu_end = .;
+    __percpu_sz = __percpu_end - __percpu_start;
 }
