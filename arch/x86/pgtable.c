@@ -1,6 +1,6 @@
 #include <pgtable.h>
 #include <kernel/stdint.h>
-
+#include <kernel/mm/mm.h>
 //申请的pte数量(base_addr)
 static void* pte_start_addr;
 static void* pde_start_addr;

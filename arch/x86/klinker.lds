@@ -1,7 +1,6 @@
-#include <config_arch.h>
 ENTRY(_start)
 SECTIONS {
-    . = KERNEL_FINAL_LDR_VADDR;
+    . = 0xffffffff80000000;
     .text : {
         *(.text)
     }
@@ -18,24 +17,21 @@ SECTIONS {
         . += 0x4000;
         __stack_top = .;
     }
-
     .gdt (NOLOAD): ALIGN(4096) {
         __gdt_bottom = .;
         . += 0x1000;
         __gdt_top = .;
     }
-
     .pgtable (NOLOAD): ALIGN(4096) {
         __pgtable_bottom = .;
         . += 0x300000;
         __pgtable_top = .;
     }
-
-    . = ALIGN(64); //64位对齐
-    __percpu_start = .; 
+    . = ALIGN(64);
+    __percpu_start = .;
     .percpu : {
-        *(.percpu) //所有.percpu段
-        *(.pecpu.shared_aligned) //需要特殊的多核共享的段
+        *(.percpu)
+        *(.pecpu.shared_aligned)
     }
     __percpu_end = .;
     __percpu_sz = __percpu_end - __percpu_start;

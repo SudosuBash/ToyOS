@@ -1,6 +1,6 @@
 #include <kloader/pgtable.h>
 #include <kloader/elf_bl.h>
-#include <config_arch.h>
+#include <kernel/config.h>
 #include <kloader/kloader.h>
 
 #define DISC_SECTOR 15
@@ -37,7 +37,6 @@ int _start() {
     link_new_pte_bigpage_addr(0,KERNEL_MEM_SA_VADDR);//临时链接前2MB
 
     link_new_pte_addr(KERNEL_TEMP_PG_ADDR,KERNEL_TEMP_PG_VADDR);
-    link_new_pte_addr(KERNEL_BOOT_INFO_PADDR,KERNEL_BOOT_INFO_VADDR); //内存信息
     link_new_pte_addr(SELF_PADDR, SELF_PADDR);//Triple Fault警告
     link_new_pte_addr(SELF_PADDR+0x1000, SELF_PADDR+0x1000);//Triple Fault警告
     link_new_pte_addr(KERNEL_GDT_ADDR,KERNEL_GDT_TEMP_VADDR);
@@ -80,13 +79,10 @@ void memset(void* addr,uint8_t val, uintptr_t size) {
 }
 
 void set_bl_info(struct boot_info* bl) {
-    bl->mem_bitmap_addr = KERNEL_MEM_BITMAP_ADDR;
     bl->phys_mem_info_addr = KERNEL_MEM_INFO_ADDR; //内核位于的内存信息
     bl->kloader_pg_base_addr = KERNEL_TEMP_PG_ADDR;
     bl->kern_ldr_addr = KERNEL_FINAL_LDR_ADDR;
     bl->kern_ldr_vaddr = KERNEL_FINAL_LDR_VADDR;
-    bl->gdt_paddr = KERNEL_GDT_ADDR;
-    bl->gdtr_limit = gdtr.limit;
 }
 
 //rsp 初始值 64-bit

@@ -4,10 +4,6 @@
 #include <kernel/stdint.h>
 #include <config_arch.h>
 
-#define PAGE_OFFSET 12
-#define PAGE_SZ 4096
-#define PAGE_MASK ~(PAGE_SZ-1)
-
 #define PML4_OF(addr) (((addr) >> 39 ) & 511)
 #define PDPT_OF(addr) (((addr) >> 30) & 511)
 #define PDE_OF(addr) (((addr) >> 21) & 511)
@@ -18,6 +14,9 @@
 #define KERNEL_PTE_ENTRIES 512
 #define PG_OFFSET 21
 #define PG_BIG_PAGE_SZ 2097152
+#define PAGE_OFFSET 12
+#define PAGE_SZ 4096
+#define PAGE_MASK ~(PAGE_SZ-1)
 
 #pragma pack(push, 1)
 

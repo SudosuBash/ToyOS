@@ -26,11 +26,14 @@ PT_OBJS      := kern_start.o \
                 asm.o \
                 pgtable_kern.o \
                 kclock.o \
-				mem.o \
 				cpu/cpu.o \
 				cpu/smp_percpu.o \
+				cpu/gdt.o \
 				irq/irq_handler.o \
-				irq/irq.o
+				irq/irq.o \
+				mm/mm_alloc.o \
+				mm/mm_info.o \
+				early_boot.o
 
 .PHONY: all clean
 
@@ -72,7 +75,10 @@ irq/%.o: irq/%.c
 
 irq/%.o: irq/%.S
 	$(AS) -f elf64 $< -o $@
-	
+
+mm/%.o: mm/%.c
+	$(CC) $(CFLAGS_M64) -c $< -o $@
+
 kstart.o: kstart.S
 	$(AS) -f elf64 $< -o $@
 
@@ -81,4 +87,4 @@ pt.o: klinker.lds $(PT_OBJS)
 
 # --- 清理 ---
 clean:
-	rm -f *.o *.bin *.elf kloader/*.o kloader/*.asm klinker.lds
+	rm -f *.o *.bin *.elf kloader/*.o kloader/*.asm klinker.lds */*.o

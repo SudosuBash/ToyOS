@@ -46,3 +46,11 @@ void hex_to_str(uint64_t n,char* buf) {
         buf[i]=bufc[20-len+1+i];
     }
 }
+
+void memcpy(void* dst, void* src, size_t sz) {
+    uint8_t* dst_e = (uint8_t*) dst;
+    uint8_t* src_e = (uint8_t*) src;
+    for(int i=0;i<sz;i++) {
+        dst_e[i] = src_e[i];
+    }
+}
