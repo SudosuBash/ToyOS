@@ -1,5 +1,6 @@
 #include <early_boot.h>
 #include <kernel/mm/mm.h>
+#include <mm/mm_info.h>
 #include <asm.h>
 static struct boot_info* bl = (struct boot_info*)KERNEL_BOOT_INFO_VADDR;
 static uint32_t max_mem_index;

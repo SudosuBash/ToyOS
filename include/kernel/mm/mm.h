@@ -12,6 +12,18 @@
 #define PHYS2VADDR(addr) ((addr) + (KERNEL_MEM_SA_VADDR))
 #define VADDR2PHYS(addr) ((addr) - (KERNEL_MEM_SA_VADDR))
 
-struct page* alloc_new_phys_page();
+#define MM_BUDDY_MAX_LEVEL 11
+
+#define MM_BUDDY_LEVEL_SIZE(level) (1 << ((level) + PAGE_OFFSET - 1))
+#define MM_BUDDY_MAX_LEVEL_SIZE() MM_BUDDY_LEVEL_SIZE(MM_BUDDY_MAX_LEVEL)
+#define MM_BUDDY_LEVEL_PAGES(level) (1 << (level - 1))
+#define MM_BUDDY_MAX_LEVEL_PAGES(level) MM_BUDDY_LEVEL_PAGES(MM_BUDDY_MAX_LEVEL)
+struct mm_buddy {
+    struct linklist_head* buddys[MM_BUDDY_MAX_LEVEL];
+};
+
+void* kmalloc(size_t sz);
+struct page* alloc_page(uint64_t pages);
+void free_page(struct page* page);
 void init_mm();
 #endif

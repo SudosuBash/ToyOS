@@ -28,6 +28,7 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
 			   $(SRC_DIR)/data_struct/linklist.o \
                $(SRC_DIR)/mm/mm_page.o \
 			   $(SRC_DIR)/mm/mm_slab.o \
+			   $(SRC_DIR)/mm/mm.o
 
 
 # 来自 arch 目录的依赖项

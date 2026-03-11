@@ -15,5 +15,4 @@ uint64_t get_mem_info_paddr();
 uint64_t get_kern_vaddr();
 //获取内核大小
 uint64_t get_kern_sz();
-uint64_t get_kern_addr();
 #endif

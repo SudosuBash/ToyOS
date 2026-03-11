@@ -11,6 +11,8 @@ struct linklist_head {
 };
 
 void list_del(struct linklist_head* h1);
-void link_next(struct linklist_head** h);
+void list_next(struct linklist_head** h);
+void list_del_head(struct linklist_head** h);
 void list_head_insert(struct linklist_head* head, struct linklist_head** orig_head);
+void list_tail_insert(struct linklist_head* tail, struct linklist_head** orig_tail);
 #endif

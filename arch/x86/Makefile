@@ -31,7 +31,6 @@ PT_OBJS      := kern_start.o \
 				cpu/gdt.o \
 				irq/irq_handler.o \
 				irq/irq.o \
-				mm/mm_alloc.o \
 				mm/mm_info.o \
 				early_boot.o
 
