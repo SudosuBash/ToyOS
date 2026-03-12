@@ -3,7 +3,6 @@
 #include <kernel/stdlib.h>
 #include <gdt.h>
 
-#define CPU_GDT_SZ 
 DEFINE_PERCPU_VAR(gdts[4],struct gdt);
 
 static struct gdt* gdt_sa;

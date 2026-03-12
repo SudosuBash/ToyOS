@@ -3,6 +3,7 @@
 #include <kernel/data_struct/bitmap.h>
 #include <mm/mm_info.h>
 #include <kernel/data_struct/general.h>
+
 static uint64_t kern_ldr_addr;
 static uint64_t mem_sz;
 static struct page *page_start;
@@ -19,6 +20,13 @@ static uint64_t get_page_index(struct page* page) {
     return (uint64_t)(page - page_start);
 }
 
+inline int highest_page_up_1(uint64_t x)  {
+    return x == 1 ? 0 : 64 - __builtin_clzll(x - 1);
+}
+
+inline int highest_page_1(uint64_t x)  {
+    return 64 - __builtin_clzll(x);
+}
 /**
  * 返回: return buddy的高页
  * 设置: page=当前的内核低页
@@ -38,7 +46,17 @@ static inline struct page* buddy_page(struct page** page) {
 
 void free_page(struct page* page) {
     if(page == 0) return;
-    page->in_buddy_system=1;
+    if(page->in_use == 0) return;
+    page->in_use=0;
+    int pages = MM_BUDDY_LEVEL_PAGES(page->buddy_level);
+
+    page[0].page_flags &= ~MM_BUDDY_FLAG_HEAD;//取消head
+
+    for(int i=1;i<pages;i++) {
+        page[i].page_head = NULL;
+        page[i].page_flags &= ~MM_BUDDY_FLAG_TAIL;
+    }
+
     //这个赋值语句放在这至关重要，因为它涉及了page=1的回收
     while(page->buddy_level <= MM_BUDDY_MAX_LEVEL) { //一直到超出索引为止
         struct page* orig_page = page;
@@ -57,11 +75,13 @@ void free_page(struct page* page) {
             break;
         }
         //至关重要的边界条件，another_page的buddy_level要是比orig的小的话，证明another_page还有多余的页.
-        if(!another_page->in_buddy_system) {
+        if(another_page->in_use) {
             page = orig_page;
             break;
         }
         //原来那块不在buddy_system中，已经被占用, 不再合并
+        high_page->page_flags&=~MM_BUDDY_FLAG_HEAD;
+        high_page->page_head=NULL;
 
         //删除原来在另外一个页中挂着的空闲空间
         int tpage_index = level-1;
@@ -80,8 +100,7 @@ void free_page(struct page* page) {
 
 struct page* alloc_page(uint64_t pages) {
     if(pages == 0) return 0;
-    pages-=1;
-    int64_t group = pages == 0 ? 0 : 64 - __builtin_clzll(pages - 1);
+    int64_t group = highest_page_up_1(pages);
     //pages
     if(group >= MM_BUDDY_MAX_LEVEL) return 0; //直接拒绝
     int now_group = group;
@@ -92,9 +111,8 @@ struct page* alloc_page(uint64_t pages) {
     struct linklist_head* target = buddy.buddys[now_group];
     struct page* p = container_of(target,struct page, buddy_sibling); //要分割的页
     if(now_group == group) { //加速
-        p->in_buddy_system = 0;
         list_del_head(&buddy.buddys[now_group]);
-        return p;
+        goto func_return;
     }
     for(int g = now_group-1;g>=group;g--) { //g是数组索引
         list_del_head(&buddy.buddys[now_group]);   
@@ -102,11 +120,20 @@ struct page* alloc_page(uint64_t pages) {
         // int page_sz = MM_BUDDY_LEVEL_PAGES(g+1); //g是索引, g+1才是组数. 我们的目的是切分数组.
         struct page* target = buddy_page(&p); 
         //分配1页的时候这个会误判, 所以必须在末尾再次重新设置in_buddy_system
-        target->in_buddy_system=1;
+        target->in_use=0;
         target->buddy_level = g+1;
         list_head_insert(&(target->buddy_sibling),&buddy.buddys[g]); //另一半插回去
     }
-    p->in_buddy_system = 0;
+
+func_return:
+    pages = 1 << group;
+    //指向头部
+    for(int i=1;i<pages;i++) {
+        p[i].page_head=p;
+        p[i].page_flags |= MM_BUDDY_FLAG_TAIL;
+    }
+    p[0].page_flags |= MM_BUDDY_FLAG_HEAD;
+    p->in_use = 1;
     return p;
 }
 
@@ -142,10 +169,6 @@ static void init_buddy() {
     }
 }
 
-void* kmalloc(size_t sz) {
-    
-}
-
 void init_mm() {
     init_mm_info(); 
     mem_sz = get_available_mem_sz();
@@ -156,4 +179,5 @@ void init_mm() {
     init_buddy();
 
     init_mm_slab();
+    kmalloc_init();
 }

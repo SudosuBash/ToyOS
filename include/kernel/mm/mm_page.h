@@ -11,10 +11,14 @@ struct page {
     struct linklist_head sibling; //位于 slab 的节点位置
     struct linklist_head buddy_sibling; //buddy 的节点位置
     link_next_ptr_t* block_start; //块开始位置
-    struct kmem_cache* cache;
+    union {
+        struct kmem_cache* cache;
+        struct page* page_head;
+    };
     uint8_t buddy_level;
     uintptr_t vaddr;
-    uint8_t in_buddy_system; //是否在buddy system中
+    uint8_t in_use; //是否在buddy system中
+    uint8_t page_flags;
 };
 
 struct page* find_page_by_vaddr(uintptr_t ptr);

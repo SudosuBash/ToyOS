@@ -4,11 +4,13 @@
 #include <mm/mm_info.h>
 #include <kernel/data_struct/linklist.h>
 #include <kernel/data_struct/general.h>
+#include <kernel/fault/fault.h>
 
 #define MM_SLAB_EXPANSION_VOODOO 10
 struct kmem_cache main_cache;
 
 void kmem_cache_free(void* addr) {
+    assert(addr != NULL);
     uintptr_t paddr = (uintptr_t)addr;
     struct page* page = find_page_by_vaddr((uintptr_t)addr);
     paddr &= PAGE_MASK;
@@ -33,7 +35,8 @@ void kmem_cache_free(void* addr) {
 }
 
 void* kmem_cache_alloc(struct kmem_cache* cache) {
-    if(cache == 0) return 0;
+    assert(cache != NULL);
+   
 cache_partial:
     if(cache->partial) {
         struct page* p = container_of(cache->partial, struct page, sibling);
@@ -57,12 +60,13 @@ cache_empty:
         alloc_count>>=PAGE_OFFSET;
         struct page* new_page = alloc_page(alloc_count);
 
+        if(new_page == NULL) return NULL; //分配失败直接返回0
         init_page_mem(cache, new_page, cache->block_sz);
         cache->empty = &new_page->sibling;
         goto cache_empty; //重新分配
     }
-    //到这儿说明出BUG了
-    return 0;
+    panic("kmem_cache_alloc() went to a wrong place!");
+    return NULL;
 }
 
 struct kmem_cache* kmem_cache_get(uint32_t sz) {

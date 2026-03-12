@@ -17,9 +17,16 @@ void put_dec(uint64_t n) {
 
 void put_hex(uint64_t n) {
     char buf[20] = {0};
-    hex_to_str(n, buf);
+    hex_to_str(n, buf, 0);
     put_str(buf);
 }
+
+void put_hex_zfill(uint64_t n,uint32_t leng) {
+    char buf[20] = {0};
+    hex_to_str(n, buf, leng);
+    put_str(buf);
+}
+
 void put_str(const char* c) {
     while(*c!=0) {
         put_char(*c);

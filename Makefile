@@ -11,7 +11,7 @@ SRC_DIR  := src
 # --- 编译选项 ---
 CINCLUDE := -Iinclude -I$(ARCH_DIR)/include
 CFLAGS   := -m64 -std=gnu11 -ffreestanding -fno-stack-protector -nostdlib \
-            $(CINCLUDE) -g -O0
+            $(CINCLUDE) -g -O0 -mcmodel=kernel -fno-pic -fno-omit-frame-pointer
 
 # --- 目标文件列表 ---
 
@@ -28,7 +28,8 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
 			   $(SRC_DIR)/data_struct/linklist.o \
                $(SRC_DIR)/mm/mm_page.o \
 			   $(SRC_DIR)/mm/mm_slab.o \
-			   $(SRC_DIR)/mm/mm.o
+			   $(SRC_DIR)/mm/mm.o \
+			   $(SRC_DIR)/mm/mm_alloc.o
 
 
 # 来自 arch 目录的依赖项

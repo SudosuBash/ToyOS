@@ -7,10 +7,12 @@
 
 #define MM_PAGE_REL_ADDR(addr) ((addr) - LOW_MEM)
 #define MM_PAGE_ABS_ADDR(addr) ((addr) + LOW_MEM)
-
+#define PHYS2VADDR(addr) ((addr) + (KERNEL_MEM_SA_VADDR))
+#define VADDR2PHYS(addr) ((addr) - (KERNEL_MEM_SA_VADDR))
 #define MM_PAGE_PINDEX(paddr) ((paddr) >> PAGE_OFFSET)
-uintptr_t get_kernel_end();
-uint64_t get_available_mem_sz();
-void init_mm_info();
-uint64_t get_kern_addr();
+
+#define PAGE_OFFSET 12
+#define PAGE_SZ 4096
+#define PAGE_MASK ~(PAGE_SZ-1)
+
 #endif

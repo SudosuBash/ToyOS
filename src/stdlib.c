@@ -25,14 +25,17 @@ void hex_to_dec(uint64_t n,char* buf) {
     }
 }
 
-void hex_to_str(uint64_t n,char* buf) {
+void hex_to_str(uint64_t n,char* buf,int leng) {
     char bufc[21] = {0};
     buf[0] = '0';
     buf[1] = 'x';
     buf+=2;
     int len = 0;
+    if(leng >= 16) leng = 16;
     if(n == 0) {
-        buf[0] = '0';
+        for(int i=0;i<leng;i++) {
+            buf[i] = '0';
+        }
         return;
     }
     while(n!=0) {
@@ -41,7 +44,14 @@ void hex_to_str(uint64_t n,char* buf) {
         bufc[20-len] = (c<10) ? (c+48) : (c+97-10);
         len++;
     }
-    
+
+    if(leng >= len) {
+        for(int i=0;i<leng-len;i++) {
+            buf[0]='0';
+            buf++;
+        }
+    }
+
     for(int i=0;i<len;i++) {
         buf[i]=bufc[20-len+1+i];
     }

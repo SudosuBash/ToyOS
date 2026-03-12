@@ -37,5 +37,7 @@ struct cpuinfo {
     uint8_t rdnand_support:1;
 };
 
+#define CPL_DPL_MASK 0b11
+#define IS_IN_KERN_MODE(cs) (((cs) & CPL_DPL_MASK) == 0)
 void init_cpu();
 #endif

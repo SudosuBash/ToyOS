@@ -3,10 +3,8 @@
 
 #include <kernel/stdint.h>
 
-typedef uint32_t size_t;
-
 void memset(void* addr,uint8_t val, size_t size);
 void memcpy(void* dst, void* src, size_t sz);
-void hex_to_str(uint64_t n,char* buf);
+void hex_to_str(uint64_t n,char* buf,int leng);
 void hex_to_dec(uint64_t num, char* buf);
 #endif

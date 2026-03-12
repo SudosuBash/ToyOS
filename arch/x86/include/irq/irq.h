@@ -5,6 +5,7 @@
 
 #define IRQ_DIV_ERR 0
 #define IRQ_PG_ERR 14
+#define IRQ_UD_ERR 6
 struct idt_gate {
     uint64_t offset_low:16;
     uint64_t selector:16;

@@ -8,7 +8,7 @@ OBJCOPY := objcopy
 CINCLUDE := -I. -Iinclude -I../../include
 CFLAGS   := -ffreestanding -fno-stack-protector -nostdlib $(CINCLUDE) -g -O0
 CFLAGS_M32 := -m32 $(CFLAGS)
-CFLAGS_M64 := -m64 $(CFLAGS) 
+CFLAGS_M64 := -m64 $(CFLAGS)  -mcmodel=kernel -fno-pic -fno-omit-frame-pointer
 
 # --- 目标文件列表 ---
 
@@ -17,7 +17,7 @@ KLOADER_OBJS := kloader/kloader.o \
                 kloader/pgtable.o \
                 kloader/elf_loader.o \
                 rddisk.o \
-                64bit_mode.o
+                64bit_mode.o 
 
 # pt.o 需要的文件 (64位)
 PT_OBJS      := kern_start.o \
@@ -32,7 +32,8 @@ PT_OBJS      := kern_start.o \
 				irq/irq_handler.o \
 				irq/irq.o \
 				mm/mm_info.o \
-				early_boot.o
+				early_boot.o \
+				fault/panic.o
 
 .PHONY: all clean
 
@@ -76,6 +77,8 @@ irq/%.o: irq/%.S
 	$(AS) -f elf64 $< -o $@
 
 mm/%.o: mm/%.c
+	$(CC) $(CFLAGS_M64) -c $< -o $@
+fault/%.o: fault/%.c
 	$(CC) $(CFLAGS_M64) -c $< -o $@
 
 kstart.o: kstart.S

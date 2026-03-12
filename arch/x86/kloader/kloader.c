@@ -4,7 +4,7 @@
 #include <kloader/kloader.h>
 
 #define DISC_SECTOR 15
-#define RD_COUNT 300
+#define RD_COUNT 3000
 
 #define SELF_PADDR 0x40000
 #define SELF_SECTOR 3
