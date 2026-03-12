@@ -19,7 +19,7 @@
 #define MM_BUDDY_FLAG_TAIL 0b10
 
 struct mm_buddy {
-    struct linklist_head* buddys[MM_BUDDY_MAX_LEVEL];
+    struct linklist_head buddys[MM_BUDDY_MAX_LEVEL];
 };
 
 void* kmalloc(size_t sz);

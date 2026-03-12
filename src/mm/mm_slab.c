@@ -19,18 +19,13 @@ void kmem_cache_free(void* addr) {
     page->block_start = (link_next_ptr_t*) paddr;
     struct kmem_cache* cache = page->cache;
     if(page->blocks == page->alloced_blocks) {
-        
-        if(&page->sibling == cache->full) //头部的话要next
-            list_next(&cache->full);
-        list_del(&page->sibling); //尾部的话sibling
-        list_head_insert(&page->sibling,&cache->partial);
+        list_del_init(&page->sibling); //尾部的话sibling
+        list_insert(&page->sibling,&cache->partial);
     }
     page->alloced_blocks--;
     if(page->alloced_blocks == 0) {
-        if(&page->sibling == cache->partial)
-            list_next(&cache->partial);
-        list_del(&page->sibling);
-        list_head_insert(&page->sibling,&cache->empty);
+        list_del_init(&page->sibling);
+        list_insert(&page->sibling,&cache->partial);
     }
 }
 
@@ -38,22 +33,22 @@ void* kmem_cache_alloc(struct kmem_cache* cache) {
     assert(cache != NULL);
    
 cache_partial:
-    if(cache->partial) {
-        struct page* p = container_of(cache->partial, struct page, sibling);
+    if(!list_empty(&cache->partial)) {
+        struct page* p = container_of(cache->partial.next, struct page, sibling);
         void* addr = (void*)p->block_start;
         p->alloced_blocks++;
         p->block_start = (link_next_ptr_t*)(*(p->block_start));
         if(p->block_start == 0) {
-            list_del_head(&cache->partial);
-            list_head_insert(&p->sibling, &cache->full);
+            list_del(cache->partial.next);
+            list_insert(&p->sibling, &cache->full);
         }
         return addr;
     }
 cache_empty:
-    if(cache->empty) {
-        struct page* p = container_of(cache->empty, struct page, sibling);
-        list_del_head(&cache->empty);
-        list_head_insert(&p->sibling,&cache->partial);
+    if(!list_empty(&cache->empty)) {
+        struct page* p = container_of(cache->empty.next, struct page, sibling);
+        list_del(cache->empty.next);
+        list_insert(&p->sibling,&cache->partial);
         goto cache_partial;
     } else {
         int alloc_count = ((cache->block_sz * MM_SLAB_EXPANSION_VOODOO) + PAGE_SZ - 1) & PAGE_MASK;
@@ -62,7 +57,8 @@ cache_empty:
 
         if(new_page == NULL) return NULL; //分配失败直接返回0
         init_page_mem(cache, new_page, cache->block_sz);
-        cache->empty = &new_page->sibling;
+        INIT_LIST_HEAD(&new_page->sibling);
+        list_insert(&new_page->sibling,&cache->empty);
         goto cache_empty; //重新分配
     }
     panic("kmem_cache_alloc() went to a wrong place!");
@@ -72,9 +68,15 @@ cache_empty:
 struct kmem_cache* kmem_cache_get(uint32_t sz) {
     struct kmem_cache* mem = (struct kmem_cache*)kmem_cache_alloc(&main_cache);
     mem->block_sz = sz;
+    INIT_LIST_HEAD(&mem->partial);
+    INIT_LIST_HEAD(&mem->full);
+    INIT_LIST_HEAD(&mem->empty);
     return mem;
 }
 
 void init_mm_slab() {
     main_cache.block_sz = sizeof(struct kmem_cache);   
+    INIT_LIST_HEAD(&main_cache.partial);
+    INIT_LIST_HEAD(&main_cache.full);
+    INIT_LIST_HEAD(&main_cache.empty);
 }

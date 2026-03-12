@@ -3,6 +3,7 @@
 #include <kernel/data_struct/bitmap.h>
 #include <mm/mm_info.h>
 #include <kernel/data_struct/general.h>
+#include <kernel/fault/fault.h>
 
 static uint64_t kern_ldr_addr;
 static uint64_t mem_sz;
@@ -85,44 +86,45 @@ void free_page(struct page* page) {
 
         //删除原来在另外一个页中挂着的空闲空间
         int tpage_index = level-1;
-        if(buddy.buddys[tpage_index] == &another_page->buddy_sibling) {
-            list_next(&buddy.buddys[tpage_index]);
-        }
-        list_del(&(another_page->buddy_sibling));
+        list_del_init(&(another_page->buddy_sibling));
         
         //高位内存buddy_level，因为已经不再需要，变更为小喽啰了
         high_page->buddy_level = 0;
         page->buddy_level = level + 1;
     }
-    list_head_insert(&page->buddy_sibling, &buddy.buddys[page->buddy_level-1]);
+    INIT_LIST_HEAD(&(page->buddy_sibling));
+    list_insert(&page->buddy_sibling, &buddy.buddys[page->buddy_level-1]);
     
 }
 
 struct page* alloc_page(uint64_t pages) {
+    assert(pages!=0);
     if(pages == 0) return 0;
     int64_t group = highest_page_up_1(pages);
     //pages
-    if(group >= MM_BUDDY_MAX_LEVEL) return 0; //直接拒绝
+    assert(group<MM_BUDDY_MAX_LEVEL);
+
     int now_group = group;
-    while(!buddy.buddys[now_group]) 
+    while(list_empty(&buddy.buddys[now_group])) 
         now_group++;
 
     if(now_group >= MM_BUDDY_MAX_LEVEL) return 0; //分配失败 
-    struct linklist_head* target = buddy.buddys[now_group];
+    struct linklist_head* target = buddy.buddys[now_group].next;
     struct page* p = container_of(target,struct page, buddy_sibling); //要分割的页
     if(now_group == group) { //加速
-        list_del_head(&buddy.buddys[now_group]);
+        list_del(buddy.buddys[now_group].next);
         goto func_return;
     }
     for(int g = now_group-1;g>=group;g--) { //g是数组索引
-        list_del_head(&buddy.buddys[now_group]);   
+        list_del(buddy.buddys[now_group].next);   
         p->buddy_level = g+1;
         // int page_sz = MM_BUDDY_LEVEL_PAGES(g+1); //g是索引, g+1才是组数. 我们的目的是切分数组.
         struct page* target = buddy_page(&p); 
         //分配1页的时候这个会误判, 所以必须在末尾再次重新设置in_buddy_system
         target->in_use=0;
         target->buddy_level = g+1;
-        list_head_insert(&(target->buddy_sibling),&buddy.buddys[g]); //另一半插回去
+        INIT_LIST_HEAD(&(target->buddy_sibling));
+        list_insert(&(target->buddy_sibling),&buddy.buddys[g]); //另一半插回去
     }
 
 func_return:
@@ -163,8 +165,12 @@ inline void* get_page_vaddr(struct page* page) {
 static void init_buddy() {
     uint64_t mem_buddy_pages = MM_BUDDY_MAX_LEVEL_PAGES();
     struct page* pg_end = page_start + mem_pages;
+    for(int i=0;i<MM_BUDDY_MAX_LEVEL;i++) {
+        INIT_LIST_HEAD(&buddy.buddys[i]);
+    }
     for(struct page* pg = page_start;pg < pg_end; pg+= mem_buddy_pages) {
-        list_head_insert(&(pg->buddy_sibling),&buddy.buddys[MM_BUDDY_MAX_LEVEL-1]);
+        INIT_LIST_HEAD(&(pg->buddy_sibling));
+        list_insert(&(pg->buddy_sibling),&buddy.buddys[MM_BUDDY_MAX_LEVEL-1]);
         pg->buddy_level = MM_BUDDY_MAX_LEVEL; //最高级
     }
 }

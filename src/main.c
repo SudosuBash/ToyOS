@@ -10,11 +10,10 @@ void kernel_start() {
     init_cpu();
     init_irq();
     init_mm();
-    
-    void* p = kmalloc(8);
+
+    void* p = kmalloc(8190);
     kfree(p);
     p=0;
     assert(1==2);
-    panic("Attempt to kill init!");
     while(1);
 }

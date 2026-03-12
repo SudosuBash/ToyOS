@@ -4,7 +4,7 @@
 
 void init_page_mem(struct kmem_cache* cache,struct page* pg, uint32_t sz) {
     uintptr_t* pg_mem = (uintptr_t*) get_page_vaddr(pg); //页开始地址
-
+    INIT_LIST_HEAD(&pg->sibling);
     pg->cache = cache;
     pg->alloced_blocks=0;
     pg->block_sz = sz;
