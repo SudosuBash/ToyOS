@@ -6,9 +6,9 @@ OBJCOPY := objcopy
 
 # --- 编译选项 ---
 CINCLUDE := -I. -Iinclude -I../../include
-CFLAGS   := -ffreestanding -fno-stack-protector -nostdlib $(CINCLUDE) -g -O0
-CFLAGS_M32 := -m32 $(CFLAGS)
-CFLAGS_M64 := -m64 $(CFLAGS)  -mcmodel=kernel -fno-pic -fno-omit-frame-pointer
+CFLAGS   := -ffreestanding -fno-stack-protector -nostdlib $(CINCLUDE) -g -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow
+CFLAGS_M32 := -m32 $(CFLAGS) -O0
+CFLAGS_M64 := -m64 -O0 -mcmodel=kernel -fno-pic -fno-omit-frame-pointer $(CFLAGS)  
 
 # --- 目标文件列表 ---
 
@@ -33,7 +33,7 @@ PT_OBJS      := kern_start.o \
 				irq/irq.o \
 				mm/mm_info.o \
 				early_boot.o \
-				fault/panic.o
+				fault/crash.o
 
 .PHONY: all clean
 

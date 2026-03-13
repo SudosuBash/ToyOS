@@ -17,6 +17,21 @@
 
 #define MM_BUDDY_FLAG_HEAD 0b1
 #define MM_BUDDY_FLAG_TAIL 0b10
+#define MM_BUDDY_FLAG_RESERVED 0b100
+
+#define PAGE_ROUND_UP(addr) (((addr) + PAGE_SZ - 1) & PAGE_MASK)
+#define PAGE_ROUND_UP_INDEX(addr) (PAGE_ROUND_UP(addr) >> PAGE_OFFSET)
+
+struct mm_area {
+    uint64_t from;
+    uint64_t to;
+};
+
+struct mm_area_record {
+    struct mm_area* area;
+    int num;
+    
+};
 
 struct mm_buddy {
     struct linklist_head buddys[MM_BUDDY_MAX_LEVEL];
@@ -24,8 +39,8 @@ struct mm_buddy {
 
 void* kmalloc(size_t sz);
 void kfree(void* addr);
-struct page* alloc_page(uint64_t pages);
-void free_page(struct page* page);
+struct page* alloc_page(uint64_t pages,int slab);
+void free_page(struct page* page,int slab);
 void init_mm();
 void kmalloc_init();
 //向上取整
@@ -33,7 +48,10 @@ int highest_page_up_1(uint64_t x);
 int highest_page_1(uint64_t x);
 
 uintptr_t get_kernel_end();
-uint64_t get_available_mem_sz();
+uint64_t get_machine_available_mem_sz();
 void init_mm_info();
 uint64_t get_kern_addr();
+uint64_t get_system_mem_alloced();
+uint64_t get_system_mem_sum();
+struct mm_area_record* get_mem_records();
 #endif

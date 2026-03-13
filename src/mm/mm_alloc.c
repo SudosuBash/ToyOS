@@ -5,14 +5,15 @@ struct kmem_cache* caches[10]; //2^3~2^13
 
 void* kmalloc(size_t sz) {
     assert(sz!=0);
-    int require_sz = highest_page_up_1(sz);
+    int require_sz = highest_page_up_1(sz+1);
+    //复用这个函数，就不新写了，直接+1代替
     if(require_sz < 3) require_sz = 3; //最小8
     if(require_sz < 13) { //4096 kb
         require_sz-=3;
         void* mem = kmem_cache_alloc(caches[require_sz]);
         return mem;
     } else { //
-        struct page* pg = alloc_page((sz) >> PAGE_OFFSET);
+        struct page* pg = alloc_page(PAGE_ROUND_UP_INDEX(sz), 0);
         if(pg == NULL) return 0;
         void* addr = get_page_vaddr(pg);
         return addr;
@@ -28,7 +29,8 @@ void kfree(void* addr) {
     }
 
     if(p->cache==NULL) {
-        free_page(p);
+        assert(p->in_use);
+        free_page(p,0);
     } else {
         kmem_cache_free(addr);
     }

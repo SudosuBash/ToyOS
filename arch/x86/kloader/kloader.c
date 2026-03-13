@@ -2,6 +2,7 @@
 #include <kloader/elf_bl.h>
 #include <kernel/config.h>
 #include <kloader/kloader.h>
+#include <packed_e820.h>
 
 #define DISC_SECTOR 15
 #define RD_COUNT 3000
@@ -28,6 +29,7 @@ void set_bl_info(struct boot_info* bl);
 void prepare_gdt();
 void rd_disks(uint32_t rd_count, int sector, uintptr_t data);
 
+void init_e820(); //f**k u
 static struct gdtr gdtr;
  
 int _start() {
@@ -44,6 +46,7 @@ int _start() {
     rd_disks(RD_COUNT,DISC_SECTOR, KERNEL_LDR_ADDR);
     uint64_t kernel_entrance = load_elf((void*)KERNEL_LDR_ADDR,(void*)KERNEL_FINAL_LDR_ADDR,bl);
 
+    init_e820();
     memset((void*)KERNEL_LDR_ADDR,0, sizeof(RD_COUNT) << 9); //脏数据清空
     
 
@@ -55,6 +58,72 @@ int _start() {
     return 0;
 }
 
+
+void init_e820() {
+    uint32_t entries = *(uint32_t*)KERNEL_MEM_INFO_TEMP_ADDR;
+    struct e820_entry* edr = (struct e820_entry*)(KERNEL_MEM_INFO_TEMP_ADDR + 4);
+
+    for(int i=0;i<entries;i++) {
+        for(int j=1;j<entries-i-1;j++) {
+            if(edr[j].base_addr < edr[j-1].base_addr) {
+                struct e820_entry tmp = edr[j];
+                edr[j] = edr[j-1];
+                edr[j-1] = tmp;
+            }
+        }
+    }
+    
+    struct e820_entry* new_edr = (struct e820_entry*)(KERNEL_MEM_INFO_ADDR+4);
+    int leng = 0;
+    new_edr[0] = edr[0];
+
+    for(int i=1;i<entries;i++) {
+        while(i<entries && edr[i].base_addr == new_edr[leng].base_addr + new_edr[leng].leng) {
+            if(edr[i].type == 2) 
+                new_edr[leng].type = 2;
+            new_edr[leng].leng += edr[i].leng;
+            i++;
+        }
+        if(i < entries && edr[i].base_addr < new_edr[leng].base_addr + new_edr[leng].leng) {
+            struct e820_entry new_e;
+            uint64_t right_border_2 = edr[i].base_addr + edr[i].leng;
+            uint64_t right_border = new_edr[leng].base_addr + new_edr[leng].leng;
+
+            int new_edr_type = new_edr[leng].type;
+            if(edr[i].base_addr != new_edr[leng].base_addr) {
+                new_edr[leng].leng = edr[i].base_addr - new_edr[leng].base_addr;
+                leng++;
+            }
+            if(right_border_2 > right_border) {
+                new_edr[leng].base_addr = edr[i].base_addr;
+                new_edr[leng].leng = right_border - edr[i].base_addr;
+                new_edr[leng].extended_attr = edr[i].extended_attr;
+                if(edr[i].type == 1 && new_edr_type == 1) {
+                    new_edr[leng].type = 1;
+                } else new_edr[leng].type = 2;
+                
+                leng++;
+                new_edr[leng].base_addr = right_border;
+                new_edr[leng].extended_attr = edr[i].extended_attr;
+                new_edr[leng].type = edr[i].type;
+                new_edr[leng].leng = right_border_2 - right_border;
+            } else if(right_border == right_border_2) {
+                new_edr[leng] = edr[i];
+            } else {
+                new_edr[leng] = edr[i];
+                leng++;
+                new_edr[leng] = new_edr[leng-1];
+                new_edr[leng].leng = right_border - right_border_2;
+                new_edr[leng].base_addr = right_border_2;
+            }
+        } else {
+            new_edr[leng] = edr[i];
+        }
+        leng++;
+    }
+
+    *(uint32_t*)(KERNEL_MEM_INFO_ADDR) = leng;
+}
 void rd_disks(uint32_t rd_count, int sector, uintptr_t data) {
     while(rd_count >= 256) {
         rd_disc(0 ,sector, (void*)data);
@@ -116,4 +185,5 @@ void prepare_gdt() { //临时页表
     gaddr+=1; //32
 
     gdtr.limit = (uint16_t)((uint32_t)gaddr - KERNEL_GDT_ADDR)-1;
+    gdtr.base = KERNEL_GDT_TEMP_VADDR;
 }

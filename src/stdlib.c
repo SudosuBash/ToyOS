@@ -1,5 +1,6 @@
 #include <kernel/stdlib.h>
 #include <kernel/math.h>
+#include <asm.h>
 void memset(void* addr,uint8_t val, size_t size) {
     uint8_t* uaddr = (uint8_t*)addr;
     for(int i=0;i<size;i++) {
@@ -17,12 +18,14 @@ void hex_to_dec(uint64_t n,char* buf) {
     while(n != 0) {
         uint64_t n1 = div_10(n);
         bufc[20-len] = (n - n1 * 10) + 48;
+        barrier();
         n = n1;
         len++;
     }
     for(int i=0;i<len;i++) {
         buf[i]=bufc[20-len+1+i];
     }
+    buf[len] = '\0';
 }
 
 void hex_to_str(uint64_t n,char* buf,int leng) {
@@ -36,6 +39,7 @@ void hex_to_str(uint64_t n,char* buf,int leng) {
         for(int i=0;i<leng;i++) {
             buf[i] = '0';
         }
+        buf[leng]='\0';
         return;
     }
     while(n!=0) {
@@ -55,6 +59,7 @@ void hex_to_str(uint64_t n,char* buf,int leng) {
     for(int i=0;i<len;i++) {
         buf[i]=bufc[20-len+1+i];
     }
+    buf[len] = '\0';
 }
 
 void memcpy(void* dst, void* src, size_t sz) {

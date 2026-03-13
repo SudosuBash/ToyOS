@@ -19,6 +19,12 @@ SECTIONS {
         __stack_top = .;
     }
 
+    .mem_info (NOLOAD): ALIGN(4096) {
+        __mem_info_bottom = .;
+        . += 0x1000;
+        __mem_info_top = .;
+    }
+    
     .gdt (NOLOAD): ALIGN(4096) {
         __gdt_bottom = .;
         . += 0x1000;

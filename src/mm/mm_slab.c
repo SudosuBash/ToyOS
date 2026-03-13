@@ -53,7 +53,7 @@ cache_empty:
     } else {
         int alloc_count = ((cache->block_sz * MM_SLAB_EXPANSION_VOODOO) + PAGE_SZ - 1) & PAGE_MASK;
         alloc_count>>=PAGE_OFFSET;
-        struct page* new_page = alloc_page(alloc_count);
+        struct page* new_page = alloc_page(alloc_count,1);
 
         if(new_page == NULL) return NULL; //分配失败直接返回0
         init_page_mem(cache, new_page, cache->block_sz);
@@ -61,7 +61,7 @@ cache_empty:
         list_insert(&new_page->sibling,&cache->empty);
         goto cache_empty; //重新分配
     }
-    panic("kmem_cache_alloc() went to a wrong place!");
+    crash("kmem_cache_alloc() went to a wrong place!");
     return NULL;
 }
 

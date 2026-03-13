@@ -4,7 +4,8 @@
 #define KERNEL_TEMP_PG_ADDR (0x10000) //临时页表放在 0x10000, 引导系统可以建立15个临时页表
 //内核就不止15个了, 因为引导系统被覆盖了
 #define KERNEL_TEMP_PG_VADDR 0xfffffffffffff000//内核分页地址
-#define KERNEL_MEM_INFO_ADDR 0x3000 //内存信息
+#define KERNEL_MEM_INFO_TEMP_ADDR 0x3000 //内存信息
+#define KERNEL_MEM_INFO_ADDR 0x5000 //内存信息
 #define KERNEL_LDR_ADDR 0x200000 //内核临时加载地址
 #define KERNEL_FINAL_LDR_ADDR 0x100000 //内存最终加载地址
 #define KERNEL_MEM_BITMAP_ADDR 0x9000 //内存管理bitmap

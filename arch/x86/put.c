@@ -10,14 +10,14 @@ void put_char(char c) {
 }
 
 void put_dec(uint64_t n) {
-    char buf[20] = {0};
+    char buf[25] = {0};
     hex_to_dec(n,buf);
     put_str(buf);
 }
 
 void put_hex(uint64_t n) {
     char buf[20] = {0};
-    hex_to_str(n, buf, 0);
+    hex_to_str(n, buf, 1);
     put_str(buf);
 }
 
@@ -29,6 +29,7 @@ void put_hex_zfill(uint64_t n,uint32_t leng) {
 
 void put_str(const char* c) {
     while(*c!=0) {
+        barrier();
         put_char(*c);
         c++;
     }

@@ -5,8 +5,7 @@
 #include <kloader/kloader.h>
 #include <pgtable.h>
 
-//获取可用内存的 e820 索引
-uint32_t get_avl_mem_index();
+#define PAGE_BIG_ROUND_UP(addr) ((addr) + PG_BIG_PAGE_SZ - 1)  & PG_BIG_PAGE_MASK
 
 void init_pgtable();
 //获取内存信息

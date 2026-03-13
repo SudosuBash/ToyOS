@@ -33,13 +33,8 @@ switch_to_64:
     shl rdi,32
     or rdi,rbx ;edi: kernel
     mov [seg_data], rdi
-    mov word [seg_data+8], 8
+    mov word [seg_data+8], 8 ;CS
     
-    mov rax,0
-    mov rbx,0
-    mov rcx,0
-    mov rdx,0
-    mov rsi,0
     lea rdi,[seg_data]
     jmp far [rdi]
 

@@ -2,8 +2,8 @@
 #include <kernel/stdint.h>
 #include <kernel/mm/mm.h>
 //申请的pte数量(base_addr)
-static void* pte_start_addr;
-static void* pde_start_addr;
+static volatile void* pte_start_addr;
+static volatile void* pde_start_addr;
 
 #define ALLOC_NEW_PTE() ((pte_start_addr) += PAGE_SZ)
 #define VADDR_TO_PADDR(addr) ((addr) - KERNEL_FINAL_LDR_VADDR + KERNEL_FINAL_LDR_ADDR)

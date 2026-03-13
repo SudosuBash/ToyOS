@@ -3,7 +3,7 @@ bits 16
 
 jmp BL_START
 
-bl_panic:
+bl_crash:
     jmp $
 
 ;al = sector count
@@ -19,7 +19,7 @@ rd_disc_bios:
     int 0x13
     
     cmp ah,0
-    jne bl_panic
+    jne bl_crash
     pop dx
     pop ax
     pop bp

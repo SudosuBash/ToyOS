@@ -17,7 +17,7 @@ struct idt_gate {
     uint64_t p:1;
     uint64_t offset:48;
     uint64_t reserved_3:32;
-}__attribute__((packed));
+}__attribute__((packed, aligned(16)));
 
 struct idtr {
     uint16_t limit;

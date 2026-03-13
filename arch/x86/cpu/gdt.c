@@ -45,6 +45,7 @@ void reload_gdt() {
     uint64_t limit = ((uintptr_t)tss_sa - (uintptr_t)gdt_sa);
     gdtr.limit = limit;
     gdtr.base = (uintptr_t)gdt_sa;
+    barrier();
     lgdt(gdtr);
 }
 

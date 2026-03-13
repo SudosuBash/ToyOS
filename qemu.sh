@@ -3,4 +3,5 @@ qemu-system-x86_64 \
 	-cpu qemu64,+cmov \
     -S -s \
     -chardev stdio,id=char0,mux=on -serial chardev:char0 -mon chardev=char0 \
-    -nographic
+    -nographic \
+    -m 12G

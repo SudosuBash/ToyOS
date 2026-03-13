@@ -1,8 +1,11 @@
 #ifndef _TOYOS_X86_FAULT_H
 #define _TOYOS_X86_FAULT_H
 
-#define arch_panic(msg,cond) { \
-    static const struct panic_info __panic_info = { \
+
+#define __crash_name_concat(line) __crash_info##line
+#define arch_crash(msg,cond) do { \
+    static const struct crash_info\
+    __attribute__((used, section(".crash_data"))) __crash_name_concat(__LINE__)= { \
         .filename = __FILE__, \
         .line = __LINE__, \
         .func=__func__, \
@@ -10,11 +13,14 @@
         .condition = (cond) \
     }; \
     asm volatile( \
-        "movq %0,%%r15\n\t" \
+        "leaq %0, %%r15\n\t" \
         "ud2\n\t" \
         :  \
-        : "r"(&__panic_info) \
+        : "m"(__crash_name_concat(__LINE__)) \
     ); \
-}
+} while(0);
 
+#define arch_crash_on_irq(msg,irq_info) do { \
+    fault_irq(msg,irq_info); \
+}while(0);
 #endif
