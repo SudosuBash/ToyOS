@@ -3,6 +3,8 @@
 #include <kernel/stdint.h>
 #include <kernel/math.h>
 #include <kernel/stdlib.h>
+#include <kernel/mm/mm.h>
+
 #define BASE_ADDR 0xB8000
 
 void put_char(char c) {

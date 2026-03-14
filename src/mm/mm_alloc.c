@@ -5,7 +5,7 @@ struct kmem_cache* caches[10]; //2^3~2^13
 
 void* kmalloc(size_t sz) {
     assert(sz!=0);
-    int require_sz = highest_page_up_1(sz+1);
+    int require_sz = highest_up_1(sz+1);
     //复用这个函数，就不新写了，直接+1代替
     if(require_sz < 3) require_sz = 3; //最小8
     if(require_sz < 13) { //4096 kb
@@ -24,9 +24,6 @@ void kfree(void* addr) {
     assert(addr!=NULL);
     uintptr_t paddr = (uint64_t)addr;
     struct page* p = find_page_by_vaddr(paddr);
-    if(p->page_flags & MM_BUDDY_FLAG_TAIL) {
-        p=p->page_head;
-    }
 
     if(p->cache==NULL) {
         assert(p->in_use);

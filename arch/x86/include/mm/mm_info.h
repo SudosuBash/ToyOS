@@ -3,6 +3,8 @@
 
 #include <kernel/stdint.h>
 
+#define arch_barrier() asm volatile("" ::: "memory")
+
 #define LOW_MEM 0x100000
 
 #define MM_PAGE_REL_ADDR(addr) ((addr) - LOW_MEM)

@@ -4,8 +4,11 @@
 #include <irq/irq.h>
 #include <cpu/cpu.h>
 #include <kernel/mm/mm.h>
+#include <kernel/atomic/spinlock.h>
+
 static uint64_t cr2;
 static uint64_t cr3;
+static spinlock_t crash_spin;
 
 static void put_kernel_regs(struct irq_frame* frame) {
     put_str("Registers info:\n");
@@ -105,6 +108,7 @@ static void crash_irq_position(struct crash_info* info,struct irq_frame* frame) 
     put_char('\n');
 }
 static void do_fault(struct crash_info* info, struct irq_frame* frame, int irq) {
+    spin_lock(&crash_spin);
     asm volatile(
         "movq %%cr2,%0\t\n"
         : "=r"(cr2): : "memory"

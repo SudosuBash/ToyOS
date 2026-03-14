@@ -1,8 +1,10 @@
 #ifndef _TOYOS_MEM
 #define _TOYOS_MEM
 
+#include <kernel/math.h>
 #include <kernel/config.h>
 #include <kernel/stdint.h>
+#include <kernel/atomic/spinlock.h>
 #include <kernel/data_struct/linklist.h>
 #include <mm/mm_info.h>
 
@@ -22,6 +24,7 @@
 #define PAGE_ROUND_UP(addr) (((addr) + PAGE_SZ - 1) & PAGE_MASK)
 #define PAGE_ROUND_UP_INDEX(addr) (PAGE_ROUND_UP(addr) >> PAGE_OFFSET)
 
+#define barrier() arch_barrier()
 struct mm_area {
     uint64_t from;
     uint64_t to;
@@ -34,7 +37,8 @@ struct mm_area_record {
 };
 
 struct mm_buddy {
-    struct linklist_head buddys[MM_BUDDY_MAX_LEVEL];
+    struct linklist_head groups[MM_BUDDY_MAX_LEVEL];
+    spinlock_t buddy_lock;
 };
 
 void* kmalloc(size_t sz);
@@ -44,8 +48,6 @@ void free_page(struct page* page,int slab);
 void init_mm();
 void kmalloc_init();
 //向上取整
-int highest_page_up_1(uint64_t x);
-int highest_page_1(uint64_t x);
 
 uintptr_t get_kernel_end();
 uint64_t get_machine_available_mem_sz();

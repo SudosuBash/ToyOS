@@ -6,9 +6,9 @@ OBJCOPY := objcopy
 
 # --- 编译选项 ---
 CINCLUDE := -I. -Iinclude -I../../include
-CFLAGS   := -ffreestanding -fno-stack-protector -nostdlib $(CINCLUDE) -g -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow
+CFLAGS   := -ffreestanding -fno-stack-protector -nostdlib $(CINCLUDE) -g 
 CFLAGS_M32 := -m32 $(CFLAGS) -O0
-CFLAGS_M64 := -m64 -O0 -mcmodel=kernel -fno-pic -fno-omit-frame-pointer $(CFLAGS)  
+CFLAGS_M64 := -m64 -O2 -mcmodel=kernel -fno-pic -fno-omit-frame-pointer $(CFLAGS)  -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow
 
 # --- 目标文件列表 ---
 
@@ -33,11 +33,12 @@ PT_OBJS      := kern_start.o \
 				irq/irq.o \
 				mm/mm_info.o \
 				early_boot.o \
-				fault/crash.o
+				fault/crash.o \
+				atomic/atomic.o
 
 .PHONY: all clean
 
-all: bl.bin prepare.bin kloader.bin pt.o
+all: boot.bin kloader.bin pt.o
 
 # --- 1 & 2. 引导与准备 (纯汇编) ---
 %.bin: %.S
@@ -78,6 +79,10 @@ irq/%.o: irq/%.S
 
 mm/%.o: mm/%.c
 	$(CC) $(CFLAGS_M64) -c $< -o $@
+
+atomic/%.o: atomic/%.c
+	$(CC) $(CFLAGS_M64) -c $< -o $@
+
 fault/%.o: fault/%.c
 	$(CC) $(CFLAGS_M64) -c $< -o $@
 

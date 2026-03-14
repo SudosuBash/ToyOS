@@ -14,13 +14,19 @@ void kernel_start() {
     
     void* ptrs[64]; // 模拟一个小的对象池
     // }
-    while(1) {
-        void* v1 = kmalloc(4194304); //1024
-        void* v2 = kmalloc(1048576); //256
-        void* v3 = kmalloc(65536); //16 pages
-        void* v4 = kmalloc(8192); //2 pages
-        void* v5 = kmalloc(8193); //4 pages
-    }
+    // while(1) {
+        void* v1 = kmalloc(4); //1024
+        void* v2 = kmalloc(8); //256
+        void* v3 = kmalloc(4095); //16 pages
+        void* v4 = kmalloc(2048); //2 pages
+        void* v5 = kmalloc(2047); //4 pages
+
+        kfree(v5);
+        kfree(v3);
+        kfree(v4);
+        kfree(v1);
+        kfree(v2);
+    // }
     // void* p = kmalloc(4194304);
     // kfree(p);
     // p=0;

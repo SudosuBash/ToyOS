@@ -4,11 +4,11 @@
 #include <kloader/kloader.h>
 #include <packed_e820.h>
 
-#define DISC_SECTOR 15
+#define DISC_SECTOR 34
 #define RD_COUNT 3000
 
 #define SELF_PADDR 0x40000
-#define SELF_SECTOR 3
+#define SELF_SECTOR 3 
 
 /**
  * 内核加载器(换句话说, 跳板程序)
@@ -17,8 +17,9 @@
 //1. 准备分页
 //2. 加载内核的 ELF 并读取
 //3. 将启动信息存储到一个地方
-//4. 进入 64 位
-//5. 进入分页模式
+//4. 准备 E820
+//5. 进入 64 位
+//6. 进入分页模式
 
 extern int rd_disc(uint8_t rd_count, int sector, void* data);
 extern void enter_64bit_mode();
@@ -64,13 +65,16 @@ void init_e820() {
     struct e820_entry* edr = (struct e820_entry*)(KERNEL_MEM_INFO_TEMP_ADDR + 4);
 
     for(int i=0;i<entries;i++) {
-        for(int j=1;j<entries-i-1;j++) {
+        int swapped = 0;
+        for(int j=1;j<entries-i;j++) {
             if(edr[j].base_addr < edr[j-1].base_addr) {
+                swapped = 1;
                 struct e820_entry tmp = edr[j];
                 edr[j] = edr[j-1];
                 edr[j-1] = tmp;
             }
         }
+        if(!swapped) break;
     }
     
     struct e820_entry* new_edr = (struct e820_entry*)(KERNEL_MEM_INFO_ADDR+4);
@@ -177,12 +181,6 @@ void prepare_gdt() { //临时页表
     gdt.access_byte = 0b10010110;
     *gaddr = gdt;
     gaddr+=1; //16
-    gdt.access_byte = 0b11111010;
-    *gaddr = gdt;
-    gaddr+=1; //24
-    gdt.access_byte = 0b11110110;
-    *gaddr = gdt;
-    gaddr+=1; //32
 
     gdtr.limit = (uint16_t)((uint32_t)gaddr - KERNEL_GDT_ADDR)-1;
     gdtr.base = KERNEL_GDT_TEMP_VADDR;

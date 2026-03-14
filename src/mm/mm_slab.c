@@ -13,11 +13,18 @@ void kmem_cache_free(void* addr) {
     assert(addr != NULL);
     uintptr_t paddr = (uintptr_t)addr;
     struct page* page = find_page_by_vaddr((uintptr_t)addr);
+    if(page->page_flags & MM_BUDDY_FLAG_TAIL) {
+        page=page->page_head;
+    }
+    
+    struct kmem_cache* cache = page->cache;
+
+    spin_lock(&cache->cache_lock);
     paddr &= PAGE_MASK;
     *(uintptr_t**)paddr = page->block_start;
 
     page->block_start = (link_next_ptr_t*) paddr;
-    struct kmem_cache* cache = page->cache;
+    
     if(page->blocks == page->alloced_blocks) {
         list_del_init(&page->sibling); //尾部的话sibling
         list_insert(&page->sibling,&cache->partial);
@@ -25,42 +32,47 @@ void kmem_cache_free(void* addr) {
     page->alloced_blocks--;
     if(page->alloced_blocks == 0) {
         list_del_init(&page->sibling);
-        list_insert(&page->sibling,&cache->partial);
+        spin_unlock(&cache->cache_lock);
+        free_page(page,1);
+    } else {
+        spin_unlock(&cache->cache_lock);
     }
+    
 }
 
 void* kmem_cache_alloc(struct kmem_cache* cache) {
     assert(cache != NULL);
-   
+
+    spin_lock(&cache->cache_lock);
 cache_partial:
     if(!list_empty(&cache->partial)) {
         struct page* p = container_of(cache->partial.next, struct page, sibling);
         void* addr = (void*)p->block_start;
         p->alloced_blocks++;
         p->block_start = (link_next_ptr_t*)(*(p->block_start));
+
+        //page不加锁, 因为page或者归buddy或者归slab管, 并且这两个还不可能同时管
+        //所以只要保证buddy和slab不用同时访问的, page就不用锁.
+
+        
         if(p->block_start == 0) {
             list_del(cache->partial.next);
-            list_insert(&p->sibling, &cache->full);
         }
+
+        spin_unlock(&cache->cache_lock);
         return addr;
     }
-cache_empty:
-    if(!list_empty(&cache->empty)) {
-        struct page* p = container_of(cache->empty.next, struct page, sibling);
-        list_del(cache->empty.next);
-        list_insert(&p->sibling,&cache->partial);
-        goto cache_partial;
-    } else {
-        int alloc_count = ((cache->block_sz * MM_SLAB_EXPANSION_VOODOO) + PAGE_SZ - 1) & PAGE_MASK;
-        alloc_count>>=PAGE_OFFSET;
-        struct page* new_page = alloc_page(alloc_count,1);
+    spin_unlock(&cache->cache_lock);
+    int alloc_count = ((cache->block_sz * MM_SLAB_EXPANSION_VOODOO) + PAGE_SZ - 1) & PAGE_MASK;
+    alloc_count>>=PAGE_OFFSET;
 
-        if(new_page == NULL) return NULL; //分配失败直接返回0
-        init_page_mem(cache, new_page, cache->block_sz);
-        INIT_LIST_HEAD(&new_page->sibling);
-        list_insert(&new_page->sibling,&cache->empty);
-        goto cache_empty; //重新分配
-    }
+    struct page* new_page = alloc_page(alloc_count,1);
+
+    spin_lock(&cache->cache_lock);
+    init_page_mem(cache, new_page, cache->block_sz);
+    //不存在页分配失败的情况, 因为分配失败的时候全部 kernel panic 了 :(        
+    goto cache_partial; //重新分配
+
     crash("kmem_cache_alloc() went to a wrong place!");
     return NULL;
 }
@@ -69,14 +81,12 @@ struct kmem_cache* kmem_cache_get(uint32_t sz) {
     struct kmem_cache* mem = (struct kmem_cache*)kmem_cache_alloc(&main_cache);
     mem->block_sz = sz;
     INIT_LIST_HEAD(&mem->partial);
-    INIT_LIST_HEAD(&mem->full);
-    INIT_LIST_HEAD(&mem->empty);
+    spin_init(&mem->cache_lock);
     return mem;
 }
 
 void init_mm_slab() {
     main_cache.block_sz = sizeof(struct kmem_cache);   
     INIT_LIST_HEAD(&main_cache.partial);
-    INIT_LIST_HEAD(&main_cache.full);
-    INIT_LIST_HEAD(&main_cache.empty);
+    spin_init(&main_cache.cache_lock);
 }

@@ -2,6 +2,7 @@
 #include <cpu/smp_percpu.h>
 #include <kernel/stdlib.h>
 #include <gdt.h>
+#include <kernel/mm/mm.h>
 
 DEFINE_PERCPU_VAR(gdts[4],struct gdt);
 

@@ -2,7 +2,7 @@
 #define _TOYOS_MM_PAGE
 #include <kernel/stdint.h>
 #include <kernel/data_struct/linklist.h>
-
+#include <kernel/atomic/spinlock.h>
 typedef uintptr_t link_next_ptr_t;
 struct page {
     uint32_t block_sz; //页面分块大小

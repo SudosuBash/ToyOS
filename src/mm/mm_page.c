@@ -29,4 +29,6 @@ void init_page_mem(struct kmem_cache* cache,struct page* pg, uint32_t sz) {
 
     *(uintptr_t*)ptr = 0;
     pg->block_start = pg_mem;
+
+    list_insert(&pg->sibling,&cache->partial);
 }

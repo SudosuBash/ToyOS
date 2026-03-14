@@ -1,6 +1,7 @@
 #include <irq/irq.h>
 #include <asm.h>
 #include <kernel/stdint.h>
+#include <kernel/mm/mm.h>
 
 #define IRQ_MAX_CNT 256
 

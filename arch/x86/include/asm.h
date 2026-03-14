@@ -8,8 +8,6 @@
 
 #define CS_SELECTOR 0x08
 
-#define barrier() asm volatile("" ::: "memory")
-
 void outb(uint16_t port, uint8_t data);
 
 void load_cr3(uint64_t paddr);

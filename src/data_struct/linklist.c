@@ -10,9 +10,6 @@ inline void list_del_init(struct linklist_head* h) {
     INIT_LIST_HEAD(h);
 }
 
-inline void list_next(struct linklist_head** h) {
-    (*h) = (*h)->next;
-}
 
 inline void list_insert(struct linklist_head* h, struct linklist_head* target) {
     h->prev = target;
@@ -20,7 +17,6 @@ inline void list_insert(struct linklist_head* h, struct linklist_head* target) {
     if(target->next!=target) 
         target->next->prev=h;
     target->next = h;
-    
 }
 
 inline uint8_t list_empty(struct linklist_head* h) {

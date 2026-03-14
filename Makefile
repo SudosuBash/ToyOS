@@ -10,7 +10,7 @@ SRC_DIR  := src
 
 # --- 编译选项 ---
 CINCLUDE := -Iinclude -I$(ARCH_DIR)/include
-CFLAGS   := -m64 -O0 -std=gnu11 -ffreestanding -fno-stack-protector -nostdlib \
+CFLAGS   := -m64 -O2 -std=gnu11 -ffreestanding -fno-stack-protector -nostdlib \
             $(CINCLUDE) -g  -mcmodel=kernel -fno-pic -fno-omit-frame-pointer -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow
 
 # --- 目标文件列表 ---
@@ -29,12 +29,12 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
                $(SRC_DIR)/mm/mm_page.o \
 			   $(SRC_DIR)/mm/mm_slab.o \
 			   $(SRC_DIR)/mm/mm.o \
-			   $(SRC_DIR)/mm/mm_alloc.o
+			   $(SRC_DIR)/mm/mm_alloc.o \
+			   $(SRC_DIR)/atomic/lock.o
 
 
 # 来自 arch 目录的依赖项
-ARCH_DEPENDS := $(ARCH_DIR)/bl.bin \
-                $(ARCH_DIR)/prepare.bin \
+ARCH_DEPENDS := $(ARCH_DIR)/boot.bin \
                 $(ARCH_DIR)/kloader.bin \
                 $(ARCH_DIR)/pt.o
 
@@ -72,10 +72,9 @@ $(ARCH_DEPENDS):
 
 $(IMAGE): $(ARCH_DEPENDS) $(KERNEL_BIN)
 	dd if=/dev/zero of=$(IMAGE) bs=512 count=20480
-	dd if=$(ARCH_DIR)/bl.bin of=$(IMAGE) conv=notrunc
-	dd if=$(ARCH_DIR)/prepare.bin of=$(IMAGE) seek=1 conv=notrunc
+	dd if=$(ARCH_DIR)/boot.bin of=$(IMAGE) conv=notrunc
 	dd if=$(ARCH_DIR)/kloader.bin of=$(IMAGE) seek=4 conv=notrunc
-	dd if=$(KERNEL_BIN) of=$(IMAGE) seek=15 conv=notrunc
+	dd if=$(KERNEL_BIN) of=$(IMAGE) seek=34 conv=notrunc
 
 # --- 5. 辅助指令 ---
 

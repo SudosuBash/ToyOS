@@ -1,10 +1,8 @@
 #include <kernel/mm/mm.h>
 #include <kernel/mm/mm_slab.h>
 #include <kernel/data_struct/bitmap.h>
-#include <mm/mm_info.h>
 #include <kernel/data_struct/general.h>
 #include <kernel/fault/fault.h>
-#include <asm.h>
 
 static uint64_t mem_sz;
 static struct page *page_start;
@@ -14,7 +12,6 @@ static volatile uint64_t mem_alloced_pages;
 static uint64_t avl_mem;
 static struct mm_buddy buddy;
 
-
 static void init_page_items() {
     uint64_t ptr_kend = PHYS2VADDR(get_kernel_end());
     page_start = (struct page*)PAGE_ROUND_UP(ptr_kend);
@@ -22,14 +19,6 @@ static void init_page_items() {
 
 static uint64_t get_page_index(struct page* page) {
     return (uint64_t)(page - page_start);
-}
-
-inline int highest_page_up_1(uint64_t x)  {
-    return x == 1 ? 0 : 64 - __builtin_clzll(x - 1);
-}
-
-inline int highest_page_1(uint64_t x)  {
-    return 64 - __builtin_clzll(x);
 }
 
 uint64_t get_system_mem_alloced() {
@@ -73,6 +62,7 @@ void free_page(struct page* page,int slub) {
 
     //这个赋值语句放在这至关重要，因为它涉及了page=1的回收
     page->in_use=0;
+    spin_lock(&buddy.buddy_lock);
     while(page->buddy_level <= MM_BUDDY_MAX_LEVEL) { //一直到超出索引为止
         struct page* orig_page = page;
         uint32_t level = orig_page->buddy_level;
@@ -100,7 +90,8 @@ void free_page(struct page* page,int slub) {
         page->buddy_level = level + 1;
     }
     INIT_LIST_HEAD(&(page->buddy_sibling));
-    list_insert(&page->buddy_sibling, &buddy.buddys[page->buddy_level-1]);
+    list_insert(&page->buddy_sibling, &buddy.groups[page->buddy_level-1]);
+    spin_unlock(&buddy.buddy_lock);
     barrier();
     mem_alloced_pages-=pages;
 }
@@ -109,25 +100,27 @@ void free_page(struct page* page,int slub) {
 struct page* alloc_page(uint64_t pages,int slub) {
     assert(pages!=0);
     if(pages == 0) return 0;
-    int64_t group = highest_page_up_1(pages);
+    int64_t group = highest_up_1(pages);
     //pages
-    if(group>=MM_BUDDY_MAX_LEVEL) {
-        return NULL;
-    }
+    assert(group < MM_BUDDY_MAX_LEVEL);
 
     int now_group = group;
-    while(list_empty(&buddy.buddys[now_group])) 
+
+    spin_lock(&buddy.buddy_lock);
+    while(list_empty(&buddy.groups[now_group])) 
         now_group++;
 
     if(now_group >= MM_BUDDY_MAX_LEVEL) {
+        spin_unlock(&buddy.buddy_lock);
         crash("Aiee, out of memory...");
     }
-    struct linklist_head* target = buddy.buddys[now_group].next;
+    struct linklist_head* target = buddy.groups[now_group].next;
     struct page* p = container_of(target,struct page, buddy_sibling); //要分割的页
-    list_del(buddy.buddys[now_group].next);
+    list_del(buddy.groups[now_group].next);
     if(now_group == group) { //加速
         goto func_return;
     }
+
     for(int g = now_group-1;g>=group;g--) { //g是数组索引
         p->buddy_level = g+1;
         struct page* ptarget = buddy_page(&p); 
@@ -136,11 +129,12 @@ struct page* alloc_page(uint64_t pages,int slub) {
         ptarget->buddy_level = g+1;
         
         INIT_LIST_HEAD(&(ptarget->buddy_sibling));
-        list_insert(&(ptarget->buddy_sibling),&buddy.buddys[g]); //另一半插回去
+        list_insert(&(ptarget->buddy_sibling),&buddy.groups[g]); //另一半插回去
     }
     p->buddy_level = group+1;
 func_return:
     pages = MM_BUDDY_LEVEL_PAGES(p->buddy_level);
+    spin_unlock(&buddy.buddy_lock);
     //指向头部
     if(slub) { //用于slub
         for(int i=1;i<pages;i++) {
@@ -186,9 +180,10 @@ static void init_buddy() {
     uint64_t free_mem_start = PAGE_ROUND_UP((uint64_t) pg_end);
     uint64_t free_mem_index = MM_PAGE_VINDEX(free_mem_start);
     
+    spin_init(&buddy.buddy_lock);
     //计算开始的page
     for(int i=0;i<MM_BUDDY_MAX_LEVEL;i++) {
-        INIT_LIST_HEAD(&buddy.buddys[i]);
+        INIT_LIST_HEAD(&buddy.groups[i]);
     }
 
     struct page *p_start, *p_end, *pg;
@@ -201,7 +196,7 @@ static void init_buddy() {
 
         for(pg = p_start;pg < p_end - mem_buddy_pages; pg+=mem_buddy_pages) {
             INIT_LIST_HEAD(&(pg->buddy_sibling));
-            list_insert(&(pg->buddy_sibling),&buddy.buddys[MM_BUDDY_MAX_LEVEL-1]);
+            list_insert(&(pg->buddy_sibling),&buddy.groups[MM_BUDDY_MAX_LEVEL-1]);
             pg->buddy_level = MM_BUDDY_MAX_LEVEL; //最高级
         }
         mem_pages += (uint64_t)(pg - p_start);
@@ -210,6 +205,7 @@ static void init_buddy() {
             mem_side_pages = pg - page_start;
         }
     }
+    
 }
 
 void init_mm() {
