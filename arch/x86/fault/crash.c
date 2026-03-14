@@ -1,10 +1,12 @@
 #include <kernel/fault/fault.h>
 #include <kernel/put.h>
 #include <regs.h>
-#include <irq/irq.h>
+#include <kernel/irq/irq.h>
 #include <cpu/cpu.h>
 #include <kernel/mm/mm.h>
 #include <kernel/atomic/spinlock.h>
+#include <kernel/cpu/archimpl.h>
+#include <irq/irq.h>
 
 static uint64_t cr2;
 static uint64_t cr3;
@@ -101,8 +103,9 @@ static void crash_irq_position(struct crash_info* info,struct irq_frame* frame) 
     if(frame->irq_num == IRQ_PG_ERR) {
         put_str(" (Page Fault on ");
         put_hex_zfill(cr2,16);
-        put_str(").\n");
+        put_str(")");
     }
+    put_str(".\n");
     put_str("Reason: ");
     put_str(info->message);
     put_char('\n');
@@ -135,10 +138,11 @@ static void do_fault(struct crash_info* info, struct irq_frame* frame, int irq) 
     crash_call_trace(frame);
     put_char('\n');
     put_str("Halting on critical error...\n");
-    while(1);
+    hlt();
 }
 
 void fault_irq(const char* name, struct irq_frame* frame) {
+    disable_irq();
     struct crash_info info = {
         .message = name,
         .condition = NULL,
@@ -151,6 +155,7 @@ void fault_irq(const char* name, struct irq_frame* frame) {
 
 
 void fault(struct crash_info* info, struct irq_frame* frame) {
+    disable_irq();
     do_fault(info, frame, 0);
 }
 

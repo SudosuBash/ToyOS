@@ -2,6 +2,7 @@
 #define __TOYOS_X86_CPU
 
 #include <kernel/stdint.h>
+#include <kernel/cpu/cpu.h>
 struct cpuinfo {
     uint8_t step_id;
     uint8_t model;
@@ -39,5 +40,4 @@ struct cpuinfo {
 
 #define CPL_DPL_MASK 0b11
 #define IS_IN_KERN_MODE(cs) (((cs) & CPL_DPL_MASK) == 0)
-void init_cpu();
 #endif

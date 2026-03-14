@@ -1,4 +1,4 @@
-#include <pgtable.h>
+#include <pgtable/pgtable.h>
 #include <kernel/stdint.h>
 #include <kernel/mm/mm.h>
 //申请的pte数量(base_addr)
@@ -101,6 +101,7 @@ static void link_addr(uint64_t paddr,uint64_t vaddr, uint8_t big_page) {
         //坑人时刻: C语言的位域
         // C语言的位域也是小端字节序(更准确的说小端比特序)，成员排列从低到高，成员内部排列从高到低
     }
+    barrier();
 }
 
 
@@ -154,6 +155,32 @@ void set_pte_rw(uint64_t vaddr, uint8_t rw) {
     struct pagetable_64* pte = get_pte(vaddr);
     if(pte == 0) return;
     pte->rw = rw;
+}
+
+void set_pde_pcd_bigpage(uint64_t vaddr, uint8_t pcd) {
+    struct pagetable_64* pde = get_pde(vaddr);
+    if(pde == 0) return;
+    if(pde->ps == 0) return;
+    pde->pcd = pcd;
+}
+
+void set_pte_pcd(uint64_t vaddr, uint8_t pcd) {
+    struct pagetable_64* pte = get_pte(vaddr);
+    if(pte == 0) return;
+    pte->rw = pcd;
+}
+
+void set_pde_pwt_bigpage(uint64_t vaddr, uint8_t pwt) {
+    struct pagetable_64* pde = get_pde(vaddr);
+    if(pde == 0) return;
+    if(pde->ps == 0) return;
+    pde->pwt = pwt;
+}
+
+void set_pte_pwt(uint64_t vaddr, uint8_t pwt) {
+    struct pagetable_64* pte = get_pte(vaddr);
+    if(pte == 0) return;
+    pte->pwt = pwt;
 }
 
 void prepare_pde(void* pde_start) { //准备最基本的页表

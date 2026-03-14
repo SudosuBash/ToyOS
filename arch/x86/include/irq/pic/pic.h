@@ -1,8 +1,5 @@
-#ifndef _TOYOS_X86_PIC
-#define _TOYOS_X86_PIC
+#ifndef _TOYOS_PIC_H
+#define _TOYOS_PIC_H
 
-#include <kernel/stdint.h>
-
-uint8_t apic_support();
 void init_pic();
 #endif

@@ -1,9 +1,22 @@
 #include <asm.h>
+#include <kernel/irq/irq.h>
+#include <kernel/cpu/archimpl.h>
 
 #define CR0_WP_MASK 0xf000
 
 #define __lfence() asm volatile("lfence")
 
+inline void enable_irq() {
+    asm volatile ("sti");
+}
+
+inline void disable_irq() {
+    asm volatile ("cli");
+}
+
+inline void hlt() {
+    asm volatile ("hlt");
+}
 
 inline void outb(uint16_t port, uint8_t data) {
     asm volatile(

@@ -3,7 +3,7 @@
 
 #include <packed_e820.h>
 #include <kloader/kloader.h>
-#include <pgtable.h>
+#include <pgtable/pgtable.h>
 
 #define PAGE_BIG_ROUND_UP(addr) ((addr) + PG_BIG_PAGE_SZ - 1)  & PG_BIG_PAGE_MASK
 

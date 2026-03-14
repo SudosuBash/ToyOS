@@ -1,10 +1,10 @@
-#include <pgtable.h>
+#include <pgtable/pgtable.h>
 #include <packed_e820.h>
 #include <asm.h>
 
 #include <kernel/mm/mm.h>
 #include <kernel/put.h>
-#include <irq/irq.h>
+#include <kernel/irq/irq.h>
 #include <early_boot.h>
 
 static struct e820_entry* edr_table;

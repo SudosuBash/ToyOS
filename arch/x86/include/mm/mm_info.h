@@ -10,6 +10,8 @@
 #define MM_PAGE_REL_ADDR(addr) ((addr) - LOW_MEM)
 #define MM_PAGE_ABS_ADDR(addr) ((addr) + LOW_MEM)
 #define PHYS2VADDR(addr) ((addr) + (KERNEL_MEM_SA_VADDR))
+#define PHYS2VADDR_MMIO(addr) ((addr) + (MMIO_MEM_SA_VADDR))
+#define VADDR2PHYS_MMIO(addr) ((addr) - (MMIO_MEM_SA_VADDR))
 #define VADDR2PHYS(addr) ((addr) - (KERNEL_MEM_SA_VADDR))
 #define MM_PAGE_PINDEX(paddr) (MM_PAGE_REL_ADDR(paddr) >> PAGE_OFFSET)
 #define MM_PAGE_VINDEX(vaddr) (MM_PAGE_PINDEX(VADDR2PHYS(vaddr)))

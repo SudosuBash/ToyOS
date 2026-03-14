@@ -25,12 +25,13 @@ PT_OBJS      := kern_start.o \
                 put.o \
                 asm.o \
                 pgtable_kern.o \
-                kclock.o \
 				cpu/cpu.o \
 				cpu/smp_percpu.o \
 				cpu/gdt.o \
 				irq/irq_handler.o \
 				irq/irq.o \
+				irq/pic/apic.o \
+				irq/pic/pic.o \
 				mm/mm_info.o \
 				early_boot.o \
 				fault/crash.o \
@@ -72,6 +73,9 @@ cpu/%.o: cpu/%.c
 	$(CC) $(CFLAGS_M64) -c $< -o $@
 
 irq/%.o: irq/%.c
+	$(CC) $(CFLAGS_M64) -c $< -o $@
+
+irq/*/%.o: irq/*/%.c
 	$(CC) $(CFLAGS_M64) -c $< -o $@
 
 irq/%.o: irq/%.S

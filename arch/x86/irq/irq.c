@@ -1,24 +1,33 @@
 #include <irq/irq.h>
+#include <irq/pic/pic.h>
 #include <asm.h>
 #include <kernel/stdint.h>
 #include <kernel/mm/mm.h>
-
+#include <kernel/cpu/archimpl.h>
+#include <irq/pic/apic.h>
+#include <kernel/irq/irq.h>
+#include <kernel/fault/fault.h>
 #define IRQ_MAX_CNT 256
 
 static volatile struct idt_gate gate[IRQ_MAX_CNT];
 extern irq_entry_t irq_entry_table[IRQ_MAX_CNT];
 volatile irq_handler_t irq_handler_fns[IRQ_MAX_CNT];
+
+static void default_irq_handler(struct irq_frame* frame) {
+    fault_irq("IRQ Triggered.",frame);
+}
+
 int irq_register(
     uint64_t num,
     irq_handler_t fn
 ) {
 
-    if(num > 255) return 0;
+    if(num >= IRQ_MAX_CNT) return 0;
     irq_handler_fns[num] = fn;
     return 1;
 }
 
-void init_irq() {
+void init_idt() {
     for(int i=0;i<IRQ_MAX_CNT;i++) {
         uintptr_t irq_entry_ptr = (uintptr_t)irq_entry_table[i];
         gate[i].dpl= 0;
@@ -29,6 +38,7 @@ void init_irq() {
         
         gate[i].offset_low =  irq_entry_ptr & 0xffff;
         gate[i].offset = irq_entry_ptr  >> 16;
+        irq_handler_fns[i] = default_irq_handler;
     }
 
     struct idtr idt;
@@ -37,4 +47,10 @@ void init_irq() {
     
     barrier();
     lidt(idt);
-}   
+}
+void init_irq() {
+    disable_irq();
+    init_idt();
+    init_pic();
+    init_apic();
+} 

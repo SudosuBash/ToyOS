@@ -15,8 +15,12 @@ void set_pde_us_bigpage(uint64_t vaddr, uint8_t us);
 void set_pte_us(uint64_t vaddr, uint8_t us);
 void set_pde_nx_bigpage(uint64_t vaddr, uint8_t nx);
 void set_pte_nx(uint64_t vaddr, uint8_t nx);
-void set_pde_rw_bigpage(uint64_t vaddr, uint8_t nx);
+void set_pde_rw_bigpage(uint64_t vaddr, uint8_t rw);
 void set_pte_rw(uint64_t vaddr, uint8_t rw);
+void set_pde_pcd_bigpage(uint64_t vaddr, uint8_t pcd);
+void set_pte_pcd(uint64_t vaddr, uint8_t pcd);
+void set_pde_pwt_bigpage(uint64_t vaddr, uint8_t pwt);
+void set_pte_pwt(uint64_t vaddr, uint8_t pwt);
 
 void delete_link(uint64_t vaddr);
 #endif

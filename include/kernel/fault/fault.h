@@ -2,7 +2,8 @@
 #define _TOYOS_FAULT_H
 
 #include <fault/fault.h>
-#include <irq/irq.h>
+#include <kernel/irq/irq.h>
+
 struct crash_info {
     const char* func;
     int line;
@@ -11,7 +12,7 @@ struct crash_info {
     const char* condition;
 };
 
-#define crash_on_irq(msg, irq_info)  
+#define crash_on_irq(msg, irq_info)  arch_crash_on_irq(msg,irq_info)
 #define crash(msg) arch_crash(msg, NULL)
 #define assert(condition) do { \
     if(!(condition)) arch_crash("assertion failed: ", (#condition)); \
