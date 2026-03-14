@@ -9,4 +9,4 @@ arch/*/.gdb_history
 *.o
 */*/*.o
 */**/*.o
-kernel
+./kernel

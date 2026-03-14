@@ -98,4 +98,4 @@ pt.o: klinker.lds $(PT_OBJS)
 
 # --- 清理 ---
 clean:
-	rm -f *.o *.bin *.elf kloader/*.o kloader/*.asm klinker.lds */*.o
+	rm -f *.o *.bin *.elf kloader/*.o kloader/*.asm klinker.lds */*.o */**/*.o
