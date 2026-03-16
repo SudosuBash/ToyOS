@@ -8,7 +8,7 @@ OBJCOPY := objcopy
 CINCLUDE := -I. -Iinclude -I../../include
 CFLAGS   := -ffreestanding -fno-stack-protector -nostdlib $(CINCLUDE) -g 
 CFLAGS_M32 := -m32 $(CFLAGS) -O0
-CFLAGS_M64 := -m64 -O2 -mcmodel=kernel -fno-pic -fno-omit-frame-pointer $(CFLAGS)  -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow
+CFLAGS_M64 := -m64 -O2 -mcmodel=kernel -fno-pic -fno-omit-frame-pointer $(CFLAGS)  -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow -mno-red-zone
 
 # --- 目标文件列表 ---
 
@@ -26,7 +26,6 @@ PT_OBJS      := kern_start.o \
                 asm.o \
                 pgtable_kern.o \
 				cpu/cpu.o \
-				cpu/smp_percpu.o \
 				cpu/gdt.o \
 				irq/irq_handler.o \
 				irq/irq.o \
@@ -35,7 +34,10 @@ PT_OBJS      := kern_start.o \
 				mm/mm_info.o \
 				early_boot.o \
 				fault/crash.o \
-				atomic/atomic.o
+				atomic/atomic.o \
+				task/fork.o \
+				task/switch_task.o \
+				task/switch.o
 
 .PHONY: all clean
 
@@ -74,6 +76,12 @@ cpu/%.o: cpu/%.c
 
 irq/%.o: irq/%.c
 	$(CC) $(CFLAGS_M64) -c $< -o $@
+
+task/%.o: task/%.c
+	$(CC) $(CFLAGS_M64) -c $< -o $@
+
+task/%.o: task/%.S
+	$(AS) -f elf64 $< -o $@
 
 irq/*/%.o: irq/*/%.c
 	$(CC) $(CFLAGS_M64) -c $< -o $@

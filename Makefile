@@ -11,7 +11,7 @@ SRC_DIR  := src
 # --- 编译选项 ---
 CINCLUDE := -Iinclude -I$(ARCH_DIR)/include
 CFLAGS   := -m64 -O2 -std=gnu11 -ffreestanding -fno-stack-protector -nostdlib \
-            $(CINCLUDE) -g  -mcmodel=kernel -fno-pic -fno-omit-frame-pointer -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow
+            $(CINCLUDE) -g  -mcmodel=kernel -fno-pic -fno-omit-frame-pointer -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow -mno-red-zone
 
 # --- 目标文件列表 ---
 
@@ -23,14 +23,19 @@ KERNEL_BIN := kernel
 KERNEL_OBJS := $(SRC_DIR)/main.o \
                $(SRC_DIR)/math.o \
                $(SRC_DIR)/stdlib.o \
-               $(SRC_DIR)/sched/sched.o \
+			   $(SRC_DIR)/sched/sched_mlfq.o \
+			   $(SRC_DIR)/sched/sched_rr.o \
+			   $(SRC_DIR)/task/fork.o \
+			   $(SRC_DIR)/task/task_manager.o \
+			   $(SRC_DIR)/task/task.o \
                $(SRC_DIR)/data_struct/bitmap.o \
 			   $(SRC_DIR)/data_struct/linklist.o \
                $(SRC_DIR)/mm/mm_page.o \
 			   $(SRC_DIR)/mm/mm_slab.o \
 			   $(SRC_DIR)/mm/mm.o \
 			   $(SRC_DIR)/mm/mm_alloc.o \
-			   $(SRC_DIR)/atomic/lock.o
+			   $(SRC_DIR)/atomic/lock.o \
+			   $(SRC_DIR)/cpu/smp.o
 
 
 # 来自 arch 目录的依赖项

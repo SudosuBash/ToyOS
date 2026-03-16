@@ -3,6 +3,6 @@
 
 #include <kernel/irq/irq.h>
 
-typedef void (*timer_handler_t)();
+typedef void (*timer_handler_t)(struct irq_frame* frame);
 void timer_irq_register(timer_handler_t fn);
 #endif

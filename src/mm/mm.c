@@ -9,7 +9,6 @@ static struct page *page_start;
 static volatile uint64_t mem_pages;
 static volatile uint64_t mem_side_pages;
 static volatile uint64_t mem_alloced_pages;
-static uint64_t avl_mem;
 static struct mm_buddy buddy;
 
 static void init_page_items() {
@@ -172,13 +171,21 @@ inline void* get_page_vaddr(struct page* page) {
     return (void*)ptr;
 }
 
-static void init_buddy() {
-    uint64_t mem_buddy_pages = MM_BUDDY_MAX_LEVEL_PAGES();
-    struct mm_area_record* mem_record = get_mem_records();
+static inline void build_up_buddy_sys(uint64_t index_left,uint64_t index_right) {
+    static const uint64_t mem_buddy_pages = MM_BUDDY_MAX_LEVEL_PAGES();
+    struct page *p_start = page_start + index_left, *p_end = page_start + index_right, *pg;
+    for(pg = p_start; pg <= p_end - mem_buddy_pages;pg+=mem_buddy_pages) {
+        barrier();
+        INIT_LIST_HEAD(&(pg->buddy_sibling));
+        list_insert(&(pg->buddy_sibling),&buddy.groups[MM_BUDDY_MAX_LEVEL-1]);
+        pg->buddy_level = MM_BUDDY_MAX_LEVEL; //最高级
+    }
+    mem_pages += (uint64_t)(pg - p_start);
+}
 
-    struct page* pg_end = page_start + mem_pages;
-    uint64_t free_mem_start = PAGE_ROUND_UP((uint64_t) pg_end);
-    uint64_t free_mem_index = MM_PAGE_VINDEX(free_mem_start);
+//现在不会获得
+static void init_buddy() {
+    struct mm_area_record* mem_record = get_mem_records();
     
     spin_init(&buddy.buddy_lock);
     //计算开始的page
@@ -186,24 +193,26 @@ static void init_buddy() {
         INIT_LIST_HEAD(&buddy.groups[i]);
     }
 
-    struct page *p_start, *p_end, *pg;
+    uint64_t kern_start_idx = MM_PAGE_PINDEX(get_kern_addr()); //内核开始页
+    mem_side_pages = get_mem_all_pages();
+    uint64_t kern_end_idx = MM_PAGE_VINDEX(PAGE_ROUND_UP((uint64_t)(page_start + mem_side_pages)));
+    barrier();
+
     for(int i=0;i<mem_record->num;i++) {
-        uint64_t start_idx = MM_PAGE_PINDEX(mem_record->area[i].from);
-        if(start_idx < free_mem_index) start_idx = free_mem_index; //从index开始
-
-        p_start = page_start + start_idx;
-        p_end = page_start + MM_PAGE_PINDEX(mem_record->area[i].to);
-
-        for(pg = p_start;pg < p_end - mem_buddy_pages; pg+=mem_buddy_pages) {
-            INIT_LIST_HEAD(&(pg->buddy_sibling));
-            list_insert(&(pg->buddy_sibling),&buddy.groups[MM_BUDDY_MAX_LEVEL-1]);
-            pg->buddy_level = MM_BUDDY_MAX_LEVEL; //最高级
+        uint64_t start_idx = MM_PAGE_PINDEX(PAGE_ROUND_UP(mem_record->area[i].from));
+        uint64_t end_idx = MM_PAGE_PINDEX(mem_record->area[i].to);
+        if((kern_start_idx >= start_idx && kern_end_idx > end_idx) || 
+            (kern_start_idx < start_idx && kern_end_idx > start_idx)) {
+            crash("Aiee, kernel was loaded to an invaild address!");
+        }   
+        barrier();
+        if(kern_start_idx >= start_idx && kern_end_idx <= end_idx) {
+            build_up_buddy_sys(start_idx, kern_start_idx);
+            build_up_buddy_sys(kern_end_idx,end_idx);
+        } else {
+            build_up_buddy_sys(start_idx, end_idx);
         }
-        mem_pages += (uint64_t)(pg - p_start);
-
-        if(i == mem_record->num-1) {
-            mem_side_pages = pg - page_start;
-        }
+        
     }
     
 }

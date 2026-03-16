@@ -77,15 +77,20 @@ cache_partial:
     return NULL;
 }
 
+void kmem_cache_init(struct kmem_cache* cache, uint32_t sz) {
+    cache->block_sz = sz;
+    INIT_LIST_HEAD(&cache->partial);
+    spin_init(&cache->cache_lock);
+}
+
 struct kmem_cache* kmem_cache_get(uint32_t sz) {
     struct kmem_cache* mem = (struct kmem_cache*)kmem_cache_alloc(&main_cache);
-    mem->block_sz = sz;
-    INIT_LIST_HEAD(&mem->partial);
-    spin_init(&mem->cache_lock);
+    kmem_cache_init(mem,sz);
     return mem;
 }
 
 void init_mm_slab() {
+    kmem_cache_init(&main_cache,sizeof(struct kmem_cache));
     main_cache.block_sz = sizeof(struct kmem_cache);   
     INIT_LIST_HEAD(&main_cache.partial);
     spin_init(&main_cache.cache_lock);

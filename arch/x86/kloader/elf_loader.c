@@ -10,9 +10,12 @@ static void memcpy(uint8_t* src,uint8_t* dst,uint32_t size) {
 
 static void proc_program_header(Elf64_Phdr* phdr,void* src_base, void* dst_base,int cnt,struct boot_info* info ) {
     uint8_t* st_addr = dst_base; //目标地址
+    uint64_t delta = info->kern_ldr_vaddr - (uintptr_t)st_addr;
+    
     for(Elf64_Phdr* p = phdr;p < phdr + cnt;p++) {
         if(p->p_type == PT_LOAD) { //展开段
             uint64_t vaddr = p->p_vaddr & PAGE_MASK;    
+            st_addr = (uint8_t*)(uint32_t)(vaddr - delta);
             uint64_t offset = (p->p_vaddr - vaddr);
 
             uint8_t* dat = src_base+p->p_offset; //段数据

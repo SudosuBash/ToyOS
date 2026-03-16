@@ -1,7 +1,6 @@
-#include <config_arch.h>
 ENTRY(_start)
 SECTIONS {
-    . = KERNEL_FINAL_LDR_VADDR;
+    . = 0xffffffff80000000;
     .text : {
         *(.text)
     }
@@ -18,44 +17,37 @@ SECTIONS {
         . += 0x2000;
         __stack_top = .;
     }
-
     .pid_0_stack (NOLOAD): ALIGN(4096)
     {
         __pid_0_stack_bottom = .;
         . += 0x2000;
     }
-
     .mem_info (NOLOAD): ALIGN(4096) {
         __mem_info_bottom = .;
         . += 0x1000;
         __mem_info_top = .;
     }
-
     .pgtable (NOLOAD): ALIGN(4096) {
         __pgtable_bottom = .;
         . += 0x300000;
         __pgtable_top = .;
     }
-
     . = ALIGN(4096);
     __percpu_seg_start = .;
-    .percpu 0 : AT(__percpu_start) { //注意: 需要从0开始，因为为后续percpu就是段
-        __percpu_start = .; 
-        QUAD(0); //这部分存储percpu分配的内存地址
-        *(.percpu); //所有.percpu段
-        *(.percpu.shared_aligned); //需要特殊的多核共享的段
+    .percpu 0 : AT(__percpu_start) {
+        __percpu_start = .;
+        QUAD(0);
+        *(.percpu);
+        *(.percpu.shared_aligned);
         __percpu_end = .;
     }
-    
     __percpu_sz = __percpu_end - __percpu_start;
     . = __percpu_seg_start + __percpu_sz;
-
     .bsp_percpu (NOLOAD): ALIGN(4096) {
         __bsp_percpu_start = .;
         . += __percpu_sz;
     }
     . = ALIGN(4096);
-
     .bsp_ist0 (NOLOAD): ALIGN(4096) {
         __bsp_ist0 = .;
         . += 8192;

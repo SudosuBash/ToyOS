@@ -22,7 +22,6 @@
 #define MM_BUDDY_FLAG_RESERVED 0b100
 
 #define PAGE_ROUND_UP(addr) (((addr) + PAGE_SZ - 1) & PAGE_MASK)
-#define PAGE_ROUND_UP_INDEX(addr) (PAGE_ROUND_UP(addr) >> PAGE_OFFSET)
 
 #define barrier() arch_barrier()
 struct mm_area {
@@ -47,8 +46,8 @@ struct page* alloc_page(uint64_t pages,int slab);
 void free_page(struct page* page,int slab);
 void init_mm();
 void kmalloc_init();
-//向上取整
 
+uint64_t get_mem_all_pages(); //向下取整
 uintptr_t get_kernel_end();
 uint64_t get_machine_available_mem_sz();
 void init_mm_info();

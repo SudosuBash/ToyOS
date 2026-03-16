@@ -13,6 +13,7 @@ struct kmem_cache {
     struct linklist_head partial; //部分被占用
 };
 
+void kmem_cache_init(struct kmem_cache* cache, uint32_t sz);
 void kmem_cache_free(void* addr);
 void init_mm_slab();
 void* kmem_cache_alloc(struct kmem_cache* cache);

@@ -7,6 +7,7 @@
 #include <irq/pic/apic.h>
 #include <kernel/irq/irq.h>
 #include <kernel/fault/fault.h>
+
 #define IRQ_MAX_CNT 256
 
 static volatile struct idt_gate gate[IRQ_MAX_CNT];
@@ -31,7 +32,7 @@ void init_idt() {
     for(int i=0;i<IRQ_MAX_CNT;i++) {
         uintptr_t irq_entry_ptr = (uintptr_t)irq_entry_table[i];
         gate[i].dpl= 0;
-        gate[i].selector = CS_SELECTOR;
+        gate[i].selector = KERNEL_CS;
         gate[i].type = 0xe;
         gate[i].ist = 0;
         gate[i].p = 1;
@@ -53,4 +54,5 @@ void init_irq() {
     init_idt();
     init_pic();
     init_apic();
+    fault_init();
 } 

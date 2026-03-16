@@ -5,7 +5,8 @@
 
 static struct mm_area_record record;
 static struct boot_info* bl = (struct boot_info*)KERNEL_BOOT_INFO_VADDR;
-static uint64_t avl_mem;
+static volatile uint64_t mem_all_pages; //不包括最上面的那一页,也就是mem_all_pages页是不包括进去的
+static volatile uint64_t avl_mem;
 
 inline uint64_t get_machine_available_mem_sz() {
     return avl_mem;
@@ -31,6 +32,9 @@ inline uint64_t get_kern_addr() {
     return bl->kern_ldr_addr;
 }
 
+inline uint64_t get_mem_all_pages() {
+    return mem_all_pages; 
+}
 static void init_mem_record() {
     uint64_t phys_mem_info_addr = bl->phys_mem_info_addr;
     uint32_t entries = *(uint32_t*)PHYS2VADDR(phys_mem_info_addr);
@@ -47,8 +51,11 @@ static void init_mem_record() {
                 link_new_pte_bigpage_addr(addr,PHYS2VADDR(addr));
             }
             avl_mem+=area.to - area.from;
+            mem_all_pages = (edr[i].base_addr +edr[i].leng) >> PAGE_OFFSET;
         }
     }
+
+    
     link_new_pte_bigpage_addr(0, PHYS2VADDR(0));
     record.area[0].from = LOW_MEM; //手动设置为低端内存
 }
@@ -61,11 +68,6 @@ void init_pgtable() { //暴力映射
     
     uint64_t kern_sz = bl->kern_sz;
     extern uintptr_t __pgtable_bottom;
-
-
-    int index = 0;
-    uint64_t cnt;
-    uintptr_t pg_start, pstart, pend;
 
     prepare_pde(&__pgtable_bottom); 
 

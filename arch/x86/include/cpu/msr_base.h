@@ -1,0 +1,6 @@
+#ifndef _TOYOS_X86_MSR_BASE
+#define _TOYOS_X86_MSR_BASE
+
+#define MSR_GS_BASE_ADDR 0xC0000101
+#define MSR_APIC_BASE_ADDR 0x1B
+#endif

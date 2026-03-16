@@ -83,5 +83,5 @@ void prepare_pde(void* pde_start) { //准备最基本的页表
         pde_start += sizeof(struct pagetable_64);
     }
     pte_start_addr = pde_start;
-    pte_start_addr += sizeof(struct pagetable_64) * KERNEL_PTE_ENTRIES;
+    // pte_start_addr += sizeof(struct pagetable_64) * KERNEL_PTE_ENTRIES;
 }

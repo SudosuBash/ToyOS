@@ -3,6 +3,9 @@
 
 #include <kernel/stdint.h>
 
+#define REG_EFLAGS_IF_BIT (1<<9)
+#define REG_EFLAGS_IF_MASK ~REG_EFLAGS_IF_BIT
+
 struct arch_regs {
     uint64_t rax;
     uint64_t rbx;
@@ -11,7 +14,6 @@ struct arch_regs {
     uint64_t rsi;
     uint64_t rdi;
     uint64_t rbp;
-    uint64_t rsp;
     uint64_t r8;
     uint64_t r9;
     uint64_t r10;
@@ -21,8 +23,9 @@ struct arch_regs {
     uint64_t r14;
     uint64_t r15;
     uint64_t rip;
-
+    uint64_t cs;
     uint64_t rflags;
-    uint64_t cr3;
+    uint64_t rsp;
+    uint64_t ss;
 };
 #endif

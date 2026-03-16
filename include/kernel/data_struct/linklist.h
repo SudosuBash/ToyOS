@@ -16,5 +16,6 @@ struct linklist_head {
 void list_del(struct linklist_head* h1);
 void list_del_init(struct linklist_head* h);
 void list_insert(struct linklist_head* h, struct linklist_head* target);
+struct linklist_head* list_head(struct linklist_head* list);
 uint8_t list_empty(struct linklist_head* h);
 #endif

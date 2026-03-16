@@ -3,7 +3,7 @@
 
 #include <kernel/stdint.h>
 #include <irq/irq.h>
-#define APIC_BSP(info) (((info) >> 8) & 3)
+#define APIC_BSP(info) (((info) >> 8) & 1)
 #define APIC_EXTD(info) (((info) >> 10) & 1)
 #define APIC_EN(info) (((info) >> 11) & 1)
 #define APIC_BASE_MEM(info) ((info) >> 12)

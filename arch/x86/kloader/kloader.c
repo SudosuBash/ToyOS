@@ -43,17 +43,15 @@ int _start() {
     link_new_pte_addr(SELF_PADDR, SELF_PADDR);//Triple Fault警告
     link_new_pte_addr(SELF_PADDR+0x1000, SELF_PADDR+0x1000);//Triple Fault警告
     link_new_pte_addr(KERNEL_GDT_ADDR,KERNEL_GDT_TEMP_VADDR);
+    init_e820();
 
     rd_disks(RD_COUNT,DISC_SECTOR, KERNEL_LDR_ADDR);
-    uint64_t kernel_entrance = load_elf((void*)KERNEL_LDR_ADDR,(void*)KERNEL_FINAL_LDR_ADDR,bl);
-
-    init_e820();
-    memset((void*)KERNEL_LDR_ADDR,0, sizeof(RD_COUNT) << 9); //脏数据清空
     
-
     enter_64bit_mode();
     prepare_gdt();
     set_bl_info(bl);
+    uint64_t kernel_entrance = load_elf((void*)KERNEL_LDR_ADDR,(void*)KERNEL_FINAL_LDR_ADDR,bl);
+    memset((void*)KERNEL_LDR_ADDR,0, sizeof(RD_COUNT) << 9); //脏数据清空
     //设置引导信息
     open_pg_mode((uint32_t)&gdtr,kernel_entrance);
     return 0;
@@ -165,15 +163,15 @@ void set_bl_info(struct boot_info* bl) {
 void prepare_gdt() { //临时页表
     uint64_t* addr = (uint64_t*)KERNEL_GDT_ADDR;
     *addr = 0; //第一个必须为0
-    struct gdt* gaddr = (struct gdt*)KERNEL_GDT_ADDR + 1;
-    struct gdt gdt = {
+    struct gdt_desc* gaddr = (struct gdt_desc*)KERNEL_GDT_ADDR + 1;
+    struct gdt_desc gdt = {
         .limit = 0xffff,
-        .base = 0,
+        .base_1 = 0,
         .base_2 = 0,
         .access_byte = 0b10011010,
         .limit_2 = 0b1111,
         .flags = 0b0010,
-        .base = 0
+        .base_3 = 0
     }; //Kernel Code
     
     *gaddr = gdt;

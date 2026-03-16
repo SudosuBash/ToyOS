@@ -5,15 +5,21 @@
 #include <kernel/mm/mm.h>
 #include <kernel/irq/timer.h>
 #include <kernel/irq/irq.h>
+#include <cpu/msr_base.h>
 
 static volatile uint64_t apic_status;
 static volatile uint64_t apic_vaddr;
 
 static volatile timer_handler_t handler;
 
+
+uint8_t is_bsp_core() {
+    return APIC_BSP(apic_status);
+}
+
 static inline uint64_t apic_current_info() {
     uint32_t edx,eax;
-    uint32_t ecx = 0x1B;
+    uint32_t ecx = MSR_APIC_BASE_ADDR;
     barrier();
     asm volatile (
         "rdmsr"
@@ -24,7 +30,7 @@ static inline uint64_t apic_current_info() {
 }
 
 static inline void update_apic_info(uint64_t info) {
-    uint32_t ecx;
+    uint32_t ecx = MSR_APIC_BASE_ADDR;
     uint32_t eax = info & 0xffffffff, edx = info >> 32;
     barrier();
     asm volatile (
@@ -75,13 +81,17 @@ static inline void init_lvt() {
     lapic_write(APIC_LVT_OFFSET, (APIC_LVT_PERODIC_VALUE) | APIC_LVT_IVT);
 }
 
-static inline void handle_ok() {
+static inline void lapic_handle_ok() {
     lapic_write(APIC_EOI_OFFSET, 0);
 }
 
+static inline void default_timer_irq_fn(struct irq_frame* frame) {
+    fault_irq("Timer IRQ Triggered!",frame);
+}
+
 static inline void timer_irq_reg_fn(struct irq_frame* frame) {
-    handler();
-    handle_ok();
+    lapic_handle_ok();
+    handler(frame);
 }
 
 void timer_irq_register(timer_handler_t fn) {
@@ -106,4 +116,5 @@ void init_apic() {
     init_freq();
 
     irq_register(APIC_LVT_IVT, timer_irq_reg_fn);
+    timer_irq_register(default_timer_irq_fn);
 }

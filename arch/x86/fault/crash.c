@@ -1,6 +1,6 @@
 #include <kernel/fault/fault.h>
 #include <kernel/put.h>
-#include <regs.h>
+#include <cpu/regs.h>
 #include <kernel/irq/irq.h>
 #include <cpu/cpu.h>
 #include <kernel/mm/mm.h>
@@ -70,9 +70,7 @@ static void print_mem_info() {
     put_dec(mem_avl);
     put_str(" Bytes / all: ");
     put_dec(mem_all);
-    put_str(" Bytes (");
-    put_dec(mem_avl * 100 / mem_all);
-    put_str("%)");
+    put_str(" Bytes");
     put_char('\n');
     put_str(" pages: used ");
     put_dec(page_avl);

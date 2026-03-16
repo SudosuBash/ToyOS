@@ -7,15 +7,15 @@
 #include <kernel/put.h>
 #include <kernel/irq/timer.h>
 #include <kernel/cpu/archimpl.h>
+#include <kernel/task/task.h>
+#include <kernel/task/task.h>
 
-void irq() {
-    put_str("Hello,World!\n");
-}
 void kernel_start() {
-    init_cpu();
     init_irq();
+    init_smp();
+    init_cpu();
+    
     init_mm();
-    timer_irq_register(irq);
-    enable_irq();
-    while(1);
+    init_task();
+    while(1) hlt();
 }
