@@ -13,9 +13,11 @@ struct linklist_head {
     struct linklist_head *prev;
 };
 
+#define list_for_entry(head, target) for((target) = (head)->next; (target) != (head); (target) = (target)->next)
+
 void list_del(struct linklist_head* h1);
 void list_del_init(struct linklist_head* h);
-void list_insert(struct linklist_head* h, struct linklist_head* target);
+void list_insert(struct linklist_head* insert, struct linklist_head* h);
 struct linklist_head* list_head(struct linklist_head* list);
 uint8_t list_empty(struct linklist_head* h);
 #endif

@@ -5,7 +5,19 @@
 #include <kernel/config.h>
 #include <cpu/regs.h>
 #include <cpu/gdt.h>
+#include <pgtable/pgtable_kern.h>
+#include <kernel/task/mm_user.h>
+#include <kernel/stdlib.h>
+#include <kernel/mm/mmap.h>
+#include <kernel/mm/mm_page.h>
+#include <kernel/ptable/ptable.h>
+#include <asm.h>
 
+extern void kernel_thread_helper(
+    void* args,
+    int (*fn)(void*)
+);
+extern void ret_from_fork();
 //这个用来获取stack的栈顶
 //因为有些架构的sp是向下的, 有些是向上的, 所以不能一概而论
 static inline uintptr_t arch_process_stack_bottom(struct task_struct* task) {
@@ -20,10 +32,13 @@ static inline uintptr_t arch_process_spp(struct task_struct* task) {
 void arch_dup_thread(struct task_struct* task, struct task_struct* origin, struct arch_regs* regs, uint64_t flags) {
     //用户栈CoW, 内核栈重新分配
     struct arch_regs* new_task_stack = (struct arch_regs*)(arch_process_stack_bottom(task));
-    if(flags & CLONE_KERNEL_THREAD) {
+    if(regs == NULL) regs = (struct arch_regs*)(arch_process_stack_bottom(origin));
+
+    if(flags & CLONE_THREAD) {
         regs->rsp = (uint64_t)new_task_stack;
     }
 
+    
     new_task_stack -= 1;
     *new_task_stack = *regs;
     new_task_stack->rax = 0; //fork返回值为0
@@ -45,6 +60,38 @@ void kernel_thread(int (*fn)(void*), void* args, char* name) {
     regs.rdi = (uint64_t)args;
     regs.cs = KERNEL_CS;
     regs.ss = KERNEL_DS;
-    regs.rflags |= REG_EFLAGS_IF_BIT; //开中断
-    clone(&regs, CLONE_KERNEL_THREAD, name);
+    regs.eflags |= REG_EFLAGS_IF_BIT; //开中断
+    clone(&regs, CLONE_THREAD, name);
+}
+
+static inline void set_cow(pte_t* old_pte, pte_t* new_pte) {
+    old_pte->rw = 0;
+    new_pte->rw = 0;
+}
+
+void arch_set_mm_user(
+    struct task_struct* new_task, 
+    struct task_struct* old_task,
+    struct user_vm_area* target
+) {
+    list_insert(&target->sibling, &new_task->mm_user.vm_node);
+    //如果target->perm&PERM_W && pte->rw == 0, 那么就是CoW
+    // hlist_insert(&new_task->user_area.vm_node, &target->sibling, )
+    pgd_t* old_pgd = old_task->mm_user.pg_root;
+    pgd_t* new_pgd = new_task->mm_user.pg_root;
+    
+    for(uintptr_t p = target->mem_start;p < target->mem_end; p+=PAGE_SZ) {
+        struct page* page = find_page_by_vaddr(p);
+        page->buddy_level = 1; //等级直接设置为1, 到时候按照4kb回收
+
+        pte_t* old_pte = get_user_pte(p, old_pgd);
+        pte_t* new_pte = get_user_pte(p, new_pgd);
+        do_pte_fast_mmap((void*)get_pte_paddr(p, old_pte), target->flag, target->perm, new_pte);
+        
+        set_cow(old_pte, new_pte);
+        ref_page(page); //引用计数+1
+        //后续会减少
+        barrier();
+        invlpg(p);
+    }
 }

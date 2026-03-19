@@ -14,7 +14,7 @@ static volatile struct idt_gate gate[IRQ_MAX_CNT];
 extern irq_entry_t irq_entry_table[IRQ_MAX_CNT];
 volatile irq_handler_t irq_handler_fns[IRQ_MAX_CNT];
 
-static void default_irq_handler(struct irq_frame* frame) {
+static void default_irq_handler(struct arch_regs* frame) {
     fault_irq("IRQ Triggered.",frame);
 }
 
@@ -41,7 +41,9 @@ void init_idt() {
         gate[i].offset = irq_entry_ptr  >> 16;
         irq_handler_fns[i] = default_irq_handler;
     }
-
+    gate[IRQ_DF_ERR].ist = DF_IRQ_IST_IDX;
+    gate[IRQ_DBG_ERR].ist = DBG_IRQ_IST_IDX;
+    //单独设置ist
     struct idtr idt;
     idt.base = (uintptr_t)gate;
     idt.limit = sizeof(struct idt_gate) * IRQ_MAX_CNT - 1;

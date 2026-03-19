@@ -1,11 +1,12 @@
 #include <kernel/data_struct/bitmap.h>
+#include <kernel/mm/mm.h>
 #include <kernel/stdlib.h>
 
 void init_bitmap(struct bitmap* bitmap, uint64_t size) {
     bitmap->size = size;
     uint64_t blocks = BITMAP_BLOCKS(bitmap);
     bitmap->need_space = blocks * sizeof(uint64_t);
-
+    bitmap->start_addr = (uint64_t*)kmalloc(size);
     memset(bitmap->start_addr,0, sizeof(uint64_t) * blocks);
 }
 

@@ -8,7 +8,18 @@
 #include <kernel/irq/timer.h>
 #include <kernel/cpu/archimpl.h>
 #include <kernel/task/task.h>
-#include <kernel/task/task.h>
+#include <kernel/task/fork.h>
+
+#include <cpu/regs.h>
+#include <cpu/gdt.h>
+
+void rest_init() {
+     
+}
+
+int thr1(void* test) {
+    return 0;
+}
 
 void kernel_start() {
     init_irq();
@@ -17,5 +28,7 @@ void kernel_start() {
     
     init_mm();
     init_task();
+    
+    fork();
     while(1) hlt();
 }

@@ -23,4 +23,5 @@
 #define arch_crash_on_irq(msg,irq_info) do { \
     fault_irq(msg,irq_info); \
 }while(0);
+
 #endif

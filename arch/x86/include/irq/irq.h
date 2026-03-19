@@ -4,8 +4,14 @@
 #include <kernel/stdint.h>
 
 #define IRQ_DIV_ERR 0
+#define IRQ_DBG_ERR 3
+#define IRQ_DF_ERR 8
 #define IRQ_PG_ERR 14
 #define IRQ_UD_ERR 6
+
+#define DBG_IRQ_IST_IDX 1
+#define DF_IRQ_IST_IDX 2
+
 struct idt_gate {
     uint64_t offset_low:16;
     uint64_t selector:16;
@@ -22,13 +28,6 @@ struct idt_gate {
 struct idtr {
     uint16_t limit;
     uint64_t base;
-}__attribute__((packed));
-
-//要倒过来, 因为rsp在栈底
-struct irq_frame {
-    uint64_t r15,r14,r13,r12,r11,r10,r9,r8;
-    uint64_t rbp,rdi,rsi,rdx,rcx,rbx,rax;
-    uint64_t irq_num, error_code, rip, cs, eflags, rsp, ss;
 }__attribute__((packed));
 
 

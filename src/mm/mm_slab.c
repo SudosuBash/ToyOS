@@ -22,13 +22,13 @@ void kmem_cache_free(void* addr) {
     spin_lock(&cache->cache_lock);
     paddr &= PAGE_MASK;
     *(uintptr_t**)paddr = page->block_start;
-
-    page->block_start = (link_next_ptr_t*) paddr;
     
-    if(page->blocks == page->alloced_blocks) {
+    if(page->block_start == 0) {
         list_del_init(&page->sibling); //尾部的话sibling
         list_insert(&page->sibling,&cache->partial);
     }
+
+    page->block_start = (link_next_ptr_t*) paddr;
     page->alloced_blocks--;
     if(page->alloced_blocks == 0) {
         list_del_init(&page->sibling);
@@ -58,7 +58,6 @@ cache_partial:
         if(p->block_start == 0) {
             list_del(cache->partial.next);
         }
-
         spin_unlock(&cache->cache_lock);
         return addr;
     }

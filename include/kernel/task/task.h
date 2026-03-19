@@ -4,35 +4,32 @@
 #include <kernel/sched/sched.h>
 #include <kernel/data_struct/linklist.h>
 #include <kernel/cpu/smp.h>
+#include <kernel/task/pid.h>
+#include <kernel/task/mm_user.h>
 
-DECLARE_PERCPU_VAR(current_process, struct task_struct*);
 
-#define CURRENT_PROCESS() THIS_CPU_VAR(current_process)
-
-#define TASK_FORK_FLAG 0b1
-#define TASK_FORK_MASK ~TASK_FORK_FLAG
-
+#define CURRENT_PROCESS get_current_process
 #define TASK_KERNEL_THREAD_FLAG 0b10
 #define TASK_KERNEL_THREAD_MASK ~TASK_KERNEL_THREAD_FLAG
 
+#define TASK_STATUS_RUNNING 0b1
+#define TASK_STATUS_SLEEP 0b10
 
-#define CLONE_KERNEL_THREAD 0b1
 struct task_struct {
-    char* name;
+    char name[30];
     void* kstack; 
 
+    uint64_t status;
     struct linklist_head sibling;
     uintptr_t ksp; //内核的sp
     uint64_t flags; //标志位
     uint64_t rest_time; 
-    uint64_t kid;
+    struct pid* pid;
+    struct mm_user mm_user;
 };
 
-extern void kernel_thread_helper(
-    void* args,
-    int (*fn)(void*)
-);
-extern void ret_from_fork();
+struct task_struct* get_current_process();
+struct task_struct* find_by_pid(uint64_t pid);
 void schedule();
 void init_task();
 void kernel_thread(int (*fn)(void*), void* args, char* name);

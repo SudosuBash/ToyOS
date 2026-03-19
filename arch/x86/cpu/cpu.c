@@ -37,6 +37,7 @@ void init_ist() {
         set_tss_ist(3, (uint64_t)&__bsp_ist3);
     }
 }
+
 void init_cpu() {
     init_gdt();
     init_ist();

@@ -50,6 +50,6 @@ struct gdtr {
 
 void init_gdt();
 void reload_gdt();
-void set_tss_rsp_r0(uint64_t addr);
+void set_tss_rsp_r0(uintptr_t addr);
 void set_tss_ist(uint8_t index,uint64_t addr);
 #endif

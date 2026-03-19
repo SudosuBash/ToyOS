@@ -5,6 +5,7 @@
 #include <kernel/mm/mm.h>
 #include <kernel/cpu/smp.h>
 #include <kernel/asm/attribute.h>
+#include <cpu/gdt.h>
 
 DECLARE_PERCPU_VAR(current_process, struct task_struct*);
 
@@ -16,11 +17,10 @@ void schedule() {
     
     if(tasks != NULL) { //存在任务
         SET_THIS_CPU_VAR(current_process, tasks);
-        //这percpu的set能给你出问题出到老家去
-
-        barrier();
-        tasks->flags &= TASK_FORK_MASK;
         tasks->flags &= TASK_KERNEL_THREAD_MASK;
+        set_tss_rsp_r0(tasks->ksp);
+        barrier();
+        
         switch_to(current,tasks);
     }
 }

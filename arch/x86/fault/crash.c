@@ -12,7 +12,7 @@ static uint64_t cr2;
 static uint64_t cr3;
 static spinlock_t crash_spin;
 
-static void put_kernel_regs(struct irq_frame* frame) {
+static void put_kernel_regs(struct arch_regs* frame) {
     put_str("Registers info:\n");
     put_str(" RAX=");put_hex_zfill(frame->rax,16);
     put_str(" RBX=");put_hex_zfill(frame->rbx,16);
@@ -46,7 +46,7 @@ static void put_kernel_regs(struct irq_frame* frame) {
     put_char('\n');
 }
 
-static void crash_call_trace(struct irq_frame* frame) {
+static void crash_call_trace(struct arch_regs* frame) {
     put_str("Call trace (address):");
     uint64_t rbp = frame->rbp;
     while(rbp != 0) {
@@ -65,17 +65,24 @@ static void print_mem_info() {
     uint64_t page_all = get_system_mem_sum();
     uint64_t mem_avl = page_avl << PAGE_OFFSET;
     uint64_t mem_all = page_all << PAGE_OFFSET;
+    uint64_t mem_percent = get_mem_alloc_percentage();
     put_str("RAM info:\n");
-    put_str(" allocated: ");
-    put_dec(mem_avl);
-    put_str(" Bytes / all: ");
-    put_dec(mem_all);
-    put_str(" Bytes");
-    put_char('\n');
-    put_str(" pages: used ");
-    put_dec(page_avl);
-    put_str(" / all ");
-    put_dec(page_all);
+    if(mem_percent == MEM_INIT_ERROR_PERCENTAGE) {
+        put_str(" Error: Memory init failure...");
+    } else {
+        put_str(" allocated: ");
+        put_dec(mem_avl);
+        put_str(" Bytes / all: ");
+        put_dec(mem_all);
+        put_str(" Bytes (");
+        put_dec(mem_percent);
+        put_str("%)\n");
+        put_str(" pages: used ");
+        put_dec(page_avl);
+        put_str(" / all ");
+        put_dec(page_all);
+    }
+
     put_char('\n');
 }
 
@@ -95,7 +102,7 @@ static void crash_log_position(struct crash_info* info) {
     put_char('\n');
 }
 
-static void crash_irq_position(struct crash_info* info,struct irq_frame* frame) {
+static void crash_irq_position(struct crash_info* info,struct arch_regs* frame) {
     put_str("on irq ");
     put_dec(frame->irq_num);
     if(frame->irq_num == IRQ_PG_ERR) {
@@ -108,7 +115,7 @@ static void crash_irq_position(struct crash_info* info,struct irq_frame* frame) 
     put_str(info->message);
     put_char('\n');
 }
-static void do_fault(struct crash_info* info, struct irq_frame* frame, int irq) {
+static void do_fault(struct crash_info* info, struct arch_regs* frame, int irq) {
     spin_lock(&crash_spin);
     asm volatile(
         "movq %%cr2,%0\t\n"
@@ -139,7 +146,7 @@ static void do_fault(struct crash_info* info, struct irq_frame* frame, int irq) 
     hlt();
 }
 
-void fault_irq(const char* name, struct irq_frame* frame) {
+void fault_irq(const char* name, struct arch_regs* frame) {
     disable_irq();
     struct crash_info info = {
         .message = name,
@@ -152,18 +159,25 @@ void fault_irq(const char* name, struct irq_frame* frame) {
 }
 
 
-void fault(struct crash_info* info, struct irq_frame* frame) {
+void fault(struct crash_info* info, struct arch_regs* frame) {
     disable_irq();
     do_fault(info, frame, 0);
 }
 
 
-static void ud_irq_handler(struct irq_frame* frame) {
+static void ud_irq_handler(struct arch_regs* frame) {
     uint32_t cs = frame->cs;
     if(IS_IN_KERN_MODE(cs)) { //内核模式直接嘎
         struct crash_info* msg = (struct crash_info*)frame->r15;
         fault(msg, frame);
     }
+}
+
+
+void warn(const char* message) {
+    put_str("[WARN] ");
+    put_str(message);
+    put_char('\n');
 }
 
 void fault_init() {

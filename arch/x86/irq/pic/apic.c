@@ -1,5 +1,5 @@
 #include <irq/pic/apic.h>
-#include <pgtable/pgtable.h>
+#include <pgtable/pgtable_kern.h>
 #include <config_arch.h>
 #include <asm.h>
 #include <kernel/mm/mm.h>
@@ -85,11 +85,11 @@ static inline void lapic_handle_ok() {
     lapic_write(APIC_EOI_OFFSET, 0);
 }
 
-static inline void default_timer_irq_fn(struct irq_frame* frame) {
+static inline void default_timer_irq_fn(struct arch_regs* frame) {
     fault_irq("Timer IRQ Triggered!",frame);
 }
 
-static inline void timer_irq_reg_fn(struct irq_frame* frame) {
+static inline void timer_irq_reg_fn(struct arch_regs* frame) {
     lapic_handle_ok();
     handler(frame);
 }

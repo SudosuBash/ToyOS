@@ -22,8 +22,14 @@
 #define MM_BUDDY_FLAG_RESERVED 0b100
 
 #define PAGE_ROUND_UP(addr) (((addr) + PAGE_SZ - 1) & PAGE_MASK)
+#define PHYS2VADDR(addr) ((addr) + (KERNEL_MEM_SA_VADDR))
+#define PHYS2VADDR_MMIO(addr) ((addr) + (MMIO_MEM_SA_VADDR))
+#define VADDR2PHYS_MMIO(addr) ((addr) - (MMIO_MEM_SA_VADDR))
+#define VADDR2PHYS(addr) ((addr) - (KERNEL_MEM_SA_VADDR))
 
 #define barrier() arch_barrier()
+void arch_barrier();
+
 struct mm_area {
     uint64_t from;
     uint64_t to;
@@ -32,13 +38,13 @@ struct mm_area {
 struct mm_area_record {
     struct mm_area* area;
     int num;
-    
 };
 
 struct mm_buddy {
     struct linklist_head groups[MM_BUDDY_MAX_LEVEL];
     spinlock_t buddy_lock;
 };
+
 
 void* kmalloc(size_t sz);
 void kfree(void* addr);
@@ -47,6 +53,9 @@ void free_page(struct page* page,int slab);
 void init_mm();
 void kmalloc_init();
 
+void ref_page(struct page* page);
+uint8_t unref_and_test_page(struct page* page);
+uint64_t get_mem_alloc_percentage();
 uint64_t get_mem_all_pages(); //向下取整
 uintptr_t get_kernel_end();
 uint64_t get_machine_available_mem_sz();

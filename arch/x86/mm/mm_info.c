@@ -1,4 +1,4 @@
-#include <pgtable/pgtable.h>
+#include <pgtable/pgtable_kern.h>
 #include <packed_e820.h>
 #include <asm.h>
 
@@ -13,16 +13,8 @@ static uint64_t kernel_end;
 static uint64_t kernel_vstart;
 
 #define KERNTOPADDR(addr) ((addr) - kernel_vstart)
-static void pagefault_irq(struct irq_frame* frame) {
+static void pagefault_irq(struct arch_regs* frame) {
     arch_crash_on_irq("Segmentation Fault", frame);
-    // put_str("Page Fault Error Info: \n");
-    // put_str("  Status is ");
-    // put_hex(frame->error_code);
-    // put_str(",\n  Vaddr is ");
-    // uint64_t pg_addr = get_cr2();
-    // put_hex(pg_addr);
-    // put_char('\n');
-    // while(1);
 }
 
 uintptr_t get_kernel_end() {
@@ -30,6 +22,9 @@ uintptr_t get_kernel_end() {
 }
 //返回可用的字节
 
+inline void arch_barrier() {
+    asm volatile("" ::: "memory");
+}
 
 void init_mm_info() {
     uint32_t* mem_info_addr = (uint32_t*)PHYS2VADDR(get_mem_info_paddr());

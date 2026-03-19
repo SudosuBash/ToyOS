@@ -3,8 +3,8 @@
 
 #include <kernel/stdint.h>
 
-struct irq_frame;
-typedef void (*irq_handler_t)(struct irq_frame* frame);
+struct arch_regs;
+typedef void (*irq_handler_t)(struct arch_regs* frame);
 
 int irq_register(uint64_t num, irq_handler_t fn);
 void init_irq();

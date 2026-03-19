@@ -32,11 +32,11 @@ PT_OBJS      := kern_start.o \
 				irq/pic/apic.o \
 				irq/pic/pic.o \
 				mm/mm_info.o \
+				mm/mmap.o \
 				early_boot.o \
 				fault/crash.o \
 				atomic/atomic.o \
 				task/fork.o \
-				task/switch_task.o \
 				task/switch.o
 
 .PHONY: all clean

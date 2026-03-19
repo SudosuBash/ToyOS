@@ -64,7 +64,7 @@ inline void close_cr0_wp() {
     );
 }
 
-void lgdt(struct gdtr gdt) {
+inline void lgdt(struct gdtr gdt) {
     asm volatile(
         "lgdt %0"
         : 
@@ -72,7 +72,7 @@ void lgdt(struct gdtr gdt) {
     );
 }
 
-void lidt(struct idtr idt) {
+inline void lidt(struct idtr idt) {
     asm volatile(
         "lidt %0"
         : 
@@ -80,11 +80,20 @@ void lidt(struct idtr idt) {
     );
 }
 
-uint64_t get_cr2() {
+inline uint64_t get_cr2() {
     uint64_t pgaddr;
     asm volatile(
         "movq %%cr2, %0"
         : "=r"(pgaddr)
     );
     return pgaddr;
+}
+
+inline void invlpg(uint64_t addr) {
+    asm volatile(
+        "invlpg (%[addr])"
+        :
+        :
+        [addr] "r"(addr)
+    );
 }

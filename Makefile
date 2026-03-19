@@ -27,9 +27,12 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
 			   $(SRC_DIR)/sched/sched_rr.o \
 			   $(SRC_DIR)/task/fork.o \
 			   $(SRC_DIR)/task/task_manager.o \
+			   $(SRC_DIR)/task/switch_task.o \
 			   $(SRC_DIR)/task/task.o \
+			   $(SRC_DIR)/task/pid.o \
                $(SRC_DIR)/data_struct/bitmap.o \
 			   $(SRC_DIR)/data_struct/linklist.o \
+			   $(SRC_DIR)/data_struct/hlist.o \
                $(SRC_DIR)/mm/mm_page.o \
 			   $(SRC_DIR)/mm/mm_slab.o \
 			   $(SRC_DIR)/mm/mm.o \

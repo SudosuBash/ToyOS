@@ -3,6 +3,15 @@
 
 #include <config_arch.h>
 
+#define CONFIG_GROUP_MAX_CNT 327680
 #define SCHED_RR_TS 10000000
 #define PROCESS_STACK_PAGE 2
+
+#define KERNEL_PTE_ENTRIES 512
+#define PG_BIG_PAGE_OFFSET 21
+#define PG_BIG_PAGE_SZ (1<<PG_BIG_PAGE_OFFSET)
+#define PG_BIG_PAGE_MASK ~(PG_BIG_PAGE_SZ-1)
+#define PAGE_OFFSET 12
+#define PAGE_SZ (1<<PAGE_OFFSET)
+#define PAGE_MASK ~(PAGE_SZ-1)
 #endif

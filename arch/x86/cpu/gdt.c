@@ -30,7 +30,7 @@ static struct tss_gdt_desc tss_gdt_desc = {
     .reserved = 0
 }; //Kernel Code
 
-inline void set_tss_rsp_r0(uint64_t addr) {
+inline void set_tss_rsp_r0(uintptr_t addr) {
     struct tss* cpu_tss = THIS_CPU_PTR(tss);
     cpu_tss->rsp_ring0 = addr;
 }
@@ -60,7 +60,6 @@ static inline void prepare_gdt() {
     cpu_desc[3].tss.desc.base_2 = (tss_addr >> 16) & 0xff;
     cpu_desc[3].tss.desc.base_3 = (tss_addr >> 24) & 0xff;
     cpu_desc[3].tss.high_32 = (tss_addr >> 32);
-
 }
 
 void reload_gdt() {

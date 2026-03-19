@@ -10,6 +10,7 @@ static volatile uint64_t mem_pages;
 static volatile uint64_t mem_side_pages;
 static volatile uint64_t mem_alloced_pages;
 static struct mm_buddy buddy;
+static uint64_t mem_alloc_M;
 
 static void init_page_items() {
     uint64_t ptr_kend = PHYS2VADDR(get_kernel_end());
@@ -20,14 +21,26 @@ static uint64_t get_page_index(struct page* page) {
     return (uint64_t)(page - page_start);
 }
 
-uint64_t get_system_mem_alloced() {
+inline uint64_t get_system_mem_alloced() {
     return mem_alloced_pages;
 }
 
-uint64_t get_system_mem_sum() {
+inline uint64_t get_system_mem_sum() {
     return mem_pages;
 }
 
+inline void ref_page(struct page* page) {
+    atomic_inc(&page->pg_ref);
+}
+
+inline uint8_t unref_and_test_page(struct page* page) {
+    return atomic_dec_and_test(&page->pg_ref);
+}
+
+inline uint64_t get_mem_alloc_percentage() {
+    if(mem_alloc_M == 0) return 101; //101代表出错
+    return (mem_alloced_pages * mem_alloc_M * 100) >> 32;
+}
 /**
  * 返回: return buddy的高页
  * 设置: page=当前的内核低页
@@ -40,9 +53,6 @@ static inline struct page* buddy_page(struct page** page) {
     uint64_t low_page = page_index & ~bit_mask;
     (*page) = page_start + low_page;
     return page_start + high_page;
-    //buddy_level = index + 1
-    //1 << (index)
-    //index - 1 = buddy_level - 2
 }
 
 void free_page(struct page* page,int slub) {
@@ -50,6 +60,10 @@ void free_page(struct page* page,int slub) {
     assert(page->in_use != 0);
 
     int pages = MM_BUDDY_LEVEL_PAGES(page->buddy_level);
+
+    if(!unref_and_test_page(page)) {
+        warn("page ref is not zero.");
+    }
 
     if(slub) {
         page[0].page_flags &= ~MM_BUDDY_FLAG_HEAD;//取消head
@@ -143,7 +157,7 @@ func_return:
         p[0].page_flags |= MM_BUDDY_FLAG_HEAD;
     }
     p->in_use = 1;
-    barrier();
+    atomic_set(&p->pg_ref, 1);
     mem_alloced_pages+=pages;
     return p;
 }
@@ -161,19 +175,18 @@ struct page* find_page_by_vaddr(uintptr_t ptr) {
 }
 
 inline void* get_page_vaddr(struct page* page) {
-    if(page->vaddr) return (void*) page->vaddr; //加速
     uintptr_t index = (uintptr_t)(page - page_start);
     if(index >= mem_side_pages) return 0;
     if(index < 0) return 0;
     uintptr_t ptr = PHYS2VADDR(MM_PAGE_ABS_ADDR(index << PAGE_OFFSET));
 
-    page->vaddr = ptr;
     return (void*)ptr;
 }
 
 static inline void build_up_buddy_sys(uint64_t index_left,uint64_t index_right) {
     static const uint64_t mem_buddy_pages = MM_BUDDY_MAX_LEVEL_PAGES();
     struct page *p_start = page_start + index_left, *p_end = page_start + index_right, *pg;
+    p_start = (struct page*)(((uint64_t)p_start + mem_buddy_pages) & ~(mem_buddy_pages-1));
     for(pg = p_start; pg <= p_end - mem_buddy_pages;pg+=mem_buddy_pages) {
         barrier();
         INIT_LIST_HEAD(&(pg->buddy_sibling));
@@ -211,10 +224,9 @@ static void init_buddy() {
             build_up_buddy_sys(kern_end_idx,end_idx);
         } else {
             build_up_buddy_sys(start_idx, end_idx);
-        }
-        
+        }   
     }
-    
+    mem_alloc_M = ((uint64_t)1 << 32) / (mem_pages);
 }
 
 void init_mm() {
@@ -223,7 +235,7 @@ void init_mm() {
     mem_pages = 0;
     init_page_items();
     init_buddy();
-
+    
     init_mm_slab();
     kmalloc_init();
 }

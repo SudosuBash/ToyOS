@@ -9,5 +9,5 @@ typedef struct {
 uint64_t atomic_cas(volatile uint64_t* dest,uint64_t src, uint64_t target);
 void atomic_inc(atomic_t *val);
 uint8_t atomic_dec_and_test(atomic_t *val);
-
+void atomic_set(atomic_t* val, uint64_t new);
 #endif
