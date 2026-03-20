@@ -5,7 +5,7 @@
 #include <kernel/data_struct/linklist.h>
 #include <kernel/data_struct/general.h>
 #include <kernel/fault/fault.h>
-
+#include <kernel/put.h>
 #define MM_SLAB_EXPANSION_VOODOO 10
 struct kmem_cache main_cache;
 
@@ -13,8 +13,8 @@ void kmem_cache_free(void* addr) {
     assert(addr != NULL);
     uintptr_t paddr = (uintptr_t)addr;
     struct page* page = find_page_by_vaddr((uintptr_t)addr);
-    if(page->page_flags & MM_BUDDY_FLAG_TAIL) {
-        page=page->page_head;
+    if(!(page->page_flags & MM_BUDDY_FLAG_TAIL)) {
+        page = find_head_page(page);
     }
     
     struct kmem_cache* cache = page->cache;
@@ -33,7 +33,7 @@ void kmem_cache_free(void* addr) {
     if(page->alloced_blocks == 0) {
         list_del_init(&page->sibling);
         spin_unlock(&cache->cache_lock);
-        free_page(page,1);
+        free_page(page);
     } else {
         spin_unlock(&cache->cache_lock);
     }
@@ -65,8 +65,7 @@ cache_partial:
     int alloc_count = ((cache->block_sz * MM_SLAB_EXPANSION_VOODOO) + PAGE_SZ - 1) & PAGE_MASK;
     alloc_count>>=PAGE_OFFSET;
 
-    struct page* new_page = alloc_page(alloc_count,1);
-
+    struct page* new_page = alloc_page(alloc_count);
     spin_lock(&cache->cache_lock);
     init_page_mem(cache, new_page, cache->block_sz);
     //不存在页分配失败的情况, 因为分配失败的时候全部 kernel panic 了 :(        

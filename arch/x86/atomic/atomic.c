@@ -20,7 +20,7 @@ inline uint64_t atomic_cas(volatile uint64_t* dest,uint64_t src, uint64_t target
     return ret;
 }
 
-inline uint64_t atomic_fas(volatile uint64_t* dest, uint64_t src) {
+static inline uint64_t atomic_fas(volatile uint64_t* dest, uint64_t src) {
     uint64_t ret = src;
     barrier();
     asm volatile(
@@ -54,7 +54,7 @@ uint8_t atomic_dec_and_test(atomic_t* val) {
         :
         :"cc","memory"
     );
-    return !zf;
+    return zf;
 }
 
 inline void atomic_set(atomic_t* val, uint64_t new) {

@@ -7,8 +7,6 @@ static volatile void* pte_start_addr;
 static volatile void* pde_start_addr;
 
 #define ALLOC_NEW_PTE() ((pte_start_addr) += PAGE_SZ)
-#define KERN_VADDR_TO_PADDR(addr) ((addr) - KERNEL_FINAL_LDR_VADDR + KERNEL_FINAL_LDR_ADDR)
-#define KERN_PADDR_TO_VADDR(addr) ((addr) + KERNEL_FINAL_LDR_VADDR - KERNEL_FINAL_LDR_ADDR)
 
 pgd_t pg_default = {
     .present = 0,
@@ -18,7 +16,7 @@ pgd_t pg_default = {
     .pcd = 0,
     .a = 0,
     .d = 0,
-    .g = 0,
+    .g = 1,
     .avl_1 = 0,
     .base_addr = 0,
     .avl_2 = 0,
@@ -30,18 +28,17 @@ pgd_t* pml4_default = &pg_default;
 pde_t* pde_default = (pgd_t*)&pg_default;
 pdpt_t* pdpt_default = (pgd_t*)&pg_default;
 
-static inline pgd_t* get_pml4(uint64_t vaddr) {
+inline pgd_t* get_pgd(uint64_t vaddr) {
     uint64_t pml4_index = PML4_OF(vaddr);
     return GET_ENTRY_TABLE(pde_start_addr, pml4_index, pgd_t);
 }
 
 static inline pdpt_t* get_pdpt(uint64_t vaddr) {
-    pgd_t* pml4 = get_pml4(vaddr);
+    pgd_t* pml4 = get_pgd(vaddr);
     uint64_t pdpt_index = PDPT_OF(vaddr);
     if(pml4->present == 0) return 0;
     return GET_ENTRY_TABLE(KERN_PADDR_TO_VADDR(pml4->base_addr << 12), pdpt_index, pdpt_t);
 }
-
 
 static inline pde_t* get_pde(uint64_t vaddr) {
     pdpt_t* pte = get_pdpt(vaddr);
@@ -122,7 +119,7 @@ void link_new_pte_bigpage_addr(uint64_t paddr,uint64_t vaddr) {
 }
 
 void set_pgd_us(uint64_t vaddr, uint8_t us) {
-    pgd_t* pml4 = get_pml4(vaddr);
+    pgd_t* pml4 = get_pgd(vaddr);
     pml4->us = us;
 }
 
@@ -193,7 +190,7 @@ void set_pte_pwt(uint64_t vaddr, uint8_t pwt) {
 
 void prepare_pde(void* pde_start) { //准备最基本的页表
     pde_start_addr = pde_start;
-    for(int i=0;i<KERNEL_PTE_ENTRIES;i++) {
+    for(int i=0;i<PAGE_PTE_ENTRIES;i++) {
         WRITE_PTE_TO_ADDR(pde_start, pg_default);
         pde_start += sizeof(pde_t);
     }

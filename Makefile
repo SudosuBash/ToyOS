@@ -30,6 +30,7 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
 			   $(SRC_DIR)/task/switch_task.o \
 			   $(SRC_DIR)/task/task.o \
 			   $(SRC_DIR)/task/pid.o \
+			   $(SRC_DIR)/task/exec.o \
                $(SRC_DIR)/data_struct/bitmap.o \
 			   $(SRC_DIR)/data_struct/linklist.o \
 			   $(SRC_DIR)/data_struct/hlist.o \

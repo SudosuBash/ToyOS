@@ -41,6 +41,7 @@ static void copy_thread(
     if(flag & CLONE_THREAD) {
         task->flags |= TASK_KERNEL_THREAD_FLAG;
     }
+    task->flags |= TASK_RET_FROM_FORK_MASK;
     task->rest_time = SCHED_RR_TS;
     INIT_LIST_HEAD(&task->sibling);
     task->kstack = kmalloc(PAGE_SZ * PROCESS_STACK_PAGE);

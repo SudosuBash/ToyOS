@@ -10,3 +10,4 @@ arch/*/.gdb_history
 */*/*.o
 */**/*.o
 ./kernel
+*.log

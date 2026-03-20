@@ -5,4 +5,6 @@ qemu-system-x86_64 \
     -chardev stdio,id=char0,mux=on -serial chardev:char0 -mon chardev=char0 \
     -nographic \
     -m 4G \
-    -smp 4
+    -smp 4 \
+    -d int,cpu_reset \
+    -D qemu.log \

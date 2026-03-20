@@ -78,7 +78,7 @@ void link_new_pte_bigpage_addr(uint64_t paddr,uint64_t vaddr) {
 
 void prepare_pde(void* pde_start) { //准备最基本的页表
     pde_start_addr = pde_start;
-    for(int i=0;i<KERNEL_PTE_ENTRIES;i++) {
+    for(int i=0;i<PAGE_PTE_ENTRIES;i++) {
         WRITE_PTE_TO_ADDR(pde_start, pg_default);
         pde_start += sizeof(struct pagetable_64);
     }

@@ -5,7 +5,7 @@
 #include <kernel/ptable/ptable.h>
 #include <kernel/task/mm_user.h>
 
-void* do_pte_fast_mmap(
+void do_pte_fast_mmap(
     void* paddr, 
     uint64_t flag,
     uint64_t prot,

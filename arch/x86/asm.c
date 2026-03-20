@@ -97,3 +97,10 @@ inline void invlpg(uint64_t addr) {
         [addr] "r"(addr)
     );
 }
+
+inline void arch_enable_pge() {
+    uint64_t cr4;
+    asm volatile("mov %%cr4, %0" : "=r"(cr4));
+    cr4 |= (1 << 7);
+    asm volatile("mov %0, %%cr4" : : "r"(cr4) : "memory");
+}

@@ -9,6 +9,9 @@
 #define USER_DS (4*8)
 #define KERNEL_TSS (6*8)
 
+#define USER_RPL 0b11
+#define KERNEL_RPL 0
+
 struct gdt_desc {
     uint16_t limit;
     uint16_t base_1;

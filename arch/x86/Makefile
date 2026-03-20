@@ -31,12 +31,14 @@ PT_OBJS      := kern_start.o \
 				irq/irq.o \
 				irq/pic/apic.o \
 				irq/pic/pic.o \
+				syscall/syscall_ret.o \
 				mm/mm_info.o \
 				mm/mmap.o \
 				early_boot.o \
 				fault/crash.o \
 				atomic/atomic.o \
 				task/fork.o \
+				task/exec.o \
 				task/switch.o
 
 .PHONY: all clean
@@ -96,6 +98,9 @@ atomic/%.o: atomic/%.c
 	$(CC) $(CFLAGS_M64) -c $< -o $@
 
 fault/%.o: fault/%.c
+	$(CC) $(CFLAGS_M64) -c $< -o $@
+
+syscall/%.o: syscall/%.c
 	$(CC) $(CFLAGS_M64) -c $< -o $@
 
 kstart.o: kstart.S

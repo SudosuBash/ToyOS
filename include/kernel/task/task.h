@@ -9,9 +9,11 @@
 
 
 #define CURRENT_PROCESS get_current_process
+#define TASK_RET_FROM_FORK_FLAG 0b1
+
 #define TASK_KERNEL_THREAD_FLAG 0b10
 #define TASK_KERNEL_THREAD_MASK ~TASK_KERNEL_THREAD_FLAG
-
+#define TASK_RET_FROM_FORK_MASK ~TASK_RET_FROM_FORK_FLAG
 #define TASK_STATUS_RUNNING 0b1
 #define TASK_STATUS_SLEEP 0b10
 
@@ -30,7 +32,9 @@ struct task_struct {
 
 struct task_struct* get_current_process();
 struct task_struct* find_by_pid(uint64_t pid);
+extern void ret_from_fork();
 void schedule();
 void init_task();
 void kernel_thread(int (*fn)(void*), void* args, char* name);
+uintptr_t arch_process_stack_bottom(struct task_struct* task);
 #endif

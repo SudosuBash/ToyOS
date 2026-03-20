@@ -1,5 +1,6 @@
 global ret_from_fork
 global kernel_thread_helper
+global execve_to_user_mode
 
 %macro SWC_POPAD 0
     pop r15
@@ -17,18 +18,19 @@ global kernel_thread_helper
     pop rcx
     pop rbx
     pop rax
+    add rsp,16
 %endmacro
 
 section .text
 kernel_thread_helper:
     call rsi
     ;后续还得写exit逻辑,这儿暂时不写
-
-ret_from_fork_kernel_thread:
-    SWC_POPAD
-    call rbx
+    ret
 
 ret_from_fork:
     SWC_POPAD
-    
+    iretq
+
+execve_to_user_mode:
+    SWC_POPAD
     iretq

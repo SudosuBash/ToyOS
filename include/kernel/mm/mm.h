@@ -20,13 +20,16 @@
 #define MM_BUDDY_FLAG_HEAD 0b1
 #define MM_BUDDY_FLAG_TAIL 0b10
 #define MM_BUDDY_FLAG_RESERVED 0b100
+#define MM_BUDDY_FLAG_MMAP 0b1000
 
 #define PAGE_ROUND_UP(addr) (((addr) + PAGE_SZ - 1) & PAGE_MASK)
 #define PHYS2VADDR(addr) ((addr) + (KERNEL_MEM_SA_VADDR))
 #define PHYS2VADDR_MMIO(addr) ((addr) + (MMIO_MEM_SA_VADDR))
 #define VADDR2PHYS_MMIO(addr) ((addr) - (MMIO_MEM_SA_VADDR))
-#define VADDR2PHYS(addr) ((addr) - (KERNEL_MEM_SA_VADDR))
+#define VADDR2PHYS(addr) ((uintptr_t)(addr) - (KERNEL_MEM_SA_VADDR))
 
+#define USER_STACK_POS 0x7fffffffe000
+#define USER_STACK_SZ 2 * PAGE_SZ
 #define barrier() arch_barrier()
 void arch_barrier();
 
@@ -48,11 +51,12 @@ struct mm_buddy {
 
 void* kmalloc(size_t sz);
 void kfree(void* addr);
-struct page* alloc_page(uint64_t pages,int slab);
-void free_page(struct page* page,int slab);
+struct page* alloc_page(uint64_t pages);
+void free_page(struct page* page);
 void init_mm();
 void kmalloc_init();
 
+struct page* find_head_page(struct page* page);
 void ref_page(struct page* page);
 uint8_t unref_and_test_page(struct page* page);
 uint64_t get_mem_alloc_percentage();

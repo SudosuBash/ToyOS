@@ -12,3 +12,7 @@ inline int highest_up_1(uint64_t x)  {
 inline int highest_1(uint64_t x)  {
     return 64 - __builtin_clzll(x);
 }
+
+inline int lowest_1(uint64_t x)  {
+    return __builtin_ctzll(x);
+}

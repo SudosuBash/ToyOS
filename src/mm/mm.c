@@ -12,6 +12,20 @@ static volatile uint64_t mem_alloced_pages;
 static struct mm_buddy buddy;
 static uint64_t mem_alloc_M;
 
+struct page* find_head_page(struct page* page) {
+    uint64_t index = page - page_start;
+    assert(index!=0);
+    int level = lowest_1(index); //找最低位的1
+    struct page* cur = page;
+    while(level < MM_BUDDY_MAX_LEVEL && !(cur->page_flags & MM_BUDDY_FLAG_HEAD)) {
+        index = index & (index - 1); //第i位清空
+        cur =page_start + index;
+        level++;
+    }
+    assert(level != MM_BUDDY_MAX_LEVEL);
+    return cur;
+}
+
 static void init_page_items() {
     uint64_t ptr_kend = PHYS2VADDR(get_kernel_end());
     page_start = (struct page*)PAGE_ROUND_UP(ptr_kend);
@@ -30,6 +44,7 @@ inline uint64_t get_system_mem_sum() {
 }
 
 inline void ref_page(struct page* page) {
+    assert(!page->in_use); //保证page不是buddy system外面的
     atomic_inc(&page->pg_ref);
 }
 
@@ -55,7 +70,7 @@ static inline struct page* buddy_page(struct page** page) {
     return page_start + high_page;
 }
 
-void free_page(struct page* page,int slub) {
+void free_page(struct page* page) {
     assert(page != NULL);
     assert(page->in_use != 0);
 
@@ -64,14 +79,7 @@ void free_page(struct page* page,int slub) {
     if(!unref_and_test_page(page)) {
         warn("page ref is not zero.");
     }
-
-    if(slub) {
-        page[0].page_flags &= ~MM_BUDDY_FLAG_HEAD;//取消head
-        for(int i=1;i<pages;i++) {
-            page[i].page_head = NULL;
-            page[i].page_flags &= ~MM_BUDDY_FLAG_TAIL;
-        }
-    }
+    page[0].page_flags &= ~MM_BUDDY_FLAG_HEAD;//取消head
 
     //这个赋值语句放在这至关重要，因为它涉及了page=1的回收
     page->in_use=0;
@@ -110,7 +118,7 @@ void free_page(struct page* page,int slub) {
 }
 
 //标记: 是否为 slub
-struct page* alloc_page(uint64_t pages,int slub) {
+struct page* alloc_page(uint64_t pages) {
     assert(pages!=0);
     if(pages == 0) return 0;
     int64_t group = highest_up_1(pages);
@@ -149,26 +157,22 @@ func_return:
     pages = MM_BUDDY_LEVEL_PAGES(p->buddy_level);
     spin_unlock(&buddy.buddy_lock);
     //指向头部
-    if(slub) { //用于slub
-        for(int i=1;i<pages;i++) {
-            p[i].page_head=p;
-            p[i].page_flags |= MM_BUDDY_FLAG_TAIL;
-        }
-        p[0].page_flags |= MM_BUDDY_FLAG_HEAD;
-    }
+    p[0].page_flags |= MM_BUDDY_FLAG_HEAD;
     p->in_use = 1;
     atomic_set(&p->pg_ref, 1);
     mem_alloced_pages+=pages;
     return p;
 }
 
-struct page* find_page_by_vaddr(uintptr_t ptr) {
-    ptr &= PAGE_MASK;
+inline struct page* find_page_by_paddr(uintptr_t ptr) {
+    uint32_t index = MM_PAGE_PINDEX(ptr);
+    if(index >= mem_side_pages) return 0;
+    if(index < 0) return 0;
+    return &page_start[index];
+}
 
-    ptr = MM_PAGE_REL_ADDR(VADDR2PHYS(ptr));
-    //获取相对于0x100000的offset, 从这儿开始计算ptr
-    
-    uint32_t index = ptr >> PAGE_OFFSET;
+inline struct page* find_page_by_vaddr(uintptr_t ptr) {
+    uint32_t index = MM_PAGE_VINDEX(ptr);
     if(index >= mem_side_pages) return 0;
     if(index < 0) return 0;
     return &page_start[index];
@@ -178,7 +182,7 @@ inline void* get_page_vaddr(struct page* page) {
     uintptr_t index = (uintptr_t)(page - page_start);
     if(index >= mem_side_pages) return 0;
     if(index < 0) return 0;
-    uintptr_t ptr = PHYS2VADDR(MM_PAGE_ABS_ADDR(index << PAGE_OFFSET));
+    uintptr_t ptr = PHYS2VADDR(index << PAGE_OFFSET);
 
     return (void*)ptr;
 }

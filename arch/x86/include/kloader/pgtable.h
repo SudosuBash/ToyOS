@@ -11,7 +11,7 @@
 
 #define GET_ENTRY_TABLE(pde, pde_index) (&((struct pagetable_64*)(pde))[(pde_index)])
 
-#define KERNEL_PTE_ENTRIES 512
+#define PAGE_PTE_ENTRIES 512
 #define PG_BIG_PAGE_OFFSET 21
 #define PG_BIG_PAGE_SZ (1<<PG_BIG_PAGE_OFFSET)
 #define PG_BIG_PAGE_MASK ~(PG_BIG_PAGE_SZ-1)

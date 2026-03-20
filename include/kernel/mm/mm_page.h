@@ -21,6 +21,7 @@ struct page {
     uint8_t in_use:1; //是否在buddy system中
 };
 
+struct page* find_page_by_paddr(uintptr_t ptr);
 struct page* find_page_by_vaddr(uintptr_t ptr);
 void* get_page_vaddr(struct page* page);
 void init_page_mem(struct kmem_cache* cache,struct page* pg, uint32_t sz);

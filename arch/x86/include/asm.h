@@ -16,4 +16,5 @@ void lgdt(struct gdtr gdtr);
 void lidt(struct idtr idtr);
 uint64_t get_cr2();
 void invlpg(uint64_t addr);
+void arch_enable_pge();
 #endif

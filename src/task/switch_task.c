@@ -17,10 +17,14 @@ void schedule() {
     
     if(tasks != NULL) { //存在任务
         SET_THIS_CPU_VAR(current_process, tasks);
+        uint64_t flag = tasks->flags & TASK_KERNEL_THREAD_FLAG;
         tasks->flags &= TASK_KERNEL_THREAD_MASK;
-        set_tss_rsp_r0(tasks->ksp);
+        tasks->flags &= TASK_RET_FROM_FORK_MASK;
+
+        uint64_t kstack_top = arch_process_stack_bottom(current);
+        set_tss_rsp_r0(kstack_top);
         barrier();
         
-        switch_to(current,tasks);
+        switch_to(current,tasks, flag);
     }
 }

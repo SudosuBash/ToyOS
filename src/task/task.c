@@ -58,7 +58,8 @@ void init_task() {
     SET_THIS_CPU_VAR(current_process,&idle);
     struct task_struct* current_task = THIS_CPU_VAR(current_process);
     extern void* __pid_0_stack_bottom;
-    current_task->kstack = &__pid_0_stack_bottom;
+    current_task->kstack = (void*)PHYS2VADDR(KERN_VADDR_TO_PADDR(&__pid_0_stack_bottom));
+    
     INIT_LIST_HEAD(&idle.sibling);
     barrier();
     init_pid();

@@ -5,4 +5,5 @@
 int highest_up_1(uint64_t x);
 int highest_1(uint64_t x);
 uint64_t div_10(uint64_t val);
+int lowest_1(uint64_t x);
 #endif

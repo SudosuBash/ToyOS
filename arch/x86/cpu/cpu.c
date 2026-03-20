@@ -38,8 +38,17 @@ void init_ist() {
     }
 }
 
+
+static void open_nx() {
+    uint32_t low, high;
+    asm volatile("rdmsr" : "=a"(low), "=d"(high) : "c"(MSR_EFER));
+    low |= EFER_NXE;
+    asm volatile("wrmsr" : : "a"(low), "d"(high), "c"(MSR_EFER));
+}
 void init_cpu() {
     init_gdt();
     init_ist();
     open_cr0_wp();
+    open_nx();
+    arch_enable_pge();
 }

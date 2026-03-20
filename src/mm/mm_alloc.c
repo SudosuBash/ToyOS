@@ -9,15 +9,14 @@ DEFINE_PERCPU_VAR(cache_per_cpu[10], struct kmem_cache);
 void* kmalloc(size_t sz) {
     struct kmem_cache *caches = THIS_CPU_VAR(cache_per_cpu);
     assert(sz!=0);
-    int require_sz = highest_up_1(sz+1);
-    //复用这个函数，就不新写了，直接+1代替
+    int require_sz = highest_up_1(sz);
     if(require_sz < 3) require_sz = 3; //最小8
     if(require_sz < 13) { //4096 kb
         require_sz-=3;
         void* mem = kmem_cache_alloc(&caches[require_sz]);
         return mem;
     } else { //
-        struct page* pg = alloc_page(MM_PAGE_PINDEX(PAGE_ROUND_UP(sz)), 0);
+        struct page* pg = alloc_page(MM_PAGE_PINDEX(PAGE_ROUND_UP(sz)));
         if(pg == NULL) return 0;
         void* addr = get_page_vaddr(pg);
         return addr;
@@ -30,10 +29,11 @@ void kfree(void* addr) {
     uintptr_t paddr = (uint64_t)addr;
     struct page* p = find_page_by_vaddr(paddr);
 
-    if(p->cache==NULL) {
-        assert(p->in_use);
-        free_page(p,0);
-    } else {
+    struct page* head = find_head_page(p);
+    if(head->cache==NULL) { //buddy
+        assert(p->in_use); //防止错误释放
+        free_page(p);
+    } else { //slab
         kmem_cache_free(addr);
     }
 }

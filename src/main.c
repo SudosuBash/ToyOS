@@ -9,16 +9,16 @@
 #include <kernel/cpu/archimpl.h>
 #include <kernel/task/task.h>
 #include <kernel/task/fork.h>
+#include <kernel/task/exec.h>
 
-#include <cpu/regs.h>
-#include <cpu/gdt.h>
-
-void rest_init() {
-     
+int test_fn(void* test) {
+    while(1);
 }
 
-int thr1(void* test) {
-    return 0;
+int idle_1(void* test) {
+    struct task_struct* current = CURRENT_PROCESS();
+    disable_irq();
+    do_exec(test_fn);
 }
 
 void kernel_start() {
@@ -27,8 +27,14 @@ void kernel_start() {
     init_cpu();
     
     init_mm();
+
     init_task();
-    
-    fork();
+    void* mem = kmalloc(15);
+    kfree(mem);
+    kernel_thread(idle_1, NULL, "Hello, Idle!");
+    enable_irq();
     while(1) hlt();
 }
+
+//0xfffff800052fe000
+//0xfffff8013f808000

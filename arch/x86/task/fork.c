@@ -17,10 +17,9 @@ extern void kernel_thread_helper(
     void* args,
     int (*fn)(void*)
 );
-extern void ret_from_fork();
 //这个用来获取stack的栈顶
 //因为有些架构的sp是向下的, 有些是向上的, 所以不能一概而论
-static inline uintptr_t arch_process_stack_bottom(struct task_struct* task) {
+inline uintptr_t arch_process_stack_bottom(struct task_struct* task) {
     return (uintptr_t)(task->kstack) + PAGE_SZ * PROCESS_STACK_PAGE;
 }
 
@@ -44,13 +43,13 @@ void arch_dup_thread(struct task_struct* task, struct task_struct* origin, struc
     new_task_stack->rax = 0; //fork返回值为0
 
     task->ksp = (uintptr_t)(new_task_stack);
-    task->ksp -= sizeof(uintptr_t);
-    *(uintptr_t*)(task->ksp) = (uintptr_t)ret_from_fork;
-    //这样ret后直接返回到ret_from_fork
+    // task->ksp -= sizeof(uintptr_t);
+    // *(uintptr_t*)(task->ksp) = (uintptr_t)ret_from_fork;
+    // //这样ret后直接返回到ret_from_fork
     
-    task->ksp -= sizeof(uintptr_t);
-    *(uintptr_t*)(task->ksp) = (uintptr_t)task->ksp; //rbp
-    //给rbp留的
+    // task->ksp -= sizeof(uintptr_t);
+    // *(uintptr_t*)(task->ksp) = (uintptr_t)task->ksp; //rbp
+    // //给rbp留的
 }
 
 void kernel_thread(int (*fn)(void*), void* args, char* name) {
@@ -81,17 +80,19 @@ void arch_set_mm_user(
     pgd_t* new_pgd = new_task->mm_user.pg_root;
     
     for(uintptr_t p = target->mem_start;p < target->mem_end; p+=PAGE_SZ) {
-        struct page* page = find_page_by_vaddr(p);
-        page->buddy_level = 1; //等级直接设置为1, 到时候按照4kb回收
 
-        pte_t* old_pte = get_user_pte(p, old_pgd);
-        pte_t* new_pte = get_user_pte(p, new_pgd);
+        pte_t* old_pte = get_user_pte(p, old_pgd, target->flag);
+        pte_t* new_pte = get_user_pte(p, new_pgd, target->flag);
         do_pte_fast_mmap((void*)get_pte_paddr(p, old_pte), target->flag, target->perm, new_pte);
         
         set_cow(old_pte, new_pte);
+        
+        struct page* page = find_page_by_vaddr(p);
+        // page->buddy_level = 1; //等级直接设置为1, 到时候按照4kb回收
         ref_page(page); //引用计数+1
         //后续会减少
         barrier();
         invlpg(p);
+        //必须处理，否则父进程继续执行的话会出现问题
     }
 }
