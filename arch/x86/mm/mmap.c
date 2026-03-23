@@ -67,6 +67,18 @@ void do_pte_fast_mmap(
     if(prot & PERM_X == 0) pte->nx = 1;
     if(!(flag & FLAG_KERN_ONLY)) pte->us = 0;
     pte->base_addr = addr >> PAGE_OFFSET;
+
+    struct page* pg = find_page_by_paddr(addr);
+    struct page* head = find_head_page(pg);
+    if(head == NULL) {
+        crash("Aiee, attempt to mmap the reserved area!");
+    }
+    pg->page_flags |= MM_BUDDY_FLAG_MMAP;
+    ref_page(head);
+    if(pte->present) {
+        barrier();
+        invlpg(addr);
+    }
 }
 
 void* do_mmap(
@@ -93,6 +105,9 @@ void* do_mmap(
         
         struct page* pg = find_page_by_paddr(pst);
         struct page* head = find_head_page(pg);
+        if(head == NULL) {
+            crash("Aiee, attempt to mmap the reserved area!");
+        }
         pg->page_flags |= MM_BUDDY_FLAG_MMAP;
         ref_page(head);
         if(present) {

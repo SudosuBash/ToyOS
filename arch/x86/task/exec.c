@@ -12,15 +12,15 @@ void arch_do_exec(
     struct task_struct* target
 ) {
     disable_irq();
-    struct arch_regs* regs = (struct arch_regs*)target->kstack;
-    regs+=1;
+    struct arch_regs* regs = (struct arch_regs*)arch_process_stack_bottom(target->kstack);
+    regs-=1;
     regs->rip = 0x400000;
     regs->cs = USER_CS | USER_RPL;
     regs->ss = USER_DS | USER_RPL;
-
+    //其实吧,这个就算改了regs, syscallq照样成立, 反正都是0
     regs->rsp = USER_STACK_POS+PAGE_SZ * 2;
     regs->eflags |= REG_EFLAGS_IF_BIT;
     target->ksp = (uint64_t)regs;
     set_tss_rsp_r0((uint64_t)arch_process_stack_bottom(target));
-    ret_to_user();
+    load_cr3(VADDR2PHYS(target->mm_user.pg_root));
 }

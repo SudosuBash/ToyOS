@@ -73,5 +73,10 @@ SECTIONS {
         . += 8192;
     }
     . = ALIGN(4096);
+    .syscall_table (NOLOAD): ALIGN(4096) {
+        __syscall_table_addr_start = .;
+        . += 8192;
+    }
+    . = ALIGN(4096);
     __kernel_end = .;
 }

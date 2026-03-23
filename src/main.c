@@ -29,12 +29,9 @@ void kernel_start() {
     init_mm();
 
     init_task();
-    void* mem = kmalloc(15);
+    void* mem = kmalloc(16);
     kfree(mem);
     kernel_thread(idle_1, NULL, "Hello, Idle!");
     enable_irq();
     while(1) hlt();
 }
-
-//0xfffff800052fe000
-//0xfffff8013f808000

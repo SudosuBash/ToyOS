@@ -22,7 +22,10 @@ struct page* find_head_page(struct page* page) {
         cur =page_start + index;
         level++;
     }
-    assert(level != MM_BUDDY_MAX_LEVEL);
+    if(level == MM_BUDDY_MAX_LEVEL) {
+        warn("find_head_page(): head page not found!");
+        return NULL;
+    }
     return cur;
 }
 
@@ -44,7 +47,7 @@ inline uint64_t get_system_mem_sum() {
 }
 
 inline void ref_page(struct page* page) {
-    assert(!page->in_use); //保证page不是buddy system外面的
+    assert(page->in_use); //保证page不是buddy system外面的
     atomic_inc(&page->pg_ref);
 }
 
