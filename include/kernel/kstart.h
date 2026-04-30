@@ -1,5 +1,5 @@
-#ifndef _TOYOS_KERNEL
-#define _TOYOS_KERNEL
+#ifndef _TOYOS_KERNEL_START
+#define _TOYOS_KERNEL_START
 
 void kernel_start();
 #endif

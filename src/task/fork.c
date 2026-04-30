@@ -1,19 +1,22 @@
 #include <kernel/task/fork.h>
 #include <kernel/task/task.h>
 #include <kernel/task/task_manager.h>
-#include <kernel/mm/mm.h>
 #include <kernel/stdlib.h>
 #include <kernel/put.h>
-#include <kernel/task/mm_user.h>
+#include <kernel/mm/mm_user.h>
+#include <kernel/mm/mm.h>
 #include <kernel/ptable/ptable.h>
 #include <kernel/mm/mmap.h>
-#include <kernel/data_struct/bitmap.h>
+#include <kernel/syscall/syscall.h>
+#include <kernel/def.h>
 
 static void dup_task_struct(struct task_struct* dst,struct task_struct* src) {
     *dst = *src;
 }
 
-void copy_mm_user(struct task_struct* task, struct task_struct* old, uint64_t flag) {
+static void copy_mm_user(struct task_struct* task, struct task_struct* old, uint64_t flag) {
+    struct linklist_head* current;
+    INIT_LIST_HEAD(&task->mm_user.vm_area_link); //必须在前面init, 否则内核线程直接无法初始化了, exec 会导致错误
     if(old->mm_user.pg_root == NULL) //父线程就是内核线程, return
         return;
     
@@ -21,13 +24,16 @@ void copy_mm_user(struct task_struct* task, struct task_struct* old, uint64_t fl
         return;
     
     task->mm_user.pg_root = alloc_pgd();
-    INIT_LIST_HEAD(&task->mm_user.vm_node);
-    // hlist_init(&task->user_area.vm_node);
-    
-    struct linklist_head* current;
-    list_for_entry(&old->mm_user.vm_node,current) {
-        struct user_vm_area* old_area = container_of(current, struct user_vm_area, sibling);
-        arch_set_mm_user(task, old, old_area);
+    task->mm_user.vm_area_root.rb_node = NULL;//从空树开始插
+
+    pgd_t* kern_pgd = get_pgd(0);
+    copy_pgd(task->mm_user.pg_root, kern_pgd);
+
+    list_for_entry(&old->mm_user.vm_area_link, current) {
+        struct user_vm_area* old_area = container_of(current, struct user_vm_area, head);
+        struct user_vm_area* area = copy_area(old_area);
+        insert_into_vma(area, &task->mm_user);
+        arch_set_mm_user(task, old, area);
     }
 }
 
@@ -53,13 +59,13 @@ static void copy_process(struct arch_regs* regs, uint64_t flag, char* name) {
     struct cpu_task_manager* manager = get_cpu_manager();
     
     struct task_struct* current = CURRENT_PROCESS();
-    struct task_struct* new_task = kmalloc(sizeof(struct task_struct));
+    struct task_struct* new_task = (struct task_struct*) kmalloc(sizeof(struct task_struct));
     
     dup_task_struct(new_task, current);
 
     copy_mm_user(new_task, current, flag);
     copy_thread(new_task, current, regs, flag, name);
-
+    
     alloc_pid(new_task, flag);
     manager->class.task_enqueue(new_task);
 }
@@ -72,8 +78,8 @@ void clone(struct arch_regs* regs, uint64_t flag, char* name) {
     do_fork(regs, flag, name);
 }
 
-void fork() {
+DEFINE_SYSCALL(fork) {
     struct task_struct* current = CURRENT_PROCESS();
     do_fork(NULL, 0, current->name);
-    // do_fork(current->, 0, "");
+    return 0;
 }

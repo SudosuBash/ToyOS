@@ -3,12 +3,12 @@ AS      := nasm
 CC      := gcc-7
 LD      := ld
 OBJCOPY := objcopy
-
+PY      := python3
 # --- 编译选项 ---
 CINCLUDE := -I. -Iinclude -I../../include
 CFLAGS   := -ffreestanding -fno-stack-protector -nostdlib $(CINCLUDE) -g 
-CFLAGS_M32 := -m32 $(CFLAGS) -O0
-CFLAGS_M64 := -m64 -O0 -mcmodel=kernel -fno-pic -fno-omit-frame-pointer $(CFLAGS)  -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow -mno-red-zone
+CFLAGS_M32 := -m32 $(CFLAGS) -O0 -Wall -Werror
+CFLAGS_M64 := -m64 -O2 -mcmodel=kernel -fno-pic -fno-omit-frame-pointer $(CFLAGS)  -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow -mno-red-zone -Wall
 
 # --- 目标文件列表 ---
 
@@ -16,99 +16,86 @@ CFLAGS_M64 := -m64 -O0 -mcmodel=kernel -fno-pic -fno-omit-frame-pointer $(CFLAGS
 KLOADER_OBJS := kloader/kloader.o \
                 kloader/pgtable.o \
                 kloader/elf_loader.o \
-                rddisk.o \
-                64bit_mode.o 
+                kloader/rddisk.o \
+                kloader/64bit_mode.o
+				
 
 # pt.o 需要的文件 (64位)
-PT_OBJS      := kern_start.o \
-                kstart.o \
-                put.o \
-                asm.o \
-                pgtable_kern.o \
-				cpu/cpu.o \
-				cpu/gdt.o \
-				irq/irq_handler.o \
-				irq/irq.o \
-				irq/pic/apic.o \
-				irq/pic/pic.o \
-				syscall/syscall_ret.o \
-				mm/mm_info.o \
-				mm/mmap.o \
-				early_boot.o \
-				fault/crash.o \
-				atomic/atomic.o \
-				task/fork.o \
-				task/exec.o \
-				task/switch.o
+PT_OBJS      := kernel/kern_start.o \
+                kernel/kstart.o \
+                kernel/put.o \
+                kernel/asm.o \
+                kernel/pgtable.o \
+				kernel/cpu/cpu.o \
+				kernel/cpu/gdt.o \
+				kernel/irq/irq_handler.o \
+				kernel/irq/irq.o \
+				kernel/irq/pic/apic.o \
+				kernel/irq/pic/pic.o \
+				kernel/mm/mm_info.o \
+				kernel/early_boot.o \
+				kernel/fault/crash.o \
+				kernel/atomic/atomic.o \
+				kernel/task/fork.o \
+				kernel/task/exec.o \
+				kernel/task/switch.o \
+				kernel/syscall/sysenter.o \
+				kernel/syscall/sysenter_fn.o \
 
 .PHONY: all clean
 
 all: boot.bin kloader.bin pt.o
 
-# --- 1 & 2. 引导与准备 (纯汇编) ---
-%.bin: %.S
-	$(AS) -f bin $< -o $@
+kloader/%.lds: kloader/%.lds.proc
+	@$(CC) -E -P -x c $(CINCLUDE) $< -o $@
+	@echo "	GEN" $@
 
-64bit_mode.o: kloader/64bit_mode.S
-	$(CC) -m32 -E -P $(CINCLUDE) $< > kloader/64bit_mode.asm
-	$(AS) -f elf32 kloader/64bit_mode.asm -o $@
+kernel/%.lds: kernel/%.lds.proc
+	@$(CC) -E -P -x c $(CINCLUDE) $< -o $@
+	@echo "	GEN" $@
+
+%.bin: %.S
+	@$(AS) -f bin $< -o $@
+	@echo "	AS" $<
+
+kloader/%.o: kloader/%.S
+	@$(CC) -m32 -E -P $(CINCLUDE) $< > $@.asm
+	@$(AS) -f elf32 $@.asm -o $@
+	@echo "	AS" $<
 
 kloader/%.o: kloader/%.c
-	$(CC) $(CFLAGS_M32) -c $< -o $@
+	@$(CC) $(CFLAGS_M32) -c $< -o $@
+	@echo "	CC" $<
 
-rddisk.o: rddisk.S
-	$(AS) -f elf32 $< -o $@
+kernel/%.o: kernel/%.c
+	@$(CC) $(CFLAGS_M64) -c $< -o $@
+	@echo "	CC" $<
 
-kloader.bin: $(KLOADER_OBJS)
-	$(LD) -T linker.lds -m elf_i386 -e _start $^ -o kloader.elf
-	$(OBJCOPY) -O binary kloader.elf $@
+kernel/%.o: kernel/%.S
+	@$(CC) -m64 -E -P $(CINCLUDE) $< > $@.asm
+	@$(AS) -f elf64 $@.asm -o $@
+	@echo "	AS" $<
 
-# --- 4. 内核部分 pt.o (64位) ---
-klinker.lds: klinker.lds.S
-	$(CC) -E -P -x c $(CINCLUDE) $< -o $@
+kernel/%/%.o: kernel/%/%.c
+	@$(CC) $(CFLAGS_M64) -c $< -o $@
+	@echo "	CC" $<
 
-pgtable_kern.o: pgtable.c
-	$(CC) $(CFLAGS_M64) -c $< -o $@
+kernel/%/%.o: kernel/%/%.S
+	@$(CC) -m64 -E -P $(CINCLUDE) $< > syscall/sysenter_fn.asm
+	@$(AS) -f elf64 syscall/sysenter_fn.asm -o $@
+	@echo "	CC" $<
 
-%.o: %.c
-	$(CC) $(CFLAGS_M64) -c $< -o $@
+kloader.bin: $(KLOADER_OBJS) kloader/linker.lds
+	@$(LD) -T kloader/linker.lds -m elf_i386 -e _start $(KLOADER_OBJS) -o kloader.elf
+	@$(OBJCOPY) -O binary kloader.elf $@
+	@echo "	LD" $<
 
-cpu/%.o: cpu/%.c
-	$(CC) $(CFLAGS_M64) -c $< -o $@
+pt.o: $(PT_OBJS) kernel/klinker.lds
+	@$(LD) -r $(PT_OBJS) -o $@
+	@echo "	LD" $<
 
-irq/%.o: irq/%.c
-	$(CC) $(CFLAGS_M64) -c $< -o $@
-
-task/%.o: task/%.c
-	$(CC) $(CFLAGS_M64) -c $< -o $@
-
-task/%.o: task/%.S
-	$(AS) -f elf64 $< -o $@
-
-irq/*/%.o: irq/*/%.c
-	$(CC) $(CFLAGS_M64) -c $< -o $@
-
-irq/%.o: irq/%.S
-	$(AS) -f elf64 $< -o $@
-
-mm/%.o: mm/%.c
-	$(CC) $(CFLAGS_M64) -c $< -o $@
-
-atomic/%.o: atomic/%.c
-	$(CC) $(CFLAGS_M64) -c $< -o $@
-
-fault/%.o: fault/%.c
-	$(CC) $(CFLAGS_M64) -c $< -o $@
-
-syscall/%.o: syscall/%.c
-	$(CC) $(CFLAGS_M64) -c $< -o $@
-
-kstart.o: kstart.S
-	$(AS) -f elf64 $< -o $@
-
-pt.o: klinker.lds $(PT_OBJS)
-	$(LD) -r $(PT_OBJS) -o $@
 
 # --- 清理 ---
 clean:
-	rm -f *.o *.bin *.elf kloader/*.o kloader/*.asm klinker.lds */*.o */**/*.o
+	rm -f *.o *.bin *.elf */**/*.o **/*.lds **/*.o */*.asm klinker.lds generated/*
+	find . -name "*.o" -delete

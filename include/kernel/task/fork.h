@@ -14,8 +14,6 @@ void arch_set_mm_user(
     struct user_vm_area* target
 );
 
-void copy_mm_user(struct task_struct* task, struct task_struct* old, uint64_t flag);
 void arch_dup_thread(struct task_struct* task, struct task_struct* origin, struct arch_regs* regs, uint64_t flags);
 void clone(struct arch_regs* regs, uint64_t flag, char* name);
-void fork();
 #endif

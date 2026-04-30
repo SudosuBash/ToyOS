@@ -7,8 +7,8 @@
 #include <kernel/atomic/spinlock.h>
 #include <kernel/data_struct/linklist.h>
 #include <mm/mm_info.h>
+#include <kernel/def.h>
 
-#define NULL ((void*)0)
 
 #define MM_BUDDY_MAX_LEVEL 11
 

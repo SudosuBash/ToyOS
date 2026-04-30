@@ -3,9 +3,11 @@
 #include <kernel/mm/mm.h>
 #include <mm/mm_info.h>
 #include <kernel/data_struct/linklist.h>
-#include <kernel/data_struct/general.h>
+#include <kernel/kernel.h>
 #include <kernel/fault/fault.h>
 #include <kernel/put.h>
+#include <kernel/fault/error.h>
+
 #define MM_SLAB_EXPANSION_VOODOO 10
 struct kmem_cache main_cache;
 
@@ -53,7 +55,6 @@ cache_partial:
 
         //page不加锁, 因为page或者归buddy或者归slab管, 并且这两个还不可能同时管
         //所以只要保证buddy和slab不用同时访问的, page就不用锁.
-
         
         if(p->block_start == 0) {
             list_del(cache->partial.next);
@@ -66,13 +67,15 @@ cache_partial:
     alloc_count>>=PAGE_OFFSET;
 
     struct page* new_page = alloc_page(alloc_count);
+    if(IS_ERR(new_page)) {
+        return ERR_PTR(new_page);
+    }
     spin_lock(&cache->cache_lock);
     init_page_mem(cache, new_page, cache->block_sz);
     //不存在页分配失败的情况, 因为分配失败的时候全部 kernel panic 了 :(        
     goto cache_partial; //重新分配
 
     crash("kmem_cache_alloc() went to a wrong place!");
-    return NULL;
 }
 
 void kmem_cache_init(struct kmem_cache* cache, uint32_t sz) {

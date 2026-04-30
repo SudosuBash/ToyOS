@@ -70,3 +70,29 @@ void memcpy(void* dst, void* src, size_t sz) {
         dst_e[i] = src_e[i];
     }
 }
+
+size_t strlen(char* c) {
+    char* st = c;
+    while(*c) c++;
+    return (size_t)(c - st);
+}
+
+uint8_t strcmp(char* c1, char* c2) {
+    while(*c1!=*c2) {
+        c1++;c2++;
+    }
+    if(*c1 > *c2) return 1;
+    else if(*c1 == *c2) return 0;
+    else return -1;
+}
+
+uint8_t strcmp_l(char* c1, char* c2, size_t sz) {
+    char* c1_ori = c1;
+    while(*c1 != *c2 && ((size_t)(c1 - c1_ori) < sz)) {
+        c1++;
+        c2++;
+    }
+    if(*c1 == *c2 || ((size_t)(c1 - c1_ori) == sz)) return 0;
+    else if(*c1 > *c2) return 1;
+    else return -1;
+}

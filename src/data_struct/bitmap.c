@@ -2,6 +2,7 @@
 #include <kernel/mm/mm.h>
 #include <kernel/stdlib.h>
 
+#include <kernel/syscall/syscall.h>
 void init_bitmap(struct bitmap* bitmap, uint64_t size) {
     bitmap->size = size;
     uint64_t blocks = BITMAP_BLOCKS(bitmap);

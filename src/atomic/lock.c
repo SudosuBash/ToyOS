@@ -7,9 +7,7 @@ inline void spin_init(spinlock_t* lk) {
 }
 
 void spin_lock(spinlock_t* lk) {
-    while(atomic_cas(&lk->value,1,0) == 1) {
-        __builtin_ia32_pause();
-    }
+    while(atomic_cas(&lk->value,1,0) == 1);
     barrier();
 }
 

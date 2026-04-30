@@ -3,20 +3,21 @@
 
 #include <kernel/stdint.h>
 #include <kernel/ptable/ptable.h>
-#include <kernel/task/mm_user.h>
-
-void do_pte_fast_mmap(
-    void* paddr, 
-    uint64_t flag,
-    uint64_t prot,
-    pte_t* pte);
+#include <kernel/mm/mm_user.h>
 
 void* do_mmap(
     void* paddr,
     void* vaddr,
     uint64_t sz,
-    uint64_t flag,
-    uint64_t prot
+    uint16_t flag,
+    uint16_t prot
 );
+
+void do_pte_fast_mmap(
+    void* paddr, 
+    uint16_t flag,
+    uint16_t prot,
+    pte_t* pte);
+
 pgd_t* alloc_pgd();
 #endif

@@ -6,11 +6,13 @@
 #define IRQ_DIV_ERR 0
 #define IRQ_DBG_ERR 3
 #define IRQ_DF_ERR 8
+#define IRQ_GP_ERR 13
 #define IRQ_PG_ERR 14
 #define IRQ_UD_ERR 6
 
 #define DBG_IRQ_IST_IDX 1
 #define DF_IRQ_IST_IDX 2
+#define UD_DG_IRQ_IST_IDX 5
 
 struct idt_gate {
     uint64_t offset_low:16;

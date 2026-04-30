@@ -24,7 +24,6 @@ void* kmalloc(size_t sz) {
 }
 
 void kfree(void* addr) {
-    
     assert(addr!=NULL);
     uintptr_t paddr = (uint64_t)addr;
     struct page* p = find_page_by_vaddr(paddr);

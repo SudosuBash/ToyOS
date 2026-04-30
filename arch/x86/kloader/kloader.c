@@ -87,7 +87,6 @@ void init_e820() {
             i++;
         }
         if(i < entries && edr[i].base_addr < new_edr[leng].base_addr + new_edr[leng].leng) {
-            struct e820_entry new_e;
             uint64_t right_border_2 = edr[i].base_addr + edr[i].leng;
             uint64_t right_border = new_edr[leng].base_addr + new_edr[leng].leng;
 

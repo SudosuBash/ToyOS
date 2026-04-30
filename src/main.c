@@ -10,15 +10,21 @@
 #include <kernel/task/task.h>
 #include <kernel/task/fork.h>
 #include <kernel/task/exec.h>
+#include <kernel/syscall/syscall.h>
 
 int test_fn(void* test) {
+    asm volatile (
+        "movq $2, %rax\r\n"
+        "syscall"
+    );
     while(1);
 }
 
 int idle_1(void* test) {
-    struct task_struct* current = CURRENT_PROCESS();
     disable_irq();
+    
     do_exec(test_fn);
+    return 0;
 }
 
 void kernel_start() {
@@ -29,8 +35,8 @@ void kernel_start() {
     init_mm();
 
     init_task();
-    void* mem = kmalloc(16);
-    kfree(mem);
+    
+    init_syscall();
     kernel_thread(idle_1, NULL, "Hello, Idle!");
     enable_irq();
     while(1) hlt();

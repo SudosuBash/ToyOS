@@ -23,8 +23,6 @@ void init_page_mem(struct kmem_cache* cache,struct page* pg, uint32_t sz) {
         ptr = next_blk;
     }
 
-    int pages = MM_BUDDY_LEVEL_PAGES(pg->buddy_level);
-
     *(uintptr_t*)ptr = 0;
     pg->block_start = pg_mem;
 

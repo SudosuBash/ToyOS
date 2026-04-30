@@ -1,5 +1,0 @@
-id,name,func
-1,read,syscall_read
-2,write,syscall_write
-3,mmap,syscall_mmap
-4,munmap,syscall_munmap

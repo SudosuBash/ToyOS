@@ -3,5 +3,4 @@
 
 #include <kernel/syscall/syscall.h>
 
-void init_syscall();
 #endif

@@ -6,10 +6,10 @@
 
 struct crash_info {
     const char* func;
-    int line;
     const char* filename;
     const char* message;
     const char* condition;
+    int line;
 };
 
 #define MEM_INIT_ERROR_PERCENTAGE 101

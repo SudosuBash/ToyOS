@@ -3,7 +3,8 @@
 
 #include <kernel/stdint.h>
 #include <kernel/data_struct/linklist.h>
-#include <kernel/atomic/atomic_type.h>
+#include <kernel/atomic/atomic.h>
+#include <kernel/vfs/vfs.h>
 
 enum device_stat {
     UNINITIALIZED = 0,
@@ -13,10 +14,10 @@ enum device_stat {
     DESTROYED = 4
 };
 
-typedef struct {
+struct device {
     uint16_t vendor_id;
     uint16_t device_id;
-
+    
     uint32_t irq;
 
     uint64_t mmio_start_addr;
@@ -28,5 +29,6 @@ typedef struct {
     struct linklist_head parent;
     struct linklist_head sibling;
     
-} device_t;
+    struct vfs_inode_operation operation; //如何读写这个设备?
+};
 #endif

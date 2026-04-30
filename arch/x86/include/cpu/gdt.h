@@ -2,15 +2,7 @@
 #define _TOYOS_X86_GDT
 
 #include <kernel/stdint.h>
-
-#define KERNEL_CS (1*8)
-#define KERNEL_DS (2*8)
-#define USER_CS (3*8)
-#define USER_DS (4*8)
-#define KERNEL_TSS (6*8)
-
-#define USER_RPL 0b11
-#define KERNEL_RPL 0
+#include <cpu/gdt_config.h>
 
 struct gdt_desc {
     uint16_t limit;

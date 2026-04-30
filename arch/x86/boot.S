@@ -87,7 +87,7 @@ BL_START:
     jmp 0x08:pt_mode_start
 
 [bits 32]
-%include "rddisk.S"
+%include "kloader/rddisk.S"
 pt_mode_start:
 
     mov ax,0x20

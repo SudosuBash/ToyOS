@@ -10,6 +10,7 @@
 #include <kernel/task/pid.h>
 #include <kernel/stdlib.h>
 #include <kernel/mm/mmap.h>
+#include <kernel/data_struct/htable.h>
 
 extern struct sched_class rr_se;
 static struct pid_nr* glob_nr;
@@ -20,6 +21,8 @@ static struct task_struct idle = {
 };
 
 DEFINE_PERCPU_VAR(current_process, struct task_struct*);
+DEFINE_PERCPU_VAR(user_rsp, uintptr_t);
+DEFINE_PERCPU_VAR(kernel_rsp, uintptr_t);
 
 static void timer_irq_handler(struct arch_regs* frame) {
     schedule();
@@ -42,15 +45,10 @@ static void init_pid() {
 }
 
 static void init_userspace_mm() {
-    idle.mm_user.pg_root = alloc_pgd();
-    INIT_LIST_HEAD(&idle.mm_user.vm_node);
-    idle.mm_user.brk = 0;
-}
+    INIT_LIST_HEAD(&idle.mm_user.vm_area_link);
 
-inline struct task_struct* find_by_pid(uint64_t pid) {
-    struct pid_ns_layer* layer =  hlist_find(&glob_nr->task_hash, pid, pid_num, sibling, struct pid_ns_layer);
-    if(layer == NULL) return NULL;
-    return layer->target_task;
+    idle.mm_user.vm_area_root.rb_node = NULL;
+    idle.mm_user.brk = 0;
 }
 
 void init_task() {

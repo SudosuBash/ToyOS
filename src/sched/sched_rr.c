@@ -2,7 +2,7 @@
 #include <kernel/cpu/smp.h>
 #include <kernel/mm/mm.h>
 #include <kernel/task/task_manager.h>
-#include <kernel/data_struct/general.h>
+#include <kernel/kernel.h>
 
 //暂时先实现rr算法, 先跑起来, 我就做一个实验, 后续实现mlfq
 struct task_struct* next_task_rr() {

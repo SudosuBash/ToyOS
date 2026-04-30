@@ -40,6 +40,7 @@ struct cpuinfo {
 
 #define CPL_DPL_MASK 0b11
 #define IS_IN_KERN_MODE(cs) (((cs) & CPL_DPL_MASK) == 0)
-#define MSR_EFER 0xC0000080
+
 #define EFER_NXE (1ULL << 11)
+#define EFER_SCE (1ULL << 0)
 #endif

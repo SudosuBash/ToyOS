@@ -1,10 +1,11 @@
 #include <kernel/mm/mm.h>
 #include <kernel/mm/mm_slab.h>
 #include <kernel/data_struct/bitmap.h>
-#include <kernel/data_struct/general.h>
+#include <kernel/kernel.h>
 #include <kernel/fault/fault.h>
+#include <kernel/fault/error.h>
+#include <kernel/mm/mm_user.h>
 
-static uint64_t mem_sz;
 static struct page *page_start;
 static volatile uint64_t mem_pages;
 static volatile uint64_t mem_side_pages;
@@ -136,7 +137,7 @@ struct page* alloc_page(uint64_t pages) {
 
     if(now_group >= MM_BUDDY_MAX_LEVEL) {
         spin_unlock(&buddy.buddy_lock);
-        crash("Aiee, out of memory...");
+        return ERR_PTR(ENOMEM);
     }
     struct linklist_head* target = buddy.groups[now_group].next;
     struct page* p = container_of(target,struct page, buddy_sibling); //要分割的页
@@ -186,7 +187,6 @@ inline void* get_page_vaddr(struct page* page) {
     if(index >= mem_side_pages) return 0;
     if(index < 0) return 0;
     uintptr_t ptr = PHYS2VADDR(index << PAGE_OFFSET);
-
     return (void*)ptr;
 }
 
@@ -244,5 +244,6 @@ void init_mm() {
     init_buddy();
     
     init_mm_slab();
+    init_vma_area();
     kmalloc_init();
 }
