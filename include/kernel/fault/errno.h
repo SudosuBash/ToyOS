@@ -4,4 +4,5 @@
 #define ENOMEM 12
 #define ENOSYS 38
 #define ENOEXT 10
+#define ENOEMP 11
 #endif

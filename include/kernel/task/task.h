@@ -17,7 +17,7 @@
 #define TASK_STATUS_RUNNING 0b1
 #define TASK_STATUS_SLEEP 0b10
 
-#define TASK_MAX_FILES 4096
+#define TASK_MAX_FILES 512
 
 struct user_file_struct {
     uint64_t ufile_index;

@@ -11,33 +11,45 @@
 #include <kernel/task/fork.h>
 #include <kernel/task/exec.h>
 #include <kernel/syscall/syscall.h>
+#include <kernel/drivers/drv_frame.h>
+#include <kernel/fs/devicefs.h>
 
-int test_fn(void* test) {
-    asm volatile (
-        "movq $2, %rax\r\n"
-        "syscall"
-    );
-    while(1);
+// int test_fn(void* test) {
+//     asm volatile (
+//         "movq $2, %rax\r\n"
+//         "syscall"
+//     );
+//     while(1);
+// }
+
+// int idle_1(void* test) {
+//     disable_irq();
+    
+//     do_exec(test_fn);
+//     return 0;
+// }
+
+struct file* dfs_do_open(struct directory* dir) {
+    put_str("Opened the file /devicefs!\n");
 }
 
-int idle_1(void* test) {
-    disable_irq();
-    
-    do_exec(test_fn);
-    return 0;
+void test_device() {
+    struct device* device = (struct device*)kmalloc(sizeof(struct device));
+    device->operation.do_open = dfs_do_open;
+    devicefs_mount("/", "devicefs", device);
 }
 
 void kernel_start() {
     init_irq();
     init_smp();
     init_cpu();
-    
     init_mm();
-
     init_task();
-    
     init_syscall();
-    kernel_thread(idle_1, NULL, "Hello, Idle!");
-    enable_irq();
+    init_vfs();
+
+    test_device();
+    do_open("/devicefs");
+    
     while(1) hlt();
 }

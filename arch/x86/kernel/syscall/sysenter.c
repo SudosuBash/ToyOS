@@ -4,7 +4,7 @@
 #include <cpu/msr_base.h>
 #include <kernel/mm/mm.h>
 
-
+#include <kernel/cpu/smp.h>
 #include <generated/syscall_id.inc>
 extern void syscall_enter();
 static inline void set_syscall_star() {

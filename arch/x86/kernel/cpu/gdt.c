@@ -2,7 +2,7 @@
 #include <kernel/cpu/smp.h>
 #include <kernel/stdlib.h>
 #include <cpu/gdt.h>
-#include <kernel/mm/mm.h>
+#include <kernel/cpu/smp.h>
 
 DEFINE_PERCPU_VAR(gdts[5],union x86_gdt_tss_desc);
 DEFINE_PERCPU_VAR(tss, struct tss);

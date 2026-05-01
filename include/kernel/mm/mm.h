@@ -8,6 +8,7 @@
 #include <kernel/data_struct/linklist.h>
 #include <mm/mm_info.h>
 #include <kernel/def.h>
+#include <kernel/cpu/smp.h>
 
 
 #define MM_BUDDY_MAX_LEVEL 11
@@ -30,8 +31,6 @@
 
 #define USER_STACK_POS 0x7fffffffe000
 #define USER_STACK_SZ 2 * PAGE_SZ
-#define barrier() arch_barrier()
-void arch_barrier();
 
 struct mm_area {
     uint64_t from;

@@ -1,6 +1,6 @@
 #include <early_boot.h>
 #include <kernel/mm/mm.h>
-#include <mm/mm_info.h>
+#include <kernel/cpu/smp.h>
 #include <asm.h>
 
 static struct mm_area_record record;

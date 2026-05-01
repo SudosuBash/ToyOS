@@ -1,6 +1,8 @@
 #ifndef _TOYOS_X86_SMP
 #define _TOYOS_X86_SMP
 
+#include <kernel/cpu/smp.h>
+
 #define ARCH_GET_PERCPU_VAR(var) ({ \
     uintptr_t __percpu_var_addr__; \
     asm volatile ( \
@@ -14,4 +16,14 @@
 })
 #define ARCH_SET_THIS_CPU_VAR(var, value) *ARCH_GET_PERCPU_VAR(var) = value;
 //C语言中var[0]严格等于*(var+0), 所以这样是合法的.
+
+void arch_barrier();
+
+inline void arch_smp_rmb() {
+    arch_barrier();
+}
+
+inline void arch_smp_wmb() {
+    arch_barrier();
+}
 #endif

@@ -1,6 +1,6 @@
 #include <kernel/atomic/atomic.h>
 #include <kernel/fault/fault.h>
-#include <kernel/mm/mm.h>
+#include <kernel/cpu/smp.h>
 
 //Compare And Set
 /**

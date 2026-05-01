@@ -17,15 +17,14 @@ char* path_file_name(char* path) {
     return ++pend;
 }
 
-static struct directory* __find_path_dir(struct directory* dir, char* path, uint64_t hash) {
+static struct directory* __find_path_dir(struct directory* dir, char* name, uint64_t hash) {
     struct linklist_head* curr;
-    char* name = path_file_name(path);
     list_for_entry(&(dir->d_children), curr) {
         struct directory* d_curr = directory_of(curr);
-        if(strcmp(name, d_curr->d_name))
+        if(!strcmp(name, d_curr->d_name))
             return d_curr;
     }
-    return NULL;
+    return ERR_PTR(ENOEXT);
 }
 
 struct directory* find_path_dir(struct directory* dir, char* path) {
@@ -41,25 +40,26 @@ struct directory* find_path_dir(struct directory* dir, char* path) {
 
     if((root = dir_cache_find(path, hash)) != NULL) 
         return root;
+    else 
+        root = dir;
     
-    for(char* p = path; p < pend; p++) {
+    for(char* p = path+1; p < pend; p++) {
         char fname[FILE_DIR_NAME_MAX] = {0};
         char* fp = fname;
 
-        while(*p!='/') 
-            *(fp++) = *(p++);
-
+        if(!(root->d_inode->f_ftype & DIR_TYPE_DIR))
+            return ERR_PTR(ENOEXT);
         if(!(root->d_flag & DIR_FLAG_LOADED)) {
             root->d_inode->f_op.vfs_load_subdir(root->d_inode, root); //加载目录到directory
             root->d_flag |= DIR_FLAG_LOADED;
         }
 
-        if((root = __find_path_dir(root, path, hash)) == NULL) {
-            return ERR_PTR(ENOEXT);
-        }
+        while(*p && *p!='/') 
+            *(fp++) = *(p++);
 
-        if(!(root->d_inode->f_flag & DIR_TYPE_DIR))
-            return NULL;
+        root = __find_path_dir(root,fname, hash);
+        if(IS_ERR(root)) 
+            return root;
     }
 
     dir_cache_add(hash, root);

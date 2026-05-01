@@ -2,7 +2,7 @@
 #include <irq/pic/pic.h>
 #include <asm.h>
 #include <kernel/stdint.h>
-#include <kernel/mm/mm.h>
+#include <kernel/cpu/smp.h>
 #include <kernel/cpu/archimpl.h>
 #include <irq/pic/apic.h>
 #include <kernel/irq/irq.h>

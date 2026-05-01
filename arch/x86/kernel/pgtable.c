@@ -1,6 +1,7 @@
 #include <kernel/ptable/ptable.h>
 #include <kernel/stdint.h>
 #include <kernel/mm/mm.h>
+#include <kernel/cpu/smp.h>
 #include <pgtable/pgtable_kern.h>
 #include <kernel/mm/mmap.h>
 #include <kernel/mm/mm_user.h>

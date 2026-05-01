@@ -47,6 +47,11 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
 			   $(SRC_DIR)/cpu/smp.o \
 			   $(SRC_DIR)/crypto/caesar.o \
 			   $(SRC_DIR)/syscall/syscall.o \
+			   $(SRC_DIR)/file/dir.o \
+			   $(SRC_DIR)/file/file.o \
+			   $(SRC_DIR)/file/path.o \
+			   $(SRC_DIR)/fs/devicefs.o \
+			   $(SRC_DIR)/fs/fs.o
 
 ARCH_DEPENDS := $(ARCH_DIR)/boot.bin \
                 $(ARCH_DIR)/kloader.bin \

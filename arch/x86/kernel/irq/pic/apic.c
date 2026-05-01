@@ -2,9 +2,10 @@
 #include <pgtable/pgtable_kern.h>
 #include <config_arch.h>
 #include <asm.h>
-#include <kernel/mm/mm.h>
+#include <kernel/cpu/smp.h>
 #include <kernel/irq/timer.h>
 #include <kernel/irq/irq.h>
+#include <kernel/mm/mm.h>
 #include <cpu/msr_base.h>
 
 static volatile uint64_t apic_status;

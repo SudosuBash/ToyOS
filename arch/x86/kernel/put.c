@@ -3,7 +3,7 @@
 #include <kernel/stdint.h>
 #include <kernel/math.h>
 #include <kernel/stdlib.h>
-#include <kernel/mm/mm.h>
+#include <kernel/cpu/smp.h>
 
 void put_char(char c) {
     outb(0x3f8,c);

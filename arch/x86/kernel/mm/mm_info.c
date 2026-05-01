@@ -22,10 +22,6 @@ uintptr_t get_kernel_end() {
 }
 //返回可用的字节
 
-inline void arch_barrier() {
-    asm volatile("" ::: "memory");
-}
-
 void init_mm_info() {
     uint32_t* mem_info_addr = (uint32_t*)PHYS2VADDR(get_mem_info_paddr());
     edr_entry = *mem_info_addr;

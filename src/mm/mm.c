@@ -5,6 +5,7 @@
 #include <kernel/fault/fault.h>
 #include <kernel/fault/error.h>
 #include <kernel/mm/mm_user.h>
+#include <kernel/cpu/smp.h>
 
 static struct page *page_start;
 static volatile uint64_t mem_pages;

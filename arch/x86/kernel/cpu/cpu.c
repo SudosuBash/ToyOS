@@ -2,7 +2,6 @@
 #include <kernel/cpu/smp.h>
 #include <asm.h>
 #include <cpu/gdt.h>
-#include <kernel/mm/mm.h>
 #include <cpu/msr_base.h>
 #include <kernel/fault/fault.h>
 DEFINE_PERCPU_VAR(cpuinfo, struct cpuinfo);
@@ -53,4 +52,8 @@ void init_cpu() {
     open_cr0_wp();
     efer_set();
     arch_enable_pge();
+}
+
+void arch_barrier() {
+    asm volatile("" ::: "memory");
 }

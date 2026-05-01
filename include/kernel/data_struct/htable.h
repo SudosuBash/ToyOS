@@ -16,4 +16,5 @@ struct htable_list {
 
 void hlist_init(struct htable_list* list);
 void hlist_insert(struct htable_list* list, struct linklist_head* sibling, uint64_t val);
+void hlist_insert_rcu(struct htable_list* list, struct linklist_head* sibling, uint64_t val);
 #endif

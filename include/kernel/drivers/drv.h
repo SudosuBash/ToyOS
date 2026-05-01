@@ -5,6 +5,7 @@
 #include <kernel/data_struct/linklist.h>
 #include <kernel/atomic/atomic.h>
 #include <kernel/vfs/vfs.h>
+#include <kernel/file/dir.h>
 
 enum device_stat {
     UNINITIALIZED = 0,
@@ -29,6 +30,6 @@ struct device {
     struct linklist_head parent;
     struct linklist_head sibling;
     
-    struct vfs_inode_operation operation; //如何读写这个设备?
+    struct dir_operation operation;
 };
 #endif

@@ -39,12 +39,10 @@ void kmem_cache_free(void* addr) {
     } else {
         spin_unlock(&cache->cache_lock);
     }
-    
 }
 
 void* kmem_cache_alloc(struct kmem_cache* cache) {
     assert(cache != NULL);
-
     spin_lock(&cache->cache_lock);
 cache_partial:
     if(!list_empty(&cache->partial)) {
@@ -52,10 +50,8 @@ cache_partial:
         void* addr = (void*)p->block_start;
         p->alloced_blocks++;
         p->block_start = (link_next_ptr_t*)(*(p->block_start));
-
         //page不加锁, 因为page或者归buddy或者归slab管, 并且这两个还不可能同时管
         //所以只要保证buddy和slab不用同时访问的, page就不用锁.
-        
         if(p->block_start == 0) {
             list_del(cache->partial.next);
         }
