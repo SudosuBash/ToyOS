@@ -2,7 +2,7 @@
 #include <kernel/mm/mm_slab.h>
 #include <kernel/mm/mm.h>
 #include <mm/mm_info.h>
-#include <kernel/data_struct/linklist.h>
+#include <kernel/base/linklist.h>
 #include <kernel/kernel.h>
 #include <kernel/fault/fault.h>
 #include <kernel/put.h>

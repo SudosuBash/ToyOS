@@ -2,7 +2,7 @@
 #define _TOYOS_TASK
 
 #include <kernel/sched/sched.h>
-#include <kernel/data_struct/linklist.h>
+#include <kernel/base/linklist.h>
 #include <kernel/cpu/smp.h>
 #include <kernel/task/pid.h>
 #include <kernel/mm/mm_user.h>

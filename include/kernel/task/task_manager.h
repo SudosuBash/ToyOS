@@ -1,7 +1,7 @@
 #ifndef _TOYOS_RQ
 #define _TOYOS_RQ
 
-#include <kernel/data_struct/linklist.h>
+#include <kernel/base/linklist.h>
 #include <kernel/sched/sched.h>
 
 struct cpu_task_manager {

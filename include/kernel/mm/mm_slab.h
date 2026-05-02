@@ -3,7 +3,7 @@
 #define _TOYOS_KMEM_SLAB
 
 #include <kernel/mm/mm_page.h>
-#include <kernel/data_struct/linklist.h>
+#include <kernel/base/linklist.h>
 #include <kernel/atomic/spinlock.h>
 
 struct kmem_cache {

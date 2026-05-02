@@ -10,7 +10,7 @@
 #include <kernel/task/pid.h>
 #include <kernel/stdlib.h>
 #include <kernel/mm/mmap.h>
-#include <kernel/data_struct/htable.h>
+#include <kernel/base/htable.h>
 
 extern struct sched_class rr_se;
 static struct pid_nr* glob_nr;

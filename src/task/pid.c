@@ -1,6 +1,6 @@
 #include <kernel/task/pid.h>
-#include <kernel/data_struct/bitmap.h>
-#include <kernel/data_struct/linklist.h>
+#include <kernel/base/bitmap.h>
+#include <kernel/base/linklist.h>
 #include <kernel/mm/mm.h>
 #include <kernel/task/fork.h>
 #include <kernel/stdlib.h>

@@ -2,8 +2,8 @@
 #define _TOYOS_TASK_MM_USER
 
 #include <kernel/ptable/ptable.h>
-#include <kernel/data_struct/linklist.h>
-#include <kernel/data_struct/rbtree.h>
+#include <kernel/base/linklist.h>
+#include <kernel/base/rbtree.h>
 
 #define PERM_X 1
 #define PERM_W 2

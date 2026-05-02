@@ -11,7 +11,7 @@
 #include <kernel/task/fork.h>
 #include <kernel/task/exec.h>
 #include <kernel/syscall/syscall.h>
-#include <kernel/drivers/drv_frame.h>
+#include <kernel/drivers/drv.h>
 #include <kernel/fs/devicefs.h>
 
 
@@ -25,5 +25,6 @@ void kernel_start() {
     init_vfs();
     init_drv();
     
+    device_try_probe(0x8086, 0x03f8);
     while(1) hlt();
 }

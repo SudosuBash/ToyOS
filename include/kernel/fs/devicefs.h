@@ -2,7 +2,7 @@
 #define _TOYOS_DRV_DEVICEFS
 
 #include <kernel/file/dir.h>
-#include <kernel/drivers/drv_frame.h>
+#include <kernel/drivers/drv.h>
 #include <kernel/kernel.h>
 
 #define DEVFS_MAGIC (0x2 <<  MAGIC_NUMBER)

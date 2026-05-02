@@ -2,7 +2,7 @@
 #include <kernel/fault/errno.h>
 #include <kernel/task/task.h>
 #include <kernel/stdlib.h>
-#include <kernel/data_struct/htable.h>
+#include <kernel/base/htable.h>
 #include <kernel/mm/mm_slab.h>
 #include <kernel/fault/error.h>
 #include <kernel/cpu/smp.h>

@@ -1,4 +1,4 @@
-#include <kernel/data_struct/bitmap.h>
+#include <kernel/base/bitmap.h>
 #include <kernel/mm/mm.h>
 #include <kernel/stdlib.h>
 

@@ -5,7 +5,7 @@
 #include <kernel/config.h>
 #include <kernel/stdint.h>
 #include <kernel/atomic/spinlock.h>
-#include <kernel/data_struct/linklist.h>
+#include <kernel/base/linklist.h>
 #include <mm/mm_info.h>
 #include <kernel/def.h>
 #include <kernel/cpu/smp.h>

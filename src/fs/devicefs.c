@@ -44,7 +44,7 @@ struct directory* devicefs_mount(char* path, char* name, struct device* dev) {
     ret = create_dir_node(name, dir, v_inode);
     if(IS_ERR(ret))
         return ERR_PTR(ret);
-    ret->d_oper = dev->operation; //绑定驱动程序操作步骤
+    ret->d_oper = dev->f_op; //绑定驱动程序操作步骤
     return ret;
 }
 

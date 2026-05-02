@@ -1,7 +1,7 @@
 #ifndef _TOYOS_MM_PAGE
 #define _TOYOS_MM_PAGE
 #include <kernel/stdint.h>
-#include <kernel/data_struct/linklist.h>
+#include <kernel/base/linklist.h>
 #include <kernel/atomic/spinlock.h>
 
 typedef uintptr_t link_next_ptr_t;

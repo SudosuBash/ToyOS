@@ -1,5 +1,5 @@
-#include <kernel/data_struct/htable.h>
-#include <kernel/data_struct/linklist.h>
+#include <kernel/base/htable.h>
+#include <kernel/base/linklist.h>
 
 inline void hlist_init(struct htable_list* list) {
     for(int idx = 0;idx < HASH_BUCKET_CNT;idx++) {

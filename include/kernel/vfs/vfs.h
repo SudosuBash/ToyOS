@@ -4,7 +4,7 @@
 #include <kernel/stdint.h>
 #include <kernel/cpu/smp.h>
 #include <kernel/kernel.h>
-#include <kernel/data_struct/linklist.h>
+#include <kernel/base/linklist.h>
 #include <kernel/kernel.h>
 
 #define superblock_of(oper) container_of((oper), struct vfs_sb_operation, v_oper)

@@ -1,6 +1,6 @@
 #include <kernel/mm/mm.h>
 #include <kernel/mm/mm_slab.h>
-#include <kernel/data_struct/bitmap.h>
+#include <kernel/base/bitmap.h>
 #include <kernel/kernel.h>
 #include <kernel/fault/fault.h>
 #include <kernel/fault/error.h>

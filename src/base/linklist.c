@@ -1,4 +1,4 @@
-#include <kernel/data_struct/linklist.h>
+#include <kernel/base/linklist.h>
 #include <kernel/cpu/smp.h>
 
 inline void list_del(struct linklist_head* h1) {

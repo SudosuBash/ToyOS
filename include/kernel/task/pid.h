@@ -1,11 +1,11 @@
 #ifndef _TOYOS_TASK_PID
 #define _TOYOS_TASK_PID
 
-#include <kernel/data_struct/linklist.h>
-#include <kernel/data_struct/bitmap.h>
+#include <kernel/base/linklist.h>
+#include <kernel/base/bitmap.h>
 #include <kernel/task/task.h>
 #include <kernel/atomic/atomic.h>
-#include <kernel/data_struct/htable.h>
+#include <kernel/base/htable.h>
 
 struct task_struct;
 

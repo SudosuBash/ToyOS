@@ -1,7 +1,7 @@
 #ifndef _TOYOS_DS_HASH
 #define _TOYOS_DS_HASH
 
-#include <kernel/data_struct/linklist.h>
+#include <kernel/base/linklist.h>
 #include <kernel/kernel.h>
 
 #define HASH_BUCKET_OFFSET 10
