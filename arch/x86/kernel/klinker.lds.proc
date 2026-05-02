@@ -79,8 +79,12 @@ SECTIONS {
         *(.data)
     }
     . = ALIGN(4096);
-    .crash_data : {
-        *(.crash_data)
+
+    .drv_init : {
+        __drv_init_start = .;
+        KEEP(*(.drv_init))
+        KEEP(*(.drv_init.*))
+        __drv_init_end = .;
     }
     . = ALIGN(4096);
     __kernel_end = .;

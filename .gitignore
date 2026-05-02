@@ -11,4 +11,3 @@ arch/*/.gdb_history
 */**/*.o
 ./kernel
 *.log
-kernel

@@ -1,7 +1,6 @@
 # --- 工具链配置 ---
 CC      := gcc-7
 LD      := ld
-OBJCOPY := objcopy
 MAKE    := make
 PY      := python3
 
@@ -9,7 +8,7 @@ PY      := python3
 ARCH = x86
 ARCH_DIR := arch/$(ARCH)
 SRC_DIR  := src
-
+DRV_DIR	 := drivers
 # --- 编译选项 ---
 CINCLUDE := -Iinclude -I$(ARCH_DIR)/include
 CFLAGS   := -m64 -O2 -std=gnu11 -ffreestanding -fno-stack-protector -nostdlib \
@@ -52,11 +51,14 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
 			   $(SRC_DIR)/file/dir.o \
 			   $(SRC_DIR)/file/file.o \
 			   $(SRC_DIR)/fs/devicefs.o \
-			   $(SRC_DIR)/fs/fs.o
+			   $(SRC_DIR)/fs/fs.o \
+			   $(SRC_DIR)/drvframe/frame.o
 
 ARCH_DEPENDS := $(ARCH_DIR)/boot.bin \
                 $(ARCH_DIR)/kloader.bin \
                 $(ARCH_DIR)/pt.o
+
+DRV_DEPENDS := $(DRV_DIR)/drvs.o
 
 ARCH_GENERATED := $(ARCH_DIR)/generated/syscall_id.h \
 				$(ARCH_DIR)/generated/syscall_id.inc \
@@ -65,7 +67,7 @@ ARCH_GENERATED := $(ARCH_DIR)/generated/syscall_id.h \
 
 all: $(IMAGE)
 
-$(KERNEL_BIN): $(KERNEL_OBJS) $(ARCH_DIR)/pt.o
+$(KERNEL_BIN): $(KERNEL_OBJS) $(DRV_DEPENDS) $(ARCH_DIR)/pt.o
 	@$(LD) -z max-page-size=4096 -m elf_x86_64 -T $(ARCH_DIR)/kernel/klinker.lds -e _start $^ -o $@
 	@echo "	LD" $<
 
@@ -84,6 +86,9 @@ $(ARCH_GENERATED): tools/gen_systable.py
 	@$(PY) $< $(ARCH)
 	@echo "	GEN" $@
 
+$(DRV_DEPENDS): 
+	@$(MAKE) -C $(DRV_DIR)
+
 $(IMAGE): $(ARCH_GENERATED) $(ARCH_DEPENDS) $(KERNEL_BIN)
 	@dd if=/dev/zero of=$(IMAGE) bs=512 count=20480
 	@dd if=$(ARCH_DIR)/boot.bin of=$(IMAGE) conv=notrunc
@@ -96,5 +101,6 @@ run: $(IMAGE)
 
 clean:
 	$(MAKE) -C $(ARCH_DIR) clean
+	$(MAKE) -C $(DRV_DIR) clean
 	rm -f $(IMAGE) $(KERNEL_BIN) script/*.S
 	find $(SRC_DIR) -name "*.o" -delete
