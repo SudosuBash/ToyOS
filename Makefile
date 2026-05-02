@@ -44,12 +44,13 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
 			   $(SRC_DIR)/mm/mm_alloc.o \
 			   $(SRC_DIR)/mm/mm_user_vma.o \
 			   $(SRC_DIR)/atomic/lock.o \
+			   $(SRC_DIR)/atomic/rwlock.o \
+			   $(SRC_DIR)/atomic/sem.o \
 			   $(SRC_DIR)/cpu/smp.o \
 			   $(SRC_DIR)/crypto/caesar.o \
 			   $(SRC_DIR)/syscall/syscall.o \
 			   $(SRC_DIR)/file/dir.o \
 			   $(SRC_DIR)/file/file.o \
-			   $(SRC_DIR)/file/path.o \
 			   $(SRC_DIR)/fs/devicefs.o \
 			   $(SRC_DIR)/fs/fs.o
 

@@ -7,6 +7,7 @@
 #include <kernel/task/pid.h>
 #include <kernel/mm/mm_user.h>
 #include <kernel/file/file.h>
+#include <kernel/atomic/rwlock.h>
 
 #define CURRENT_PROCESS get_current_process
 #define TASK_RET_FROM_FORK_FLAG 0b1
@@ -20,8 +21,8 @@
 #define TASK_MAX_FILES 512
 
 struct user_file_struct {
-    uint64_t ufile_index;
-    struct file files[TASK_MAX_FILES];
+    uint32_t ufile_index;
+    struct file* files[TASK_MAX_FILES];
 };
 
 struct task_struct {
@@ -38,6 +39,7 @@ struct task_struct {
     uintptr_t usp; //用户sp, 用于内核抢占
     uint64_t flags; //标志位
     uint64_t rest_time; 
+    rwlock_t rwlock;
 };
 
 struct task_struct* get_current_process();

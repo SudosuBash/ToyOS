@@ -5,6 +5,7 @@
 #include <kernel/cpu/smp.h>
 #include <kernel/kernel.h>
 #include <kernel/data_struct/linklist.h>
+#include <kernel/kernel.h>
 
 #define superblock_of(oper) container_of((oper), struct vfs_sb_operation, v_oper)
 
@@ -31,13 +32,14 @@ struct vfs_inode_operation { //对于 inode 的 vfs 操作
     void (*vfs_inode_write)(struct vfs_inode* inode, void* data, size_t len, size_t *seek);
     void (*vfs_inode_read)(struct vfs_inode* inode, size_t seek, size_t len, void* buf);
     void (*vfs_inode_rename)(struct vfs_inode* inode, char* path);
-    void (*vfs_load_subdir)(struct vfs_inode* inode, struct directory* dir);
+    struct vfs_inode* (*vfs_get_subdir)(struct vfs_inode* inode, char* name);
 };
 
 struct vfs_inode { // inode 对象
     struct vfs_inode_operation f_op;
     struct vfs_superblock *sblock;
 
+    char f_name[FILE_DIR_NAME_MAX];
     uint64_t f_blk_count;
     uint64_t f_blk_off;
     uint64_t f_last_modified_time;

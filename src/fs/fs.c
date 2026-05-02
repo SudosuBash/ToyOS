@@ -30,7 +30,7 @@ static void __init_inode_operation(struct vfs_inode* inode) {
     inode->f_op.vfs_inode_read = NULL;
     inode->f_op.vfs_inode_rename = NULL;
     inode->f_op.vfs_inode_write = NULL;
-    inode->f_op.vfs_load_subdir = NULL;
+    inode->f_op.vfs_get_subdir = NULL;
 }
 
 struct vfs_inode* alloc_inode() {

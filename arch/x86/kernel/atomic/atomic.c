@@ -6,7 +6,7 @@
 /**
  * 这个并不适用赋值, 因为它会修改失败, 需要 while 循环
  */
-inline uint64_t atomic_cas(volatile uint64_t* dest,uint64_t src, uint64_t target) {
+inline uint64_t atomic_cas(volatile int64_t* dest,int64_t src, int64_t target) {
     uint64_t ret;
     barrier();
     asm volatile (
@@ -20,7 +20,7 @@ inline uint64_t atomic_cas(volatile uint64_t* dest,uint64_t src, uint64_t target
     return ret;
 }
 
-static inline uint64_t atomic_fas(volatile uint64_t* dest, uint64_t src) {
+static inline uint64_t atomic_fas(volatile int64_t* dest, int64_t src) {
     uint64_t ret = src;
     barrier();
     asm volatile(
@@ -57,6 +57,6 @@ uint8_t atomic_dec_and_test(atomic_t* val) {
     return zf;
 }
 
-inline void atomic_set(atomic_t* val, uint64_t new) {
+inline void atomic_set(atomic_t* val, int64_t new) {
     atomic_fas(&val->count, new);
 }

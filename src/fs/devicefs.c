@@ -1,6 +1,5 @@
 #include <kernel/fs/devicefs.h>
 #include <kernel/file/dir.h>
-#include <kernel/file/path.h>
 #include <kernel/mm/mm_slab.h>
 #include <kernel/def.h>
 #include <kernel/fault/error.h>
@@ -32,7 +31,7 @@ struct directory* devicefs_mount(char* path, char* name, struct device* dev) {
     struct directory *dir, *ret;
     struct vfs_inode* v_inode;
 
-    dir = find_path_dir_from_root(path);
+    dir = find_path_dir(NULL, path);
     if(path[0] != '/')
         return ERR_PTR(ENOEXT);
         
@@ -53,7 +52,7 @@ stat_t* devicefs_unmount(char* path, struct device* dev) {
     if(path[0] != '/') 
         return ERR_PTR(ENOEXT);
     
-    struct directory* dir = find_path_dir_from_root(path);
+    struct directory* dir = find_path_dir(NULL, path);
     if(IS_ERR(dir))
         return ERR_PTR(ENOEXT);
     

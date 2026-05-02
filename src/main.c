@@ -14,21 +14,6 @@
 #include <kernel/drivers/drv_frame.h>
 #include <kernel/fs/devicefs.h>
 
-// int test_fn(void* test) {
-//     asm volatile (
-//         "movq $2, %rax\r\n"
-//         "syscall"
-//     );
-//     while(1);
-// }
-
-// int idle_1(void* test) {
-//     disable_irq();
-    
-//     do_exec(test_fn);
-//     return 0;
-// }
-
 struct file* dfs_do_open(struct directory* dir) {
     put_str("Opened the file /devicefs!\n");
 }
@@ -49,7 +34,7 @@ void kernel_start() {
     init_vfs();
 
     test_device();
-    do_open("/devicefs");
+    int* fd = do_open("/devicefs");
     
     while(1) hlt();
 }

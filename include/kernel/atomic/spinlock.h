@@ -4,7 +4,7 @@
 #include <kernel/atomic/atomic.h>
 
 typedef struct {
-    volatile uint64_t value;
+    volatile int64_t value;
 } spinlock_t;
 
 void spin_init(spinlock_t* lk);

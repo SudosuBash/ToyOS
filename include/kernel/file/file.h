@@ -4,21 +4,10 @@
 #include <kernel/vfs/vfs.h>
 #include <kernel/stdint.h>
 #include <kernel/atomic/atomic.h>
-
-#define FILE_DIR_NAME_MAX 64
-#define FILE_DIR_PREFIX_MAX 256
-
-struct file;
-
-struct file_operation {
-    struct file* (*open)(char* path);
-    void (*close)(struct file* file);
-};
-
+#include <kernel/kernel.h>
 
 //打开文件表
 struct file {
-    struct file_operation f_ops;
     struct directory* f_dir;
     atomic_t f_ref;
 
@@ -32,6 +21,6 @@ struct file {
     uint16_t f_perm;
 };
 
-uint64_t do_open(char* name);
+int32_t* do_open(char* name);
 stat_t do_write(int fd, void* buf, size_t len);
 #endif

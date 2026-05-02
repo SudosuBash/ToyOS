@@ -6,4 +6,7 @@
      (type*)((char*)(object) - offsetof(type, member))
 
 #define MAGIC_NUMBER 0x1D105D5B
+
+#define FILE_DIR_NAME_MAX 64
+#define FILE_DIR_PREFIX_MAX 256
 #endif
