@@ -5,6 +5,7 @@
 #include <kernel/base/htable.h>
 #include <kernel/put.h>
 #include <kernel/drivers/drv.h>
+#include <kernel/mm/mm.h>
 
 extern struct drv_class *__drv_init_start, *__drv_init_end;
 
@@ -17,7 +18,7 @@ static struct kmem_cache* driver_allocator;
 static struct htable_list device_bus;
 
 static struct device* new_device() {
-    struct device* dev = kmem_cache_alloc(device_allocator);
+    struct device* dev = kmem_cache_alloc(device_allocator, GFP_KERNEL);
     if(IS_ERR(dev))
         return dev;
 
@@ -26,7 +27,7 @@ static struct device* new_device() {
 }
 
 static struct driver* new_driver() {
-    struct driver* dv = kmem_cache_alloc(driver_allocator);
+    struct driver* dv = kmem_cache_alloc(driver_allocator, GFP_KERNEL);
     if(IS_ERR(dv))
         return dv;
 

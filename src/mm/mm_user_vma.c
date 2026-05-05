@@ -13,7 +13,7 @@ inline struct user_vm_area* copy_area(struct user_vm_area* area) {
 
 inline struct user_vm_area* new_area(uintptr_t start, uintptr_t end, uint16_t flag, uint16_t prot) {
     struct kmem_cache* pool = THIS_CPU_PTR(vma_pool);
-    struct user_vm_area* area = (struct user_vm_area*)kmem_cache_alloc(pool);
+    struct user_vm_area* area = (struct user_vm_area*)kmem_cache_alloc(pool, GFP_KERNEL);
     area->flag = flag;
     area->perm = prot;
     area->mem_start = start;

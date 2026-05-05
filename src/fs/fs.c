@@ -19,7 +19,7 @@ static void __init_superblk_operation(struct vfs_superblock* blk) {
 }
 
 struct vfs_superblock* alloc_superblock() {
-    struct vfs_superblock* v_sblk = kmem_cache_alloc(kmem_fs_sb_allocator);
+    struct vfs_superblock* v_sblk = kmem_cache_alloc(kmem_fs_sb_allocator, GFP_KERNEL);
     if(IS_ERR(v_sblk))
         return ERR_PTR(v_sblk);
     __init_superblk_operation(v_sblk);
@@ -34,7 +34,7 @@ static void __init_inode_operation(struct vfs_inode* inode) {
 }
 
 struct vfs_inode* alloc_inode() {
-    struct vfs_inode* v_inode = kmem_cache_alloc(kmem_fs_allocator);
+    struct vfs_inode* v_inode = kmem_cache_alloc(kmem_fs_allocator, GFP_KERNEL);
     if(IS_ERR(v_inode))
         return ERR_PTR(v_inode);
     v_inode->f_create_time = 0;
@@ -53,5 +53,6 @@ void init_vfs() {
     kmem_cache_init(kmem_fs_sb_allocator, sizeof(struct vfs_superblock));
 
     init_dir_module();
+    init_file_env();
     init_devicefs();
 }

@@ -10,7 +10,7 @@
 
 #define DEVICE_DRV_ID(vendor_id, device_id) ((((uint32_t)(vendor_id)) << 16) | (device_id))
 #define PCI_DEVID(vendor_id, device_id) {(vendor_id), (device_id)}
-
+#define DEVICE_BIND_FILE_OP(dev, file) ((dev)->f_op = (file))
 #define driver_of(node) container_of(node, struct driver, sibling)
 typedef uint16_t drv_match_table[][2], (*pdrv_match_table)[][2];
 struct device;
@@ -40,7 +40,7 @@ struct device {
     uint32_t irq;
 };
 
-#define MODULE_SET_DEVICE(drv) static struct drv_class* export_drv_sym __attribute__((section(".drv_init"), aligned(sizeof(void*)), used)) = &(drv);
+#define MODULE_SET_DRIVER_OP(drv) static struct drv_class* export_drv_sym __attribute__((section(".drv_init"), aligned(sizeof(void*)), used)) = &(drv);
 
 void drv_device_match(struct drv_class* drv, pdrv_match_table table);
 void device_try_probe(uint16_t vendor_id, uint16_t device_id);

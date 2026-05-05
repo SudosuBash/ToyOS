@@ -22,10 +22,10 @@ struct dir_operation {
     struct file* (*do_open)(struct directory* dir);
     struct file* (*do_mkdir)(struct directory* dir, char* name);
     struct file* (*do_mount)(struct directory* root, struct directory* mount);
-    stat_t* (*do_write)(struct file* file, void* data, size_t len);
-    stat_t* (*do_read)(struct file* file);
-    stat_t* (*do_umount)(struct directory* root);
-    stat_t* (*do_close)(struct file* file);
+    stat_t (*do_write)(struct file* file, void* data, size_t len);
+    stat_t (*do_read)(struct file* file);
+    stat_t (*do_umount)(struct directory* root);
+    stat_t (*do_close)(struct file* file);
 };
 
 struct directory {

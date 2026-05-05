@@ -7,7 +7,7 @@ void init_bitmap(struct bitmap* bitmap, uint64_t size) {
     bitmap->size = size;
     uint64_t blocks = BITMAP_BLOCKS(bitmap);
     bitmap->need_space = blocks * sizeof(uint64_t);
-    bitmap->start_addr = (uint64_t*)kmalloc(size);
+    bitmap->start_addr = (uint64_t*)kmalloc(size, GFP_KERNEL);
     memset(bitmap->start_addr,0, sizeof(uint64_t) * blocks);
 }
 

@@ -4,6 +4,7 @@
 #include <kernel/stdlib.h>
 #include <kernel/base/htable.h>
 #include <kernel/mm/mm_slab.h>
+#include <kernel/mm/mm.h>
 #include <kernel/fault/error.h>
 #include <kernel/cpu/smp.h>
 #include <kernel/atomic/spinlock.h>
@@ -26,7 +27,7 @@ DEFINE_PERCPU_VAR(dir_node_percpu_allocator, struct kmem_cache)
 
 
 struct directory* create_dir_node(char* name, struct directory* dir, struct vfs_inode* inode) {
-    struct directory* new_dir = kmem_cache_alloc(dir_node_allocator);
+    struct directory* new_dir = kmem_cache_alloc(dir_node_allocator, GFP_KERNEL);
     if(IS_ERR(new_dir)) 
         return ERR_PTR(new_dir);
 
@@ -92,6 +93,8 @@ static void __init_root_dir() {
 static struct directory* __find_path_dir(struct directory* dir, char* name) {
     struct directory* target = dir_cache_find(name, dir);
     if(target == NULL) {
+        if(dir->d_inode->f_op.vfs_get_subdir == NULL)
+            return ERR_PTR(ENOEXT);
         struct vfs_inode* in = dir->d_inode->f_op.vfs_get_subdir(dir->d_inode, name);
         if(in == NULL)
             return ERR_PTR(ENOEXT);

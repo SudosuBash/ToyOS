@@ -10,7 +10,7 @@ ARCH_DIR := arch/$(ARCH)
 SRC_DIR  := src
 DRV_DIR	 := drivers
 # --- 编译选项 ---
-CINCLUDE := -Iinclude -I$(ARCH_DIR)/include
+CINCLUDE := -Iinclude -I$(ARCH_DIR)/include 
 CFLAGS   := -m64 -O2 -std=gnu11 -ffreestanding -fno-stack-protector -nostdlib \
             $(CINCLUDE) -g  -mcmodel=kernel -fno-pic -fno-omit-frame-pointer -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow -mno-red-zone -Wall
 

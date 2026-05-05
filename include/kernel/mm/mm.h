@@ -47,8 +47,10 @@ struct mm_buddy {
     spinlock_t buddy_lock;
 };
 
+#define GFP_KERNEL 0x1
+#define GFP_ATOMIC 0x2
 
-void* kmalloc(size_t sz);
+void* kmalloc(size_t sz, uint64_t flag);
 void kfree(void* addr);
 struct page* alloc_page(uint64_t pages);
 void free_page(struct page* page);

@@ -15,5 +15,5 @@ typedef long long int64_t;
 
 typedef uintptr_t size_t;
 
-typedef uint64_t stat_t;
+typedef int64_t stat_t;
 #endif

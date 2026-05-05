@@ -17,10 +17,11 @@ struct file {
     uint64_t f_flag;
     uint64_t f_seek_pos;
     
-    size_t f_fsize;
     uint16_t f_perm;
 };
 
-int32_t* do_open(char* name);
-stat_t do_write(int fd, void* buf, size_t len);
+int64_t do_open(char* name);
+int64_t do_write(int fd, void* buf, size_t len);
+struct file* alloc_file(struct directory* dir);
+void init_file_env();
 #endif

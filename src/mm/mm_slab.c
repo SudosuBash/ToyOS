@@ -34,6 +34,7 @@ void kmem_cache_free(void* addr) {
     page->alloced_blocks--;
     if(page->alloced_blocks == 0) {
         list_del_init(&page->sibling);
+        atomic_dec(&cache->cache_using_blks);
         spin_unlock(&cache->cache_lock);
         free_page(page);
     } else {
@@ -41,7 +42,7 @@ void kmem_cache_free(void* addr) {
     }
 }
 
-void* kmem_cache_alloc(struct kmem_cache* cache) {
+void* kmem_cache_alloc(struct kmem_cache* cache, uint64_t flag) {
     assert(cache != NULL);
     spin_lock(&cache->cache_lock);
 cache_partial:
@@ -52,7 +53,7 @@ cache_partial:
         p->block_start = (link_next_ptr_t*)(*(p->block_start));
         //page不加锁, 因为page或者归buddy或者归slab管, 并且这两个还不可能同时管
         //所以只要保证buddy和slab不用同时访问的, page就不用锁.
-        if(p->block_start == 0) {
+        if(p->block_start == 0) { //full
             list_del(cache->partial.next);
         }
         spin_unlock(&cache->cache_lock);
@@ -68,6 +69,7 @@ cache_partial:
     }
     spin_lock(&cache->cache_lock);
     init_page_mem(cache, new_page, cache->block_sz);
+    atomic_inc(&cache->cache_using_blks);
     //不存在页分配失败的情况, 因为分配失败的时候全部 kernel panic 了 :(        
     goto cache_partial; //重新分配
 
@@ -78,12 +80,31 @@ void kmem_cache_init(struct kmem_cache* cache, uint32_t sz) {
     cache->block_sz = sz;
     INIT_LIST_HEAD(&cache->partial);
     spin_init(&cache->cache_lock);
+    atomic_set(&cache->cache_using_blks, 0);
 }
 
 struct kmem_cache* kmem_cache_get(uint32_t sz) {
-    struct kmem_cache* mem = (struct kmem_cache*)kmem_cache_alloc(&main_cache);
+    struct kmem_cache* mem = (struct kmem_cache*)kmem_cache_alloc(&main_cache, GFP_KERNEL);
+    if(IS_ERR(mem))
+        return ERR_PTR(mem);
     kmem_cache_init(mem,sz);
     return mem;
+}
+
+void kmem_cache_destroy(struct kmem_cache* *cache) {
+    assert(cache!=NULL);
+    struct kmem_cache* target = *cache;
+    assert(target!=NULL);
+    if(target->cache_using_blks.count != 0) {
+        warn("SLUB ALLOCATOR: attempt to release a using cache!");
+        put_str("   On Object ");
+        put_hex(target);
+        put_char('\n');
+        return;
+    }
+    kfree(*cache);
+    *cache = NULL;
+    smp_wmb();
 }
 
 void init_mm_slab() {

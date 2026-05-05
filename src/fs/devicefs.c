@@ -28,15 +28,20 @@ static struct vfs_inode* _dfs_alloc_inode(struct device* dev) {
 }
 
 struct directory* devicefs_mount(char* path, char* name, struct device* dev) {
-    struct directory *dir, *ret;
+    struct directory *dir, *file, *ret;
     struct vfs_inode* v_inode;
 
-    dir = find_path_dir(NULL, path);
     if(path[0] != '/')
         return ERR_PTR(ENOEXT);
+
+    dir = find_path_dir(NULL, path);
         
     if(IS_ERR(dir)) 
         return ERR_PTR(dir);
+    file = find_path_dir(dir, name);
+
+    if(!IS_ERR(file)) //文件存在
+        return ERR_PTR(EFEXIST); //冲突
 
     v_inode = _dfs_alloc_inode(dev);
     if(IS_ERR(v_inode))

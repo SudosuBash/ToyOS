@@ -5,7 +5,7 @@ LD      := ld
 OBJCOPY := objcopy
 PY      := python3
 # --- 编译选项 ---
-CINCLUDE := -I. -Iinclude -I../../include
+CINCLUDE := -I. -Iinclude -I../../include -Itools/include
 CFLAGS   := -ffreestanding -fno-stack-protector -nostdlib $(CINCLUDE) -g 
 CFLAGS_M32 := -m32 $(CFLAGS) -O0 -Wall -Werror
 CFLAGS_M64 := -m64 -O2 -mcmodel=kernel -fno-pic -fno-omit-frame-pointer $(CFLAGS)  -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow -mno-red-zone -Wall

@@ -2,6 +2,13 @@
 ENTRY(_start)
 SECTIONS {
     . = KERNEL_FINAL_LDR_VADDR;
+    .text : {
+        *(.text)
+    }
+    . = ALIGN(0x1000);
+    .data : {
+        *(.data)
+    }
     . = ALIGN(4096);
     .bss : {
         *(.bss)
@@ -70,13 +77,6 @@ SECTIONS {
     .bsp_ist4 (NOLOAD): ALIGN(4096) {
         __bsp_ist4 = .;
         . += 8192;
-    }
-    .text : {
-        *(.text)
-    }
-    . = ALIGN(0x1000);
-    .data : {
-        *(.data)
     }
     . = ALIGN(4096);
 

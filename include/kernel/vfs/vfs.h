@@ -42,6 +42,7 @@ struct vfs_inode { // inode 对象
     char f_name[FILE_DIR_NAME_MAX];
     uint64_t f_blk_count;
     uint64_t f_blk_off;
+    uint64_t f_fsize;
     uint64_t f_last_modified_time;
     uint64_t f_create_time;
     uint64_t f_read_time;

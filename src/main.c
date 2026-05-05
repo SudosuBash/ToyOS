@@ -13,7 +13,7 @@
 #include <kernel/syscall/syscall.h>
 #include <kernel/drivers/drv.h>
 #include <kernel/fs/devicefs.h>
-
+#include <kernel/stdlib.h>
 
 void kernel_start() {
     init_irq();
@@ -26,5 +26,9 @@ void kernel_start() {
     init_drv();
     
     device_try_probe(0x8086, 0x03f8);
+    int fd = do_open("/test_file");
+
+    char* test = "Hello, printk!\n";
+    do_write(fd, test, strlen(test));
     while(1) hlt();
 }

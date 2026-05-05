@@ -6,14 +6,14 @@
 DEFINE_PERCPU_VAR(cache_per_cpu[10], struct kmem_cache);
 // struct kmem_cache* caches[10]; //2^3~2^13
 
-void* kmalloc(size_t sz) {
+void* kmalloc(size_t sz, uint64_t flag) {
     struct kmem_cache *caches = THIS_CPU_VAR(cache_per_cpu);
     assert(sz!=0);
     int require_sz = highest_up_1(sz);
     if(require_sz < 3) require_sz = 3; //最小8
     if(require_sz < 13) { //4096 kb
         require_sz-=3;
-        void* mem = kmem_cache_alloc(&caches[require_sz]);
+        void* mem = kmem_cache_alloc(&caches[require_sz], flag);
         return mem;
     } else { //
         struct page* pg = alloc_page(MM_PAGE_PINDEX(PAGE_ROUND_UP(sz)));

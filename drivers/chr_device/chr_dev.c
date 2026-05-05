@@ -1,5 +1,8 @@
 #include <kernel/drivers/drv.h>
+#include <kernel/vfs/vfs.h>
+#include <kernel/fs/devicefs.h>
 #include <kernel/put.h>
+#include <kernel/fault/error.h>
 
 static struct drv_class chr_drv;
 
@@ -8,17 +11,40 @@ static drv_match_table table = {
     {0,0}
 };
 
+static struct file* drv_do_open(struct directory* dir) {
+    put_str("[serial driver] opening drv...\n");
+    struct file* fd = alloc_file(dir);
+    if(IS_ERR(fd))
+        return ERR_PTR(fd);
+    return fd;
+}
+
+static stat_t drv_do_write(struct file* file, void* buf, size_t len) {
+    char* cbuf = (char*)buf;
+    cbuf[len] = 0;
+    put_str(cbuf);
+    return 0;
+}
+
+struct dir_operation oper = {
+    .do_open = drv_do_open,
+    .do_write = drv_do_write
+};
+
 static void chr_drv_init() {
-    put_str("chr driver init!\n");
+    put_str("[serial driver] initializing....\n");
     drv_device_match(&chr_drv, &table);
 }
 
 static void chr_drv_probe(struct device* dev) {
-    put_str("chr driver probe!\n");
+    put_str("[serial driver] found the device: 8086:03f8. probing...\n");
+    DEVICE_BIND_FILE_OP(dev, oper);
+    devicefs_mount("/", "test_file", dev);
 }
 
 static void chr_drv_destroy(struct device* dev) {
-    put_str("chr driver destroy!\n");
+    put_str("[serial driver] serial driver destroyed.\n");
+    devicefs_unmount("/test_file", dev);
 }
 
 static struct drv_class chr_drv = {
@@ -27,5 +53,4 @@ static struct drv_class chr_drv = {
     .destroy = chr_drv_destroy
 };
 
-
-MODULE_SET_DEVICE(chr_drv);
+MODULE_SET_DRIVER_OP(chr_drv);

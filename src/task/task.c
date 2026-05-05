@@ -30,8 +30,8 @@ static void timer_irq_handler(struct arch_regs* frame) {
 
 static void init_pid() {
     uint64_t pid_sz = sizeof(struct pid) + sizeof(struct pid_ns_layer);
-    glob_nr = kmalloc(sizeof(struct pid_nr));
-    struct pid* new = kmalloc(pid_sz);
+    glob_nr = kmalloc(sizeof(struct pid_nr), GFP_KERNEL);
+    struct pid* new = kmalloc(pid_sz, GFP_KERNEL);
 
     memset(glob_nr, 0, sizeof(struct pid_nr));
 
