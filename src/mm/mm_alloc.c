@@ -6,7 +6,8 @@
 DEFINE_PERCPU_VAR(cache_per_cpu[10], struct kmem_cache);
 // struct kmem_cache* caches[10]; //2^3~2^13
 
-void* kmalloc(size_t sz, uint64_t flag) {
+void* kmalloc(size_t sz, uint64_t flag) {   
+
     struct kmem_cache *caches = THIS_CPU_VAR(cache_per_cpu);
     assert(sz!=0);
     int require_sz = highest_up_1(sz);

@@ -24,7 +24,6 @@ int irq_register(
     uint64_t num,
     irq_handler_t fn
 ) {
-
     if(num >= IRQ_MAX_CNT) return 0;
     irq_handler_fns[num] = fn;
     return 1;

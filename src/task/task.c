@@ -46,7 +46,7 @@ static void init_pid() {
 
 static void init_userspace_mm() {
     INIT_LIST_HEAD(&idle.mm_user.vm_area_link);
-
+    rwlock_init(&idle.mm_user.rwlock);
     idle.mm_user.vm_area_root.rb_node = NULL;
     idle.mm_user.brk = 0;
 }

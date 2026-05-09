@@ -19,14 +19,12 @@ void do_exec(int (*fn)(void*)) {
         destroy_vma(&target_vma);
     }
 
-    // kfree(pgd);
-
-    void* stack = kmalloc(2 * PAGE_SZ);
+    void* stack = kmalloc(2 * PAGE_SZ, GFP_KERNEL);
     pgd_t* kern_pgd = get_pgd(0);
     copy_pgd(new_pgd, kern_pgd);
     
-    do_mmap((void*)KERN_VADDR_TO_PADDR(fn), (void*)0x400000, 4096 * 10, 0, PERM_X);
-    do_mmap((void*)VADDR2PHYS(stack), (void*)USER_STACK_POS, 2 * PAGE_SZ, 0, PERM_W);
+    do_remap((void*)KERN_VADDR_TO_PADDR(fn), (void*)0x400000, 4096 * 10, PERM_X);
+    do_remap((void*)VADDR2PHYS(stack), (void*)USER_STACK_POS, 2 * PAGE_SZ, PERM_W);
     
     arch_do_exec(fn, current);
 }

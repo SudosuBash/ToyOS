@@ -35,10 +35,24 @@ void do_pte_fast_mmap(
 }
 
 void* do_mmap(
-    void* paddr,
     void* vaddr,
     uint64_t sz,
     uint16_t flag,
+    uint16_t prot) {
+        
+    struct task_struct* current = CURRENT_PROCESS();
+    uintptr_t addr = ((uint64_t)vaddr & PAGE_MASK);
+    uintptr_t st = addr;
+    uintptr_t ed = PAGE_ROUND_UP(addr + sz);
+    struct user_vm_area* area = new_area(st, ed, flag, prot);
+    insert_into_vma(area, &current->mm_user);
+    return (void*)addr;
+}
+
+void* do_remap(
+    void* paddr,
+    void* vaddr,
+    uint64_t sz,
     uint16_t prot
 ) {
     struct task_struct* current = CURRENT_PROCESS();
@@ -49,30 +63,24 @@ void* do_mmap(
     uintptr_t pst = ((uint64_t)paddr & PAGE_MASK), st = addr;
     uintptr_t ed = PAGE_ROUND_UP(addr + sz);
 
-    if(!(flag & FLAG_KERN_ONLY)) {
-        struct user_vm_area* area = new_area(st, ed, flag, prot);
-        insert_into_vma(area, &current->mm_user);
-    }
-
-
     for(; st < ed; st+=PAGE_SZ, pst += PAGE_SZ) {
-        pte = get_user_pte(st, pgd, flag );
+        pte = get_user_pte(st, pgd);
         uint64_t present = pte->present;
         pte->present = 1;
-        pte->nx = 0;
         //这个每次查表的话，其实可以优化，但是优化起来的代码可读性很差，所以还是算了
         if(prot & PERM_W) pte->rw = 1;
         if(!(prot & PERM_X)) pte->nx = 1;
-        if(!(flag & FLAG_KERN_ONLY)) pte->us = 1;
+        //pte->us = 0;
+        pte->us = 1; //后续完善内存分页机制后, 这个会改为 0, 现在临时用一下
         pte->base_addr = (uint64_t)pst >> PAGE_OFFSET;
         
-        struct page* pg = find_page_by_paddr(pst);
-        struct page* head = find_head_page(pg);
-        if(head == NULL) {
-            crash("Aiee, attempt to mmap the reserved area!");
-        }
-        pg->page_flags |= MM_BUDDY_FLAG_MMAP;
-        ref_page(head);
+        // struct page* pg = find_page_by_paddr(pst);
+        // struct page* head = find_head_page(pg);
+        // if(head == NULL) {
+        //     crash("Aiee, attempt to remap the reserved area!");
+        // }
+        // pg->page_flags |= MM_BUDDY_FLAG_MMAP;
+        // ref_page(head);
         if(present) {
             barrier();
             invlpg(st);
@@ -100,17 +108,14 @@ void do_munmap(
 }
 
 pgd_t* alloc_pgd() {
-    pgd_t* pgd = (pgd_t*)kmalloc(sizeof(pgd_t) * PAGE_PTE_ENTRIES);
+    pgd_t* pgd = (pgd_t*)kmalloc(sizeof(pgd_t) * PAGE_PTE_ENTRIES, GFP_ATOMIC);
     memset(pgd,0,sizeof(pgd_t) * PAGE_PTE_ENTRIES);
     return pgd;
 }
 
 
 DEFINE_SYSCALL4(mmap, vaddr, void*, sz, size_t, flag, uint16_t, prot, uint16_t) {
-    void* alloced_mem = kmalloc(sz);
-    if(IS_ERR(alloced_mem))
-        return 0;
-    return (long)do_mmap((void*)VADDR2PHYS((uint64_t)alloced_mem), vaddr, sz, flag, prot);
+    return (long)do_mmap(vaddr, sz, flag, prot);
 }
 
 DEFINE_SYSCALL2(munmap, vaddr, void*, sz, size_t) {

@@ -34,7 +34,7 @@ void kmem_cache_free(void* addr) {
     page->alloced_blocks--;
     if(page->alloced_blocks == 0) {
         list_del_init(&page->sibling);
-        atomic_dec(&cache->cache_using_blks);
+        atomic_dec_and_test(&cache->cache_using_blks);
         spin_unlock(&cache->cache_lock);
         free_page(page);
     } else {
@@ -44,6 +44,9 @@ void kmem_cache_free(void* addr) {
 
 void* kmem_cache_alloc(struct kmem_cache* cache, uint64_t flag) {
     assert(cache != NULL);
+    if(flag & GFP_ATOMIC)
+        preempt_disable();
+    barrier();
     spin_lock(&cache->cache_lock);
 cache_partial:
     if(!list_empty(&cache->partial)) {
@@ -57,6 +60,8 @@ cache_partial:
             list_del(cache->partial.next);
         }
         spin_unlock(&cache->cache_lock);
+        if(flag & GFP_ATOMIC)
+            preempt_enable();
         return addr;
     }
     spin_unlock(&cache->cache_lock);
@@ -65,6 +70,9 @@ cache_partial:
 
     struct page* new_page = alloc_page(alloc_count);
     if(IS_ERR(new_page)) {
+        if(flag & GFP_ATOMIC)
+            preempt_enable();
+        barrier();
         return ERR_PTR(new_page);
     }
     spin_lock(&cache->cache_lock);
@@ -98,7 +106,7 @@ void kmem_cache_destroy(struct kmem_cache* *cache) {
     if(target->cache_using_blks.count != 0) {
         warn("SLUB ALLOCATOR: attempt to release a using cache!");
         put_str("   On Object ");
-        put_hex(target);
+        put_hex((uintptr_t)target);
         put_char('\n');
         return;
     }

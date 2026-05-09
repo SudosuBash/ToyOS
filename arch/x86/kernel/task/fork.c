@@ -73,11 +73,16 @@ void arch_set_mm_user(
     struct user_vm_area* target
 ) {
     
+    rwlock_read_lock(&old_task->mm_user.rwlock);
+    rwlock_read_lock(&new_task->mm_user.rwlock);
     pgd_t* old_pgd = old_task->mm_user.pg_root;
     pgd_t* new_pgd = new_task->mm_user.pg_root;
+    rwlock_read_unlock(&new_task->mm_user.rwlock);
+    rwlock_read_unlock(&old_task->mm_user.rwlock);
+
     for(uintptr_t p = target->mem_start;p < target->mem_end; p+=PAGE_SZ) {
-        pte_t* old_pte = get_user_pte(p, old_pgd, target->flag);
-        pte_t* new_pte = get_user_pte(p, new_pgd, target->flag);
+        pte_t* old_pte = get_user_pte(p, old_pgd);
+        pte_t* new_pte = get_user_pte(p, new_pgd);
         
         uintptr_t paddr = get_pte_paddr(p, old_pte);
         do_pte_fast_mmap((void*)paddr, target->flag, target->perm, new_pte);

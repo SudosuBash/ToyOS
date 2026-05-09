@@ -10,8 +10,13 @@
 DECLARE_PERCPU_VAR(current_process, struct task_struct*);
 DECLARE_PERCPU_VAR(user_rsp, uintptr_t);
 DECLARE_PERCPU_VAR(kernel_rsp, uintptr_t);
+DECLARE_PERCPU_VAR(percpu_preempt_count, atomic_t);
 
 void schedule() {
+    atomic_t* preempt_count = THIS_CPU_PTR(percpu_preempt_count);
+    if(preempt_count->count != 0) //PREEMPT DISABLE
+        return;
+    
     struct cpu_task_manager* manager = get_cpu_manager();
     struct task_struct* current = CURRENT_PROCESS();
     struct task_struct* tasks = manager->class.next_task();

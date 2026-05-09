@@ -26,10 +26,9 @@ inline struct user_vm_area* new_area(uintptr_t start, uintptr_t end, uint16_t fl
 void insert_into_vma(struct user_vm_area *target_area, struct mm_user *user) {
     struct rb_node *curr, *parent;
     struct user_vm_area *area;
-    
 
     INIT_LIST_HEAD(&target_area->head);
-    list_insert(&target_area->head, &user->vm_area_link);
+    list_insert_rcu(&target_area->head, &user->vm_area_link);
     rb_init_node(&target_area->sibling);
     if(user->vm_area_root.rb_node == NULL) {
         rb_link_node(&target_area->sibling, NULL, &user->vm_area_root.rb_node);
@@ -63,6 +62,22 @@ void remove_from_vma(struct user_vm_area *victim, struct mm_user *user) {
 void destroy_vma(struct user_vm_area** victim) {
     kmem_cache_free(*victim);
     *victim = NULL;
+}
+
+struct user_vm_area* find_vm_area(struct mm_user* area, uintptr_t addr) {
+    struct rb_node* curr;
+    struct user_vm_area *varea;
+    curr = area->vm_area_root.rb_node;
+    while(curr) {
+        varea = container_of(curr, struct user_vm_area, sibling);
+        if(varea->mem_start <= addr && varea->mem_end >= addr) {
+            return varea;
+        } else if(varea->mem_start > addr) 
+            curr = curr->rb_left;
+        else
+            curr = curr->rb_right;
+    }
+    return NULL;
 }
 
 void init_vma_area() {

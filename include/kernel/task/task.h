@@ -15,8 +15,6 @@
 #define TASK_KERNEL_THREAD_FLAG 0b10
 #define TASK_KERNEL_THREAD_MASK ~TASK_KERNEL_THREAD_FLAG
 #define TASK_RET_FROM_FORK_MASK ~TASK_RET_FROM_FORK_FLAG
-#define TASK_STATUS_RUNNING 0b1
-#define TASK_STATUS_SLEEP 0b10
 
 #define TASK_MAX_FILES 512
 
@@ -40,6 +38,7 @@ struct task_struct {
     uint64_t flags; //标志位
     uint64_t rest_time; 
     rwlock_t rwlock;
+    
 };
 
 struct task_struct* get_current_process();

@@ -4,6 +4,7 @@
 #include <kernel/ptable/ptable.h>
 #include <kernel/base/linklist.h>
 #include <kernel/base/rbtree.h>
+#include <kernel/atomic/rwlock.h>
 
 #define PERM_X 1
 #define PERM_W 2
@@ -25,6 +26,7 @@ struct mm_user {
     struct linklist_head vm_area_link;
     pgd_t* pg_root; //根页表
     uintptr_t brk;  
+    rwlock_t rwlock;
 };
 
 void init_vma_area();
@@ -33,4 +35,5 @@ void insert_into_vma(struct user_vm_area *target_area, struct mm_user *user);
 void remove_from_vma(struct user_vm_area *victim, struct mm_user *user);
 void destroy_vma(struct user_vm_area** victim);
 struct user_vm_area* copy_area(struct user_vm_area* area);
+struct user_vm_area* find_vm_area(struct mm_user* area, uintptr_t addr);
 #endif

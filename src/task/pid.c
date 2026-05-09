@@ -35,14 +35,14 @@ void alloc_pid(struct task_struct* task, uint64_t flags) {
     uint64_t layers = parent->pid_layers;
     if(flags & CLONE_NEW_PID_NS) 
         layers += 1;
-    struct pid* new = kmalloc(sizeof(struct pid) + (layers) * sizeof(struct pid_ns_layer));
+    struct pid* new = kmalloc(sizeof(struct pid) + (layers) * sizeof(struct pid_ns_layer), GFP_KERNEL);
     memset(new, 0, sizeof(struct pid));
     task->pid = new;
     task->pid->pid_layers = layers;
 
     if(flags & CLONE_NEW_PID_NS) {
         struct pid_ns_layer* last_layer = &new->layer[layers-1];
-        last_layer->nr = kmalloc(sizeof(struct pid_nr));
+        last_layer->nr = kmalloc(sizeof(struct pid_nr), GFP_KERNEL);
         memset(last_layer->nr, 0, sizeof(struct pid_nr));
         init_new_pid_nr(last_layer->nr);
         init_pid_ns_layer(last_layer, task);

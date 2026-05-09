@@ -17,7 +17,7 @@ void rwlock_read_unlock(rwlock_t* lock) {
     sem_p(&lock->rwlock_readers_mutex);
     lock->readers--;
     if(lock->readers == 0)
-        sem_p(&lock->rwlock_mutex);
+        sem_v(&lock->rwlock_mutex);
     sem_v(&lock->rwlock_readers_mutex);
 }
 

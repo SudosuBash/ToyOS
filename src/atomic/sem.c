@@ -1,7 +1,10 @@
 #include <kernel/atomic/sem.h>
+#include <kernel/task/task.h>
 
 void sem_p(sem_t* sem) {
-    atomic_dec_and_test(&sem->value);
+    if(atomic_dec_and_test(&sem->value)) {
+        schedule();
+    }
 }
 
 void sem_v(sem_t* sem) {

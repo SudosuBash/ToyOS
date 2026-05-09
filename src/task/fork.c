@@ -16,13 +16,20 @@ static void dup_task_struct(struct task_struct* dst,struct task_struct* src) {
 
 static void copy_mm_user(struct task_struct* task, struct task_struct* old, uint64_t flag) {
     struct linklist_head* current;
+    
     INIT_LIST_HEAD(&task->mm_user.vm_area_link); //必须在前面init, 否则内核线程直接无法初始化了, exec 会导致错误
-    if(old->mm_user.pg_root == NULL) //父线程就是内核线程, return
+    rwlock_read_lock(&task->mm_user.rwlock);
+    if(old->mm_user.pg_root == NULL) {//父线程就是内核线程, return
+        rwlock_read_unlock(&task->mm_user.rwlock);
         return;
+    }
     
-    if(flag & CLONE_THREAD) //内核线程
+    if(flag & CLONE_THREAD) {//内核线程
+        rwlock_read_unlock(&task->mm_user.rwlock);
         return;
+    }
     
+    rwlock_init(&task->rwlock);
     task->mm_user.pg_root = alloc_pgd();
     task->mm_user.vm_area_root.rb_node = NULL;//从空树开始插
 
@@ -35,6 +42,8 @@ static void copy_mm_user(struct task_struct* task, struct task_struct* old, uint
         insert_into_vma(area, &task->mm_user);
         arch_set_mm_user(task, old, area);
     }
+    
+    rwlock_read_unlock(&task->mm_user.rwlock);
 }
 
 static void copy_thread(
@@ -50,7 +59,7 @@ static void copy_thread(
     task->flags |= TASK_RET_FROM_FORK_MASK;
     task->rest_time = SCHED_RR_TS;
     INIT_LIST_HEAD(&task->sibling);
-    task->kstack = kmalloc(PAGE_SZ * PROCESS_STACK_PAGE);
+    task->kstack = kmalloc(PAGE_SZ * PROCESS_STACK_PAGE, GFP_KERNEL);
     arch_dup_thread(task, origin, regs, flag);
 }
 
@@ -59,7 +68,7 @@ static void copy_process(struct arch_regs* regs, uint64_t flag, char* name) {
     struct cpu_task_manager* manager = get_cpu_manager();
     
     struct task_struct* current = CURRENT_PROCESS();
-    struct task_struct* new_task = (struct task_struct*) kmalloc(sizeof(struct task_struct));
+    struct task_struct* new_task = (struct task_struct*) kmalloc(sizeof(struct task_struct), GFP_KERNEL);
     
     dup_task_struct(new_task, current);
 

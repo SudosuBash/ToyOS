@@ -15,6 +15,26 @@
 #include <kernel/fs/devicefs.h>
 #include <kernel/stdlib.h>
 
+int test_fn(void* test) {
+    asm volatile (
+        "movq $0, %rax\r\n"
+        "movq $0x7fff00, %rdi\r\n"
+        "movq $256, %rsi\r\n"
+        "movq $2, %r10\r\n"
+        "movq $2, %rdx\r\n"
+        "syscall"
+    );
+    *(uint64_t*)(0x7fff00) = 1;
+    while(1);
+}
+
+int idle_1(void* test) {
+    disable_irq();
+    
+    do_exec(test_fn);
+    return 0;
+}
+
 void kernel_start() {
     init_irq();
     init_smp();
@@ -24,11 +44,13 @@ void kernel_start() {
     init_syscall();
     init_vfs();
     init_drv();
-    
-    device_try_probe(0x8086, 0x03f8);
-    int fd = do_open("/test_file");
 
-    char* test = "Hello, printk!\n";
-    do_write(fd, test, strlen(test));
+    kernel_thread(idle_1, NULL, "Idle 1");
+    enable_irq();
+    // device_try_probe(0x8086, 0x03f8);
+    // int fd = do_open("/test_file");
+
+    // char* test = "Hello, printk!\n";
+    // do_write(fd, test, strlen(test));
     while(1) hlt();
 }

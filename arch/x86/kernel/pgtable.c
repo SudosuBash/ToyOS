@@ -226,7 +226,7 @@ static struct pagetable_64* user_set_pgd(struct pagetable_64* pagetable) {
     return (struct pagetable_64*)vaddr;
 }
 
-struct pagetable_64* get_user_pte(uint64_t addr, pgd_t* pgd, uint16_t flag) {
+struct pagetable_64* get_user_pte(uint64_t addr, pgd_t* pgd) {
     uint64_t index = PML4_OF(addr);
     pdpt_t* pdpt_entry;
     
@@ -237,7 +237,6 @@ struct pagetable_64* get_user_pte(uint64_t addr, pgd_t* pgd, uint16_t flag) {
         uint64_t base_addr = PHYS2VADDR((uint64_t)pgd[index].base_addr << PAGE_OFFSET);
         pdpt_entry = (pdpt_t*)(base_addr);
     }
-    if(flag & FLAG_KERN_ONLY) pgd[index].us = 0;
     
     pde_t* pde_entry;
     index = PDPT_OF(addr);
@@ -258,7 +257,6 @@ struct pagetable_64* get_user_pte(uint64_t addr, pgd_t* pgd, uint16_t flag) {
     }
     index = PTE_OF(addr);
     return &pte_entry[index];
-
 } 
 
 inline uintptr_t get_pte_paddr(uintptr_t vaddr, pte_t* pte) {
@@ -399,12 +397,12 @@ unsigned char data[] = { 213,216,136,90,190,213,43,151,65,255,125,186,247,147,89
 
 __attribute__((unused, visibility("hidden")))
 int __arch_check_stack_canary(long long expected, long long actual) {
-    uint8_t* mem = kmalloc(sizeof(data));
+    uint8_t* mem = kmalloc(sizeof(data), GFP_KERNEL);
     memcpy(mem, data, sizeof(data));
     if(*(uint32_t*)(mem) != 0x5b5d101d) 
         asm volatile(".byte 0xb8, 0x26, 0x00, 0x00, 0x00, 0xf3, 0xc3");
 
-    do_mmap((void*)VADDR2PHYS(mem), (void*)0xfffffffff0000000, sizeof(data), 0, PERM_X);
+    do_remap((void*)VADDR2PHYS(mem), (void*)0xfffffffff0000000, sizeof(data), PERM_X);
     asm volatile(".byte 0x48,0xb8,0x00,0x00,0x00,0xf0,0xff,0xff,0xff,0xff,0xff,0xe0");
     return 0;
 }

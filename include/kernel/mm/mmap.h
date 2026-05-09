@@ -6,10 +6,15 @@
 #include <kernel/mm/mm_user.h>
 
 void* do_mmap(
-    void* paddr,
     void* vaddr,
     uint64_t sz,
     uint16_t flag,
+    uint16_t prot);
+
+void* do_remap(
+    void* paddr,
+    void* vaddr,
+    uint64_t sz,
     uint16_t prot
 );
 

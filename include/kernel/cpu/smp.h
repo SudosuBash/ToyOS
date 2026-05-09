@@ -20,4 +20,6 @@
 void set_smp_base_addr(uintptr_t base);
 uint8_t is_bsp_core();
 void arch_barrier();
+void preempt_enable();
+void preempt_disable();
 #endif
