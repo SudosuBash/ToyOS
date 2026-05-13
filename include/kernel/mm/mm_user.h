@@ -17,6 +17,7 @@ struct user_vm_area {
     uintptr_t mem_start;
     uintptr_t mem_end;
     uintptr_t kern_mem_start;
+    uint32_t fd;
     uint8_t perm; //设置内存权限
     uint8_t flag; //申请内存的flag
 }; 
@@ -30,7 +31,7 @@ struct mm_user {
 };
 
 void init_vma_area();
-struct user_vm_area* new_area(uintptr_t start, uintptr_t end, uint16_t flag, uint16_t prot);
+struct user_vm_area* new_area(uintptr_t start, uintptr_t end, uint16_t flag, uint32_t fd, uint16_t prot);
 void insert_into_vma(struct user_vm_area *target_area, struct mm_user *user);
 void remove_from_vma(struct user_vm_area *victim, struct mm_user *user);
 void destroy_vma(struct user_vm_area** victim);

@@ -9,7 +9,7 @@
 #include <kernel/cpu/archimpl.h>
 #include <kernel/task/task.h>
 #include <kernel/task/fork.h>
-#include <kernel/task/exec.h>
+# include <kernel/task/exec.h>
 #include <kernel/syscall/syscall.h>
 #include <kernel/drivers/drv.h>
 #include <kernel/fs/devicefs.h>
@@ -47,10 +47,11 @@ void kernel_start() {
 
     kernel_thread(idle_1, NULL, "Idle 1");
     enable_irq();
-    // device_try_probe(0x8086, 0x03f8);
-    // int fd = do_open("/test_file");
+    device_try_probe(0x8086, 0x03f8);
+    int fd = do_open("/test_file");
 
-    // char* test = "Hello, printk!\n";
-    // do_write(fd, test, strlen(test));
+    char* test = "Hello, printk!\n";
+    do_write(fd, test, strlen(test));
+    enable_irq();
     while(1) hlt();
 }

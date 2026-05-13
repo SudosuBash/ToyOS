@@ -6,6 +6,7 @@
 #include <kernel/fault/error.h>
 #include <kernel/mm/mm_user.h>
 #include <kernel/cpu/smp.h>
+#include <kernel/base/math.h>
 #include <kernel/task/task.h>
 
 static struct page *page_start;
@@ -123,7 +124,6 @@ void free_page(struct page* page) {
     mem_alloced_pages-=pages;
 }
 
-//标记: 是否为 slub
 struct page* alloc_page(uint64_t pages) {
     assert(pages!=0);
     if(pages == 0) return 0;
@@ -182,6 +182,13 @@ inline struct page* find_page_by_vaddr(uintptr_t ptr) {
     if(index >= mem_side_pages) return 0;
     if(index < 0) return 0;
     return &page_start[index];
+}
+
+inline void* get_page_paddr(struct page* page) {
+    uintptr_t index = (uintptr_t)(page - page_start);
+    if(index >= mem_side_pages) return 0;
+    if(index < 0) return 0;
+    return (void*)(index << PAGE_OFFSET);
 }
 
 inline void* get_page_vaddr(struct page* page) {

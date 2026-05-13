@@ -1,7 +1,6 @@
 #ifndef _TOYOS_MEM
 #define _TOYOS_MEM
 
-#include <kernel/math.h>
 #include <kernel/config.h>
 #include <kernel/stdint.h>
 #include <kernel/atomic/spinlock.h>

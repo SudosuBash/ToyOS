@@ -2,6 +2,7 @@
 #define _TOYOS_STDINT
 
 typedef unsigned char uint8_t;
+typedef char int8_t;
 typedef unsigned short uint16_t;
 typedef short int16_t;
 typedef unsigned int uint32_t;
@@ -16,4 +17,9 @@ typedef long long int64_t;
 typedef uintptr_t size_t;
 
 typedef int64_t stat_t;
+
+typedef uint8_t bool;
+#define true 1
+#define false 0
+
 #endif

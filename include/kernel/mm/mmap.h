@@ -9,6 +9,7 @@ void* do_mmap(
     void* vaddr,
     uint64_t sz,
     uint16_t flag,
+    uint32_t fd,
     uint16_t prot);
 
 void* do_remap(
@@ -18,10 +19,8 @@ void* do_remap(
     uint16_t prot
 );
 
-void do_pte_fast_mmap(
+void user_cow_remap(
     void* paddr, 
-    uint16_t flag,
-    uint16_t prot,
     pte_t* pte);
 
 pgd_t* alloc_pgd();

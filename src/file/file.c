@@ -9,7 +9,6 @@
 
 //long的话便于传递ERR_PTR指针, 返回 fd
 DEFINE_PERCPU_VAR(percpu_file_allocator, struct kmem_cache);
-static struct kmem_cache* file_allocator;
 
 int64_t do_open(char* path) {
     struct task_struct* current = CURRENT_PROCESS();
@@ -60,6 +59,7 @@ int32_t do_mkdir(char* name, uint64_t flag) {
 }
 
 struct file* alloc_file(struct directory* dir) {
+    struct kmem_cache* file_allocator = THIS_CPU_PTR(percpu_file_allocator);
     struct file* fd = kmem_cache_alloc(file_allocator, GFP_KERNEL);
 
     if(IS_ERR(fd))
@@ -76,6 +76,6 @@ struct file* alloc_file(struct directory* dir) {
 }
 
 void init_file_env() {
-    file_allocator = THIS_CPU_PTR(percpu_file_allocator);
+    struct kmem_cache* file_allocator = THIS_CPU_PTR(percpu_file_allocator);
     kmem_cache_init(file_allocator, sizeof(struct file));
 }

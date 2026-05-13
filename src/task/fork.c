@@ -1,6 +1,6 @@
 #include <kernel/task/fork.h>
 #include <kernel/task/task.h>
-#include <kernel/task/task_manager.h>
+#include <kernel/sched/sched.h>
 #include <kernel/stdlib.h>
 #include <kernel/put.h>
 #include <kernel/mm/mm_user.h>
@@ -57,17 +57,20 @@ static void copy_thread(
         task->flags |= TASK_KERNEL_THREAD_FLAG;
     }
     task->flags |= TASK_RET_FROM_FORK_MASK;
-    task->rest_time = SCHED_RR_TS;
+    
     INIT_LIST_HEAD(&task->sibling);
     task->kstack = kmalloc(PAGE_SZ * PROCESS_STACK_PAGE, GFP_KERNEL);
+#if defined(CONFIG_EEVDF)
+    task->vdeadtime = 0;
+#endif
     arch_dup_thread(task, origin, regs, flag);
 }
 
 
 static void copy_process(struct arch_regs* regs, uint64_t flag, char* name) {
-    struct cpu_task_manager* manager = get_cpu_manager();
     
     struct task_struct* current = CURRENT_PROCESS();
+
     struct task_struct* new_task = (struct task_struct*) kmalloc(sizeof(struct task_struct), GFP_KERNEL);
     
     dup_task_struct(new_task, current);
@@ -76,7 +79,9 @@ static void copy_process(struct arch_regs* regs, uint64_t flag, char* name) {
     copy_thread(new_task, current, regs, flag, name);
     
     alloc_pid(new_task, flag);
-    manager->class.task_enqueue(new_task);
+
+    struct scheduler* se = new_task->scheduler;
+    se->s_class.task_enqueue(se, new_task);
 }
 
 static void do_fork(struct arch_regs* regs, uint64_t flag, char* name) {

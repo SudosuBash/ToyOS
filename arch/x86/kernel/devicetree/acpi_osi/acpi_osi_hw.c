@@ -10,7 +10,7 @@ AcpiOsReadPort (
 }
 
 ACPI_STATUS
-AcpiOsWritePort (
+AcpiOsWritePort 
     ACPI_IO_ADDRESS         Address,
     UINT32                  Value,
     UINT32                  Width) {

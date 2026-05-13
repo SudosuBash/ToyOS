@@ -1,13 +1,6 @@
 #include <kernel/stdlib.h>
-#include <kernel/math.h>
 #include <kernel/cpu/smp.h>
-
-void memset(void* addr,uint8_t val, size_t size) {
-    uint8_t* uaddr = (uint8_t*)addr;
-    for(int i=0;i<size;i++) {
-        uaddr[i] = val;
-    }
-}
+#include <kernel/base/math.h>
 
 void hex_to_dec(uint64_t n,char* buf) {
     char bufc[21] = {0};
@@ -61,14 +54,6 @@ void hex_to_str(uint64_t n,char* buf,int leng) {
         buf[i]=bufc[20-len+1+i];
     }
     buf[len] = '\0';
-}
-
-void memcpy(void* dst, void* src, size_t sz) {
-    uint8_t* dst_e = (uint8_t*) dst;
-    uint8_t* src_e = (uint8_t*) src;
-    for(int i=0;i<sz;i++) {
-        dst_e[i] = src_e[i];
-    }
 }
 
 size_t strlen(char* c) {

@@ -16,6 +16,5 @@ struct kernel_vma {
 struct kernel_vma_table {
     struct rb_root vma_root;
     struct linklist_head vma_head;
-
 };
 #endif

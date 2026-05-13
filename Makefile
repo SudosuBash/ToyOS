@@ -22,12 +22,11 @@ KERNEL_BIN := kernel
 
 # 内核通用的对象文件 (根据你的目录结构提取)
 KERNEL_OBJS := $(SRC_DIR)/main.o \
-               $(SRC_DIR)/math.o \
+               $(SRC_DIR)/base/math.o \
                $(SRC_DIR)/stdlib.o \
-			   $(SRC_DIR)/sched/sched_mlfq.o \
-			   $(SRC_DIR)/sched/sched_rr.o \
+			   $(SRC_DIR)/sched/sched_eevdf.o \
 			   $(SRC_DIR)/task/fork.o \
-			   $(SRC_DIR)/task/task_manager.o \
+			   $(SRC_DIR)/sched/sched.o \
 			   $(SRC_DIR)/task/switch_task.o \
 			   $(SRC_DIR)/task/task.o \
 			   $(SRC_DIR)/task/pid.o \

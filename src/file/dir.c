@@ -20,13 +20,12 @@ static struct vfs_inode root_node = {
 };
 static rwlock_t dir_lock;
 
-static struct kmem_cache* dir_node_allocator;
-//任何节点都是一个 directory 对象
 
 DEFINE_PERCPU_VAR(dir_node_percpu_allocator, struct kmem_cache)
 
 
 struct directory* create_dir_node(char* name, struct directory* dir, struct vfs_inode* inode) {
+    struct kmem_cache* dir_node_allocator = THIS_CPU_PTR(dir_node_percpu_allocator);
     struct directory* new_dir = kmem_cache_alloc(dir_node_allocator, GFP_KERNEL);
     if(IS_ERR(new_dir)) 
         return ERR_PTR(new_dir);
@@ -144,7 +143,7 @@ struct directory* find_path_dir(struct directory* dir, char* path) {
 }
 
 void init_dir_module() {
-    dir_node_allocator = THIS_CPU_PTR(dir_node_percpu_allocator);
+    struct kmem_cache* dir_node_allocator = THIS_CPU_PTR(dir_node_percpu_allocator);
     kmem_cache_init(dir_node_allocator, sizeof(struct kmem_cache));
 
     __init_root_dir();

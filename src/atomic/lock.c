@@ -7,6 +7,7 @@ inline void spin_init(spinlock_t* lk) {
 }
 
 void spin_lock(spinlock_t* lk) {
+    preempt_disable();
     while(atomic_cas(&lk->value,1,0) == 1);
     barrier();
 }
@@ -14,4 +15,5 @@ void spin_lock(spinlock_t* lk) {
 void spin_unlock(spinlock_t* lk) {
     barrier();
     lk->value = 0;
+    preempt_enable();
 }

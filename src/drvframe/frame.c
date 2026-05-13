@@ -12,12 +12,11 @@ extern struct drv_class *__drv_init_start, *__drv_init_end;
 DEFINE_PERCPU_VAR(percpu_device_allocator, struct kmem_cache);
 DEFINE_PERCPU_VAR(percpu_driver_allocator, struct kmem_cache);
 
-static struct kmem_cache* device_allocator;
-static struct kmem_cache* driver_allocator;
 
 static struct htable_list device_bus;
 
 static struct device* new_device() {
+    struct kmem_cache* device_allocator = THIS_CPU_PTR(percpu_device_allocator);
     struct device* dev = kmem_cache_alloc(device_allocator, GFP_KERNEL);
     if(IS_ERR(dev))
         return dev;
@@ -27,6 +26,7 @@ static struct device* new_device() {
 }
 
 static struct driver* new_driver() {
+    struct kmem_cache* driver_allocator = THIS_CPU_PTR(percpu_driver_allocator);
     struct driver* dv = kmem_cache_alloc(driver_allocator, GFP_KERNEL);
     if(IS_ERR(dv))
         return dv;
@@ -73,6 +73,7 @@ void device_try_probe(uint16_t vendor_id, uint16_t device_id) {
                 new_dev->d_op = drv->class;
                 new_dev->device_id = device_id;
                 new_dev->vendor_id = vendor_id;
+                barrier();
                 new_dev->d_op.probe(new_dev);
             }
 
@@ -82,8 +83,8 @@ void device_try_probe(uint16_t vendor_id, uint16_t device_id) {
 }
 
 void init_drv() {
-    device_allocator = THIS_CPU_PTR(percpu_device_allocator);
-    driver_allocator = THIS_CPU_PTR(percpu_driver_allocator);
+    struct kmem_cache* device_allocator = THIS_CPU_PTR(percpu_device_allocator);
+    struct kmem_cache* driver_allocator = THIS_CPU_PTR(percpu_driver_allocator);
     kmem_cache_init(device_allocator, sizeof(struct device));
     kmem_cache_init(driver_allocator, sizeof(struct driver));
 

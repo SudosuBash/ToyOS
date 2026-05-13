@@ -41,7 +41,8 @@ PT_OBJS      := kernel/kern_start.o \
 				kernel/task/switch.o \
 				kernel/syscall/sysenter.o \
 				kernel/syscall/sysenter_fn.o \
-
+				kernel/stdlib.o 
+				
 .PHONY: all clean
 
 all: boot.bin kloader.bin pt.o
@@ -94,8 +95,6 @@ pt.o: $(PT_OBJS) kernel/klinker.lds
 	@$(LD) -r $(PT_OBJS) -o $@
 	@echo "	LD" $<
 
-
-# --- 清理 ---
 clean:
 	rm -f *.o *.bin *.elf */**/*.o **/*.lds **/*.o */*.asm klinker.lds generated/*
 	find . -name "*.o" -delete

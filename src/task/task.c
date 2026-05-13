@@ -5,7 +5,7 @@
 #include <kernel/task/fork.h>
 #include <kernel/cpu/smp.h>
 #include <kernel/irq/irq.h>
-#include <kernel/task/task_manager.h>
+#include <kernel/sched/sched.h>
 #include <kernel/irq/timer.h>
 #include <kernel/task/pid.h>
 #include <kernel/stdlib.h>
@@ -15,7 +15,7 @@
 extern struct sched_class rr_se;
 static struct pid_nr* glob_nr;
 static struct task_struct idle = {
-    .rest_time = SCHED_RR_TS,
+    .vruntime = SCHED_RR_TS,
     .kstack = NULL,
     .name = "Idle Process"
 };
@@ -52,7 +52,6 @@ static void init_userspace_mm() {
 }
 
 void init_task() {
-    init_task_manager();
     SET_THIS_CPU_VAR(current_process,&idle);
     struct task_struct* current_task = THIS_CPU_VAR(current_process);
     extern void* __pid_0_stack_bottom;

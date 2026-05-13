@@ -7,11 +7,11 @@
 DEFINE_PERCPU_VAR(vma_pool, struct kmem_cache);
 
 inline struct user_vm_area* copy_area(struct user_vm_area* area) {
-    struct user_vm_area* area1 = new_area(area->mem_start, area->mem_end, area->flag, area->perm);
+    struct user_vm_area* area1 = new_area(area->mem_start, area->mem_end, area->flag, area->fd, area->perm);
     return area1;
 }
 
-inline struct user_vm_area* new_area(uintptr_t start, uintptr_t end, uint16_t flag, uint16_t prot) {
+inline struct user_vm_area* new_area(uintptr_t start, uintptr_t end, uint16_t flag, uint32_t fd, uint16_t prot) {
     struct kmem_cache* pool = THIS_CPU_PTR(vma_pool);
     struct user_vm_area* area = (struct user_vm_area*)kmem_cache_alloc(pool, GFP_KERNEL);
     area->flag = flag;

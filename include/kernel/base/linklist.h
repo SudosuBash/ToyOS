@@ -2,7 +2,7 @@
 #define _TOYOS_LINK
 
 #include <kernel/stdint.h>
-#include <kernel/atomic/spinlock.h>
+
 #define INIT_LIST_HEAD(var) do { \
     (var)->next=(var); \
     (var)->prev=(var); \

@@ -14,8 +14,8 @@
 #define WRITE_PTE_TO_ADDR(addr, pte) (*(struct pagetable_64*)(addr) = (pte))
 
 #define PG_ERR_PRESENT 1
-#define PG_ERR_PERM 2
-#define PG_ERR_MODE 3
+#define PG_ERR_RW 2
+#define PG_ERR_PERM 4
 
 struct pagetable_64 {
     uint64_t present:1;

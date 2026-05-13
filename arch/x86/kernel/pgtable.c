@@ -5,6 +5,7 @@
 #include <pgtable/pgtable_kern.h>
 #include <kernel/mm/mmap.h>
 #include <kernel/mm/mm_user.h>
+#include <kernel/stdlib.h>
 //申请的pte数量(base_addr)
 static volatile void* pte_start_addr;
 static volatile void* pde_start_addr;

@@ -85,8 +85,8 @@ void arch_set_mm_user(
         pte_t* new_pte = get_user_pte(p, new_pgd);
         
         uintptr_t paddr = get_pte_paddr(p, old_pte);
-        do_pte_fast_mmap((void*)paddr, target->flag, target->perm, new_pte);
-        //这部分已经ref_page了
+        user_cow_remap((void*) paddr, new_pte);
+        //对新页进行原有页的映射, 设置为和父页一样的地址
         set_cow(old_pte, new_pte);
         
         //后续会减少

@@ -1,7 +1,7 @@
 #include <kernel/put.h>
 #include <asm.h>
 #include <kernel/stdint.h>
-#include <kernel/math.h>
+#include <kernel/base/math.h>
 #include <kernel/stdlib.h>
 #include <kernel/cpu/smp.h>
 

@@ -9,16 +9,11 @@
 #include <kernel/fault/fault.h>
 #include <kernel/cpu/archimpl.h>
 
-void do_pte_fast_mmap(
-    void* paddr, 
-    uint16_t flag,
-    uint16_t prot,
-    pte_t* pte) {
-    
+//这个函数的目的是设置 pte 指向的地址, 还有就是增加 paddr 对应 page 的 refcount.
+void user_cow_remap(void* paddr, pte_t* pte) {
     uint64_t addr = (uint64_t)paddr;
-    if(prot & PERM_W) pte->rw = 1;
-    if(!(prot & PERM_X)) pte->nx = 1;
-    if(!(flag & FLAG_KERN_ONLY)) pte->us = 0;
+    pte->present = 1;
+    pte->us = 1;
     pte->base_addr = addr >> PAGE_OFFSET;
 
     struct page* pg = find_page_by_paddr(addr);
@@ -38,13 +33,14 @@ void* do_mmap(
     void* vaddr,
     uint64_t sz,
     uint16_t flag,
+    uint32_t fd,
     uint16_t prot) {
-        
+
     struct task_struct* current = CURRENT_PROCESS();
     uintptr_t addr = ((uint64_t)vaddr & PAGE_MASK);
     uintptr_t st = addr;
     uintptr_t ed = PAGE_ROUND_UP(addr + sz);
-    struct user_vm_area* area = new_area(st, ed, flag, prot);
+    struct user_vm_area* area = new_area(st, ed, flag, fd, prot);
     insert_into_vma(area, &current->mm_user);
     return (void*)addr;
 }
@@ -114,8 +110,8 @@ pgd_t* alloc_pgd() {
 }
 
 
-DEFINE_SYSCALL4(mmap, vaddr, void*, sz, size_t, flag, uint16_t, prot, uint16_t) {
-    return (long)do_mmap(vaddr, sz, flag, prot);
+DEFINE_SYSCALL5(mmap, vaddr, void*, sz, size_t, flag, uint16_t,fd, uint64_t, prot, uint16_t) {
+    return (long)do_mmap(vaddr, sz, flag, fd, prot);
 }
 
 DEFINE_SYSCALL2(munmap, vaddr, void*, sz, size_t) {

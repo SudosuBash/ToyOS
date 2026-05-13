@@ -15,4 +15,6 @@
 #define PAGE_SZ (1<<PAGE_OFFSET)
 #define PAGE_MASK ~(PAGE_SZ-1)
 #define SYSCALL_COUNT 512
+
+#define CONFIG_EEVDF 1
 #endif
