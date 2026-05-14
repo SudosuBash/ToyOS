@@ -25,6 +25,7 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
                $(SRC_DIR)/base/math.o \
                $(SRC_DIR)/stdlib.o \
 			   $(SRC_DIR)/sched/sched_eevdf.o \
+			   $(SRC_DIR)/sched/sched_idle.o \
 			   $(SRC_DIR)/task/fork.o \
 			   $(SRC_DIR)/sched/sched.o \
 			   $(SRC_DIR)/task/switch_task.o \

@@ -22,10 +22,11 @@ struct scheduler;
 typedef uint8_t task_stat_t;
 
 struct sched_class {
-    void (*task_enqueue)(struct scheduler* sched, struct task_struct* t);
-    struct task_struct* (*next_task)(struct scheduler* sched, struct task_struct* prev);
-    bool (*sched_has_task)(struct scheduler* sched);
+    struct task_struct* (*task_sched_next_task)(struct scheduler* sched);
     void (*sched_init)(struct scheduler* sched);
+    void (*task_sched_enqueue)(struct scheduler* sched, struct task_struct* t);
+    void (*task_fork_enqueue)(struct scheduler* sched, struct task_struct* task);
+    void (*task_smp_enqueue)(struct scheduler* sched,struct task_struct* task);
     /* task status trigger */
     void (*task_r_to_ss)(struct task_struct *task);
     void (*task_ss_to_r)(struct task_struct *task);
@@ -43,7 +44,9 @@ struct scheduler {
 
 
 void sched_task_switch_stat(struct task_struct *task, task_stat_t new_stat);
-struct scheduler* pick_scheduler();
+struct task_struct* pick_next_task();
 void register_scheduler(struct scheduler* sched, struct sched_class sc, uint16_t level) ;
 void init_scheduler();
+
+void register_idle();
 #endif

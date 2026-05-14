@@ -32,6 +32,7 @@ PT_OBJS      := kernel/kern_start.o \
 				kernel/irq/irq.o \
 				kernel/irq/pic/apic.o \
 				kernel/irq/pic/pic.o \
+				kernel/timer/timer.o \
 				kernel/mm/mm_info.o \
 				kernel/early_boot.o \
 				kernel/fault/crash.o \

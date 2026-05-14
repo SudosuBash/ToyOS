@@ -38,6 +38,6 @@ syscall_enter_end:
     add rsp,16 ;跳过RSP,SS
     ;mov [gs:KERNEL_RSP], rsp 
     ; 栈守恒, 否则绝对出错了
-    mov rsp, [gs:user_rsp]
+    mov rsp, [gs:user_rsp] ;切换回 user_rsp
     swapgs
     o64 sysret

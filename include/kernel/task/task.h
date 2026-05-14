@@ -39,7 +39,7 @@ struct task_struct {
     uintptr_t usp; //用户sp, 用于内核抢占
     uint64_t flags; //标志位
     uint64_t vruntime; 
-
+    uint64_t last_runtime; //物理层面的上次运行开始时间
 #if defined(CONFIG_EEVDF)
     uint64_t vdeadtime;
     struct rb_node rb_node;

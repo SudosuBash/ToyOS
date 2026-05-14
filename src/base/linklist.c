@@ -27,9 +27,9 @@ inline void list_insert_rcu(struct linklist_head* h, struct linklist_head* targe
     h->prev = target;
     h->next = target->next;
     smp_wmb();
-    WRITE_ONCE(target->next, h);
     if(target->next!=target) 
         WRITE_ONCE(target->next->prev, h);
+    WRITE_ONCE(target->next, h);
 }
 
 inline uint8_t list_empty(struct linklist_head* h) {

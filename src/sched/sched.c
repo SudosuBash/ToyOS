@@ -2,6 +2,7 @@
 #include <kernel/cpu/smp.h>
 #include <kernel/sched/sched.h>
 #include <kernel/fault/fault.h>
+#include <kernel/sched/sched_eevdf.h>
 
 struct se_info {
     struct linklist_head lhead;
@@ -41,9 +42,10 @@ void current_sched_task_switch_stat(task_stat_t new_stat) {
     struct task_struct* current = CURRENT_PROCESS();
     sched_task_switch_stat(current, new_stat);
     preempt_enable();
+    schedule(); //当前任务切换状态后, 直接调用 schedule 换走任务
 }
 
-struct scheduler* pick_scheduler() {
+struct task_struct* pick_next_task() {
     struct se_info* info = THIS_CPU_PTR(se_info);
     struct scheduler *sched, *target;
     struct linklist_head* curr;
@@ -52,18 +54,18 @@ struct scheduler* pick_scheduler() {
     preempt_disable(); //rmw干mesi, 这玩意只需要关中断, 性价比还是后者高
 pick_scheduler_start:
     sched = container_of(list_head(&info->lhead), struct scheduler, s_sibling);
-    list_del(sched);
+    list_del_init(&sched->s_sibling);
 
     sched->s_count += sched->s_level;
 
     if(list_empty(&info->lhead)) {
-        assert(sched->s_class.sched_has_task(sched));
+        // assert(sched->s_class.sched_has_task(sched));
         list_insert(&sched->s_sibling, info->ltail);
         info->ltail = &sched->s_sibling;
         goto pick_scheduler_end;
     }
-
-    if(!sched->s_class.sched_has_task(sched)) {
+    struct task_struct* next = sched->s_class.task_sched_next_task(sched);
+    if(!next) {
         target = container_of(info->ltail, struct scheduler, s_sibling);
         sched->s_count = target->s_count + 1;
         list_insert(&sched->s_sibling, info->ltail);
@@ -84,7 +86,7 @@ pick_scheduler_start:
     }
 pick_scheduler_end:
     preempt_enable();
-    return sched;
+    return next;
 }
 
 void register_scheduler(struct scheduler* sched, struct sched_class sc, uint16_t level) {
@@ -95,7 +97,7 @@ void register_scheduler(struct scheduler* sched, struct sched_class sc, uint16_t
     sched->s_level = level;
     sched->s_class = sc;
     INIT_LIST_HEAD(&sched->s_sibling);
-    list_insert_rcu(&info->lhead, &sched->s_sibling);
+    list_insert_rcu(&sched->s_sibling, &info->lhead);
     if(info->ltail == &info->lhead) { //无进程
         sched->s_count = 0;
         info->ltail = &sched->s_sibling;
@@ -112,4 +114,6 @@ void init_scheduler() {
     struct se_info* info = THIS_CPU_PTR(se_info);
     INIT_LIST_HEAD(&info->lhead);
     info->ltail = &info->lhead;
+    register_eevdf();
+    register_idle();
 }

@@ -71,7 +71,6 @@ struct file* alloc_file(struct directory* dir) {
 
     atomic_set(&fd->f_ref, 0);
     fd->f_dir = dir;
-
     return fd;
 }
 

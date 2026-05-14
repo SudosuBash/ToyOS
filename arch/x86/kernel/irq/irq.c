@@ -58,6 +58,17 @@ void init_idt() {
     barrier();
     lidt(idt);
 }
+
+
+inline int irqs_disabled() {
+    uint64_t rfl;
+    asm volatile (
+        "pushfq\r\n"
+        "pop %0\r\n"
+        : "=r"(rfl));
+    return (rfl & (1 << 9));
+}
+
 void init_irq() {
     disable_irq();
     init_idt();

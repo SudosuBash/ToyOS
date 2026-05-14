@@ -1,5 +1,7 @@
 #include <kernel/base/math.h>
 #include <kernel/stdint.h>
+#include <kernel/fault/fault.h>
+#include <kernel/def.h>
 
 static unsigned long div_table[256] = {
     8589934592,8556510721,8523345951,8490437280,
@@ -69,7 +71,7 @@ static unsigned long div_table[256] = {
 };
 
 
-const __uint128_t prev = (__uint128_t)(1) << 65;
+static const __uint128_t prev = (__uint128_t)(1) << 65;
 
 inline uint64_t div_10(uint64_t num) {
     __uint128_t res = (__uint128_t)num * 0xCCCCCCCCCCCCCCCDULL;
@@ -89,10 +91,17 @@ inline int lowest_1(uint64_t x)  {
 }
 
 inline uint64_t div_32bit(uint64_t div, uint32_t num) {
+    if(num == 0)
+        crash("Aiee, div num is zero!");
+
+    if(!(num & (num-1))) { //fast
+        return div >> __builtin_ctz(num);
+    }
+
     uint8_t cl = __builtin_clz(num);
     num <<= cl;
     uint8_t idx = (num >> 23) & ~(1 << 8);
     __uint128_t Xn = div_table[idx];
     Xn = (Xn * (prev - num * Xn)) >> 64;
-    return (Xn * div) << (64-cl);
+    return (Xn * div) >> (64-cl);
 }

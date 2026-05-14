@@ -9,6 +9,9 @@
 #include <kernel/mm/mmap.h>
 #include <kernel/syscall/syscall.h>
 #include <kernel/def.h>
+#include <kernel/sched/sched_eevdf.h>
+
+extern struct task_struct idle;
 
 static void dup_task_struct(struct task_struct* dst,struct task_struct* src) {
     *dst = *src;
@@ -52,6 +55,7 @@ static void copy_thread(
     struct arch_regs* regs, 
     uint64_t flag,
     char* name ) {
+        
     memcpy(task->name, name, 30);
     if(flag & CLONE_THREAD) {
         task->flags |= TASK_KERNEL_THREAD_FLAG;
@@ -61,6 +65,9 @@ static void copy_thread(
     INIT_LIST_HEAD(&task->sibling);
     task->kstack = kmalloc(PAGE_SZ * PROCESS_STACK_PAGE, GFP_KERNEL);
 #if defined(CONFIG_EEVDF)
+    if(origin == &idle) { //idle 进程的 fork 直接变成 eevdf
+        set_eevdf_sched(task);
+    }
     task->vdeadtime = 0;
 #endif
     arch_dup_thread(task, origin, regs, flag);
@@ -68,7 +75,7 @@ static void copy_thread(
 
 
 static void copy_process(struct arch_regs* regs, uint64_t flag, char* name) {
-    
+    preempt_disable();
     struct task_struct* current = CURRENT_PROCESS();
 
     struct task_struct* new_task = (struct task_struct*) kmalloc(sizeof(struct task_struct), GFP_KERNEL);
@@ -81,7 +88,8 @@ static void copy_process(struct arch_regs* regs, uint64_t flag, char* name) {
     alloc_pid(new_task, flag);
 
     struct scheduler* se = new_task->scheduler;
-    se->s_class.task_enqueue(se, new_task);
+    se->s_class.task_fork_enqueue(se, new_task);
+    preempt_enable();
 }
 
 static void do_fork(struct arch_regs* regs, uint64_t flag, char* name) {

@@ -57,7 +57,7 @@ cache_partial:
         //page不加锁, 因为page或者归buddy或者归slab管, 并且这两个还不可能同时管
         //所以只要保证buddy和slab不用同时访问的, page就不用锁.
         if(p->block_start == 0) { //full
-            list_del(cache->partial.next);
+            list_del_init(cache->partial.next);
         }
         spin_unlock(&cache->cache_lock);
         if(flag & GFP_ATOMIC)

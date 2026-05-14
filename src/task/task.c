@@ -14,8 +14,8 @@
 
 extern struct sched_class rr_se;
 static struct pid_nr* glob_nr;
-static struct task_struct idle = {
-    .vruntime = SCHED_RR_TS,
+struct task_struct idle = {
+    .vruntime = 0,
     .kstack = NULL,
     .name = "Idle Process"
 };
@@ -59,8 +59,10 @@ void init_task() {
     
     INIT_LIST_HEAD(&idle.sibling);
     barrier();
+    rwlock_init(&idle.rwlock);
     init_pid();
     init_userspace_mm();
+    init_scheduler();
     timer_irq_register(timer_irq_handler);
 }
 

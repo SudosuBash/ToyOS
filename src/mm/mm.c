@@ -143,7 +143,7 @@ struct page* alloc_page(uint64_t pages) {
     }
     struct linklist_head* target = buddy.groups[now_group].next;
     struct page* p = container_of(target,struct page, buddy_sibling); //要分割的页
-    list_del(buddy.groups[now_group].next);
+    list_del_init(buddy.groups[now_group].next);
     if(now_group == group) { //加速
         goto func_return;
     }

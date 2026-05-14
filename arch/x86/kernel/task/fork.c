@@ -48,7 +48,6 @@ void arch_dup_thread(struct task_struct* task, struct task_struct* origin, struc
     *new_task_stack = *regs;
     new_task_stack->rax = 0; //fork返回值为0
     task->ksp = (uintptr_t)(new_task_stack);
-
 }
 
 void kernel_thread(int (*fn)(void*), void* args, char* name) {
