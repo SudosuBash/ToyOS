@@ -29,9 +29,15 @@ int test_fn(void* test) {
 }
 
 int idle_1(void* test) {
-    disable_irq();
-    
-    do_exec(test_fn);
+    // disable_irq();
+    if((uint32_t) test == 1) {
+        kernel_thread(idle_1, 2, "Idle 2");
+    } else if((uint32_t) test == 2) {
+        kernel_thread(idle_1, 3, "Idle 3");
+    }
+
+    // do_exec(test_fn);
+    while(1);
     return 0;
 }
 
@@ -45,7 +51,7 @@ void kernel_start() {
     init_vfs();
     init_drv();
 
-    kernel_thread(idle_1, NULL, "Idle 1");
+    kernel_thread(idle_1, 1, "Idle 1");
     enable_irq();
     device_try_probe(0x8086, 0x03f8);
     int fd = do_open("/test_file");

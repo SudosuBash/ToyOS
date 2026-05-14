@@ -36,5 +36,5 @@ static struct sched_class idle_class = {
 
 void register_idle() {
     struct scheduler* this_sched = THIS_CPU_PTR(sched);
-    register_scheduler(this_sched, idle_class, SCHED_LEVEL_L5);
+    register_scheduler(this_sched, idle_class, SCHED_PRIO_LOOOOOW);
 }

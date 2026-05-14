@@ -10,11 +10,14 @@
 #define TASK_SIGNAL_SLEEP_STAT 3
 
 #define SCHED_TIMER_IRQ_VRUNTIME 2000
-#define SCHED_LEVEL_L1 10
-#define SCHED_LEVEL_L2 20
-#define SCHED_LEVEL_L3 30
-#define SCHED_LEVEL_L4 40
-#define SCHED_LEVEL_L5 50
+
+#define SCHED_PRIO_LOOOOOW 100
+#define SCHED_PRIO_LOOW 50
+#define SCHED_PRIO_LOW 40
+#define SCHED_PRIO_MEDIUM 30
+#define SCHED_PRIO_HIGH 20
+#define SCHED_PRIO_HIIGH 10
+#define SCHED_PRIO_HIIIIIGH 3
 
 struct task_struct;
 struct scheduler;

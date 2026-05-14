@@ -16,13 +16,14 @@ DECLARE_PERCPU_VAR(percpu_preempt_count, atomic_t);
 void schedule() {
     struct task_struct *next, *current = CURRENT_PROCESS();
     atomic_t* preempt_count = THIS_CPU_PTR(percpu_preempt_count);
+    
     if(preempt_count->count != 0) //PREEMPT DISABLE
         return;
-
-    next = pick_next_task(); //新任务出队
-    assert(next != NULL);
     current->scheduler->s_class.task_sched_enqueue(current->scheduler, current);
     //原任务入队
+    next = pick_next_task(); //新任务出队
+    assert(next != NULL);
+
     if(next != NULL) { //存在任务
         SET_THIS_CPU_VAR(current_process, next);
         SET_THIS_CPU_VAR(kernel_rsp, next->ksp);

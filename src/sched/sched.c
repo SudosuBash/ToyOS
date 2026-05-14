@@ -2,6 +2,7 @@
 #include <kernel/cpu/smp.h>
 #include <kernel/sched/sched.h>
 #include <kernel/fault/fault.h>
+#include <kernel/cpu/archimpl.h>
 #include <kernel/sched/sched_eevdf.h>
 
 struct se_info {
@@ -51,20 +52,26 @@ struct task_struct* pick_next_task() {
     struct linklist_head* curr;
 
     assert(!list_empty(&info->lhead));
+    
     preempt_disable(); //rmw干mesi, 这玩意只需要关中断, 性价比还是后者高
 pick_scheduler_start:
     sched = container_of(list_head(&info->lhead), struct scheduler, s_sibling);
     list_del_init(&sched->s_sibling);
 
-    sched->s_count += sched->s_level;
+    struct task_struct* next = sched->s_class.task_sched_next_task(sched);
 
-    if(list_empty(&info->lhead)) {
-        // assert(sched->s_class.sched_has_task(sched));
+    if(list_empty(&info->lhead)) { //几乎不可能发生, 防御性编程
         list_insert(&sched->s_sibling, info->ltail);
         info->ltail = &sched->s_sibling;
+        if(next == NULL) { //这是彻底没任务了
+            hlt(); //那直接睡吧, 等任务
+            goto pick_scheduler_start;
+        }
         goto pick_scheduler_end;
     }
-    struct task_struct* next = sched->s_class.task_sched_next_task(sched);
+
+    sched->s_count += sched->s_level;
+    
     if(!next) {
         target = container_of(info->ltail, struct scheduler, s_sibling);
         sched->s_count = target->s_count + 1;

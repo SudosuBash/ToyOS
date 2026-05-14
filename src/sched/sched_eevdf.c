@@ -3,6 +3,7 @@
 #include <kernel/config.h>
 #include <kernel/base/math.h>
 #include <kernel/timer/timer.h>
+#include <kernel/put.h>
 
 #if defined(CONFIG_EEVDF)
 
@@ -71,17 +72,17 @@ static void __insert_into_queue(struct task_struct* task, struct rb_root* root) 
 
     while(node) {
         parent = container_of(node, struct task_struct, rb_node);
-        if(parent->vruntime > task->vruntime)
+        if(signed_bigger(parent->vruntime , task->vruntime))
             node = node->rb_left;
         else 
             node = node->rb_right;
     }
 
-    if(parent->vruntime > task->vruntime)
+    if(signed_bigger(parent->vruntime, task->vruntime))
         rb_link_node(&task->rb_node, &parent->rb_node, &parent->rb_node.rb_left);
     else
         rb_link_node(&task->rb_node, &parent->rb_node, &parent->rb_node.rb_right);
-    rb_augment_insert(node, __eevdf_update_min_vd, NULL);
+    rb_augment_insert(&task->rb_node, __eevdf_update_min_vd, NULL);
 }
 
 static void __eevdf_update_min_vd(struct rb_node* node, void* data) {
@@ -118,7 +119,7 @@ static struct task_struct* eevdf_sched_next_task(struct scheduler* sched) {
     current = eevdf->run_task_queue.rb_node;
     while(current) {
         new_task = container_of(current,struct task_struct, rb_node);
-        if(new_task->vruntime > eevdf->vcputime) 
+        if(signed_bigger(new_task->vruntime, eevdf->vcputime)) 
             current = current->rb_left;
         else
             break;
@@ -127,11 +128,11 @@ static struct task_struct* eevdf_sched_next_task(struct scheduler* sched) {
         last_fit = new_task;
         while(current) {
             new_task = container_of(current, struct task_struct, rb_node);
-            if(new_task->vruntime > eevdf->vcputime) {
+            if(signed_bigger(new_task->vruntime, eevdf->vcputime)) {
                 current = current->rb_left;
                 continue;
             } else {
-                if(new_task->min_vdeadtime > last_fit->min_vdeadtime)
+                if(signed_bigger(new_task->min_vdeadtime, last_fit->min_vdeadtime))
                 //new_task 的最短截止时间比 last_fit 大的话, 那last_fit就是最小的
                 //直接 break 就好, 用 last_fit, 不用找了
                     break;
@@ -199,7 +200,6 @@ static void eevdf_task_sched_enqueue(struct scheduler* sched, struct task_struct
     __update_sched_vruntime(task, current); //结束一轮执行, 更新 vruntime
 
     __insert_into_queue(task, &eevdf->run_task_queue); //插入队列
-    
     eevdf->e_flag &= ~EEVDF_FLAG_TASK_SELECTED;
 }
 
@@ -215,8 +215,16 @@ static void eevdf_task_fork_enqueue(struct scheduler* sched, struct task_struct*
 
     uint64_t current = get_current_tstamp();
     eevdf->eevdf_sum_weigh += TASK_WEIGH(task);
-    //权重的更改应该丢在前面
-    //因为除以总权重是计入这个任务除以的
+    /**
+     * 这儿其实做了一点性能优化
+     * 原来的逻辑:
+     * 1. 加上旧任务的权重
+     * 2. 更新 vcputime 的记账和调度前的逻辑
+     * 3. 减去旧任务的权重
+     * 4. 加上新任务的权重
+     * 但是新任务的权重=旧任务的权重(fork), 3 4 抵消
+     * 所以 3 4 不用做
+    */
     __update_vcputime(eevdf, current); //更新虚拟时间
 
     task->vruntime = eevdf->vcputime;
@@ -243,9 +251,10 @@ void set_eevdf_sched(struct task_struct* task) {
     task->nice_level = 0;
     task->request_time = 100000; //暂时先这么定, 还需要初始化 pic
 }
+
 void register_eevdf() {
     struct sched_eevdf* eevdf = THIS_CPU_PTR(eevdf_sched);
     eevdf->last_timestamp = get_current_tstamp();
-    register_scheduler(&eevdf->scheduler, sc, SCHED_LEVEL_L2);
+    register_scheduler(&eevdf->scheduler, sc, SCHED_PRIO_HIIGH);
 }
 #endif
