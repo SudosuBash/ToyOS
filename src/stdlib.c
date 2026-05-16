@@ -81,3 +81,14 @@ uint8_t strcmp_l(char* c1, char* c2, size_t sz) {
     else if(*c1 > *c2) return 1;
     else return -1;
 }
+
+bool isdigit(char c) {
+    return c - 48 >= 0 && c - 57 <= 0;
+}
+
+
+size_t strnlen(char* c, uint64_t argmax) {
+    char* st = c;
+    while(*c && ((size_t)(c - st) <= argmax)) c++;
+    return (size_t)(c - st);
+}

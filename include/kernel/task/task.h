@@ -46,7 +46,6 @@ struct task_struct {
     uint64_t request_time;
     uint64_t min_vdeadtime;
 #endif
-
     rwlock_t rwlock;
     int8_t nice_level;
 }__attribute__((aligned(64)));
@@ -56,5 +55,5 @@ extern void ret_from_fork();
 void schedule();
 void init_task();
 void kernel_thread(int (*fn)(void*), void* args, char* name);
-uintptr_t arch_process_stack_bottom(struct task_struct* task);
+uintptr_t arch_process_stack_top(struct task_struct* task);
 #endif

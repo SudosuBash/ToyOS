@@ -17,6 +17,10 @@ static void idle_enqueue_empty(struct scheduler* sched, struct task_struct* task
     return;
 }
 
+static void idle_nice_change_empty(struct scheduler* sched, struct task_struct* task, int8_t value) {
+    return;
+}
+
 static void idle_sched_init(struct scheduler* sched) {
     idle.scheduler = sched;
     return;
@@ -24,14 +28,13 @@ static void idle_sched_init(struct scheduler* sched) {
 
 static struct sched_class idle_class = {
     .task_sched_next_task = idle_next_task,
-    .task_bs_to_r = idle_swc_stat_empty,
-    .task_r_to_bs = idle_swc_stat_empty,
-    .task_r_to_ss = idle_swc_stat_empty,
-    .task_ss_to_r = idle_swc_stat_empty,
+    .task_r_to_s = idle_swc_stat_empty,
+    .task_s_to_r = idle_swc_stat_empty,
     .task_fork_enqueue = idle_enqueue_empty,
     .task_smp_enqueue = idle_enqueue_empty,
     .task_sched_enqueue = idle_enqueue_empty,
-    .sched_init = idle_sched_init
+    .sched_init = idle_sched_init,
+    .task_nice_changed = idle_nice_change_empty
 };
 
 void register_idle() {

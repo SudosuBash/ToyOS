@@ -11,4 +11,6 @@ void hex_to_dec(uint64_t num, char* buf);
 size_t strlen(char* c);
 uint8_t strcmp(char* c1, char* c2);
 uint8_t strcmp_l(char* c1, char* c2, size_t sz);
+bool isdigit(char c);
+size_t strnlen(char* c, uint64_t argmax);
 #endif

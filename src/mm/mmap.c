@@ -93,15 +93,15 @@ void* do_remap(
  * 若没有映射到 User Space 的区域, 则选择不动
  * 查找 VMA 来直接回收 do_munmap 的内存
 */
-void do_munmap(
-    void* vaddr,
-    size_t sz
-) {
-    struct task_struct* current = CURRENT_PROCESS();
+// void do_munmap(
+//     void* vaddr,
+//     size_t sz
+// ) {
+//     struct task_struct* current = CURRENT_PROCESS();
 
-    uint64_t st = (uint64_t) vaddr;
-    uint64_t end = st + sz;
-}
+//     uint64_t st = (uint64_t) vaddr;
+//     uint64_t end = st + sz;
+// }
 
 pgd_t* alloc_pgd() {
     pgd_t* pgd = (pgd_t*)kmalloc(sizeof(pgd_t) * PAGE_PTE_ENTRIES, GFP_ATOMIC);

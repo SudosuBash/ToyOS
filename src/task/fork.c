@@ -10,6 +10,7 @@
 #include <kernel/syscall/syscall.h>
 #include <kernel/def.h>
 #include <kernel/sched/sched_eevdf.h>
+#include <kernel/fault/error.h>
 
 extern struct task_struct idle;
 
@@ -105,3 +106,4 @@ DEFINE_SYSCALL(fork) {
     do_fork(NULL, 0, current->name);
     return 0;
 }
+

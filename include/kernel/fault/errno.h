@@ -9,4 +9,5 @@
 #define ENOEMP 11
 #define EOUTRG 16
 #define EDRVERR 17
+#define EINVAL  22
 #endif

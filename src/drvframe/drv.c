@@ -4,16 +4,15 @@
 #include <kernel/stdlib.h>
 #include <kernel/base/htable.h>
 #include <kernel/put.h>
-#include <kernel/drivers/drv.h>
 #include <kernel/mm/mm.h>
+#include <kernel/drivers/drv_bus.h>
 
 extern struct drv_class *__drv_init_start, *__drv_init_end;
 
 DEFINE_PERCPU_VAR(percpu_device_allocator, struct kmem_cache);
 DEFINE_PERCPU_VAR(percpu_driver_allocator, struct kmem_cache);
 
-
-static struct htable_list device_bus;
+struct device_bus device_bus;
 
 static struct device* new_device() {
     struct kmem_cache* device_allocator = THIS_CPU_PTR(percpu_device_allocator);
@@ -22,6 +21,7 @@ static struct device* new_device() {
         return dev;
 
     memset(dev, 0, sizeof(struct device));
+    INIT_LIST_HEAD(&dev->dev_type_node);
     return dev;
 }
 
@@ -50,7 +50,7 @@ void drv_device_match(struct drv_class* drv, pdrv_match_table table) {
         drv_d->class = *drv;
 
         id = DEVICE_DRV_ID(vendor_id, device_id);
-        hlist_insert_rcu(&device_bus, &drv_d->sibling, id);
+        hlist_insert_rcu(&device_bus.phys_bus, &drv_d->sibling, id);
         index++;
     } while(device_id != 0);
 }
@@ -58,7 +58,7 @@ void drv_device_match(struct drv_class* drv, pdrv_match_table table) {
 void device_try_probe(uint16_t vendor_id, uint16_t device_id) {
     uint32_t id = hlist_calc_hash(DEVICE_DRV_ID(vendor_id, device_id));
     struct linklist_head* current;
-    list_for_entry(&device_bus.bucket[id], current) {
+    list_for_entry(&device_bus.phys_bus.bucket[id], current) {
         struct driver* drv = driver_of(current);
         uint64_t m_device_id, m_vendor_id, index = 0;
         
@@ -82,13 +82,19 @@ void device_try_probe(uint16_t vendor_id, uint16_t device_id) {
     }
 }
 
-void init_drv() {
+void init_devicebus() {
     struct kmem_cache* device_allocator = THIS_CPU_PTR(percpu_device_allocator);
     struct kmem_cache* driver_allocator = THIS_CPU_PTR(percpu_driver_allocator);
     kmem_cache_init(device_allocator, sizeof(struct device));
     kmem_cache_init(driver_allocator, sizeof(struct driver));
 
-    hlist_init(&device_bus);
+    hlist_init(&device_bus.phys_bus);
+
+    for(int i=0;i<DRV_BUS_TYPE_COUNT;i++) {
+        INIT_LIST_HEAD(&device_bus.typed_bus[i].head);
+        device_bus.typed_bus[i].tail = &device_bus.typed_bus[i].head;
+        device_bus.typed_bus[i].count = 0;
+    }
 
     struct drv_class* *d_st = &__drv_init_start;
     struct drv_class* *d_ed = &__drv_init_end;

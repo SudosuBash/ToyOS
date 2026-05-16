@@ -22,6 +22,8 @@ KERNEL_BIN := kernel
 
 # 内核通用的对象文件 (根据你的目录结构提取)
 KERNEL_OBJS := $(SRC_DIR)/main.o \
+			   $(SRC_DIR)/log/vfprintf.o \
+			   $(SRC_DIR)/log/kprintf.o \
                $(SRC_DIR)/base/math.o \
                $(SRC_DIR)/stdlib.o \
 			   $(SRC_DIR)/sched/sched_eevdf.o \
@@ -36,6 +38,7 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
 			   $(SRC_DIR)/base/linklist.o \
 			   $(SRC_DIR)/base/hlist.o \
 			   $(SRC_DIR)/base/rbtree.o \
+			   $(SRC_DIR)/base/rio_queue.o \
                $(SRC_DIR)/mm/mm_page.o \
 			   $(SRC_DIR)/mm/mm_slab.o \
 			   $(SRC_DIR)/mm/mm.o \
@@ -52,7 +55,10 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
 			   $(SRC_DIR)/file/file.o \
 			   $(SRC_DIR)/fs/devicefs.o \
 			   $(SRC_DIR)/fs/fs.o \
-			   $(SRC_DIR)/drvframe/frame.o
+			   $(SRC_DIR)/drvframe/drv.o \
+			   $(SRC_DIR)/drvframe/devicebus.o \
+			   $(SRC_DIR)/sched/sched_drv.o
+
 
 ARCH_DEPENDS := $(ARCH_DIR)/boot.bin \
                 $(ARCH_DIR)/kloader.bin \

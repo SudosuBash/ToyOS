@@ -4,15 +4,17 @@
 
 //Compare And Set
 /**
- * 这个并不适用赋值, 因为它会修改失败, 需要 while 循环
+ * * 这个并不适用赋值, 因为它会修改失败, 需要 while 循环
+ * * 成功是1，失败是0
  */
-inline uint64_t atomic_cas(volatile int64_t* dest,int64_t src, int64_t target) {
-    uint64_t ret;
+inline uint64_t atomic_cas(uint64_t* dest,int64_t src, int64_t target) {
+    uint8_t ret;
     barrier();
     asm volatile (
-        "cmpxchgq %[src],%[dest]"
+        "lock cmpxchgq %[src],%[dest]\n\t"
+        "sete %[r]\n\t"
         :[dest] "+m"(*dest),
-         "=a" (ret)
+         [r] "=q"(ret)
         : [src]"r"(src),
          "a" (target)
         : "memory","cc"
@@ -20,7 +22,7 @@ inline uint64_t atomic_cas(volatile int64_t* dest,int64_t src, int64_t target) {
     return ret;
 }
 
-static inline uint64_t atomic_fas(volatile int64_t* dest, int64_t src) {
+static inline uint64_t atomic_fas(uint64_t* dest, int64_t src) {
     uint64_t ret = src;
     barrier();
     asm volatile(

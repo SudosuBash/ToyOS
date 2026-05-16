@@ -3,6 +3,7 @@
 #include <kernel/fs/devicefs.h>
 #include <kernel/put.h>
 #include <kernel/fault/error.h>
+#include <kernel/log/kprintf.h>
 
 static struct drv_class chr_drv;
 
@@ -39,7 +40,7 @@ static void chr_drv_init() {
 static void chr_drv_probe(struct device* dev) {
     put_str("[serial driver] found the device: 8086:03f8. probing...\n");
     DEVICE_BIND_FILE_OP(dev, oper);
-    devicefs_mount("/", "test_file", dev);
+    set_device_type(dev, DRV_CONSOLETYP);
 }
 
 static void chr_drv_destroy(struct device* dev) {
@@ -47,10 +48,19 @@ static void chr_drv_destroy(struct device* dev) {
     devicefs_unmount("/test_file", dev);
 }
 
+static void chr_drv_callback(struct device* dev) {
+    char c = get_print_buf();
+    while(c != 0) {
+        put_char(c);
+        c = get_print_buf();
+    }
+}
+
 static struct drv_class chr_drv = {
     .init = chr_drv_init,
     .probe = chr_drv_probe,
-    .destroy = chr_drv_destroy
+    .destroy = chr_drv_destroy,
+    .msg_callback = chr_drv_callback
 };
 
 MODULE_SET_DRIVER_OP(chr_drv);

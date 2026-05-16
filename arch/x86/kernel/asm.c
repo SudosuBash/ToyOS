@@ -104,3 +104,7 @@ inline void arch_enable_pge() {
     cr4 |= (1 << 7);
     asm volatile("mov %0, %%cr4" : : "r"(cr4) : "memory");
 }
+
+inline void pause() {
+    asm volatile("pause");
+}

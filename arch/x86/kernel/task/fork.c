@@ -19,13 +19,13 @@ extern void kernel_thread_helper(
 );
 //这个用来获取stack的栈顶
 //因为有些架构的sp是向下的, 有些是向上的, 所以不能一概而论
-inline uintptr_t arch_process_stack_bottom(struct task_struct* task) {
+inline uintptr_t arch_process_stack_top(struct task_struct* task) {
     return (uintptr_t)(task->kstack) + PAGE_SZ * PROCESS_STACK_PAGE;
 }
 
 //这个用来获取stack新进程应该指向的 sp 的位置(不是内核栈底!)
 static inline uintptr_t arch_process_spp(struct task_struct* task) {
-    return arch_process_stack_bottom(task) - STACK_OFFSET;
+    return arch_process_stack_top(task) - STACK_OFFSET;
 }
 
 void arch_dup_thread(struct task_struct* task, struct task_struct* origin, struct arch_regs* regs, uint64_t flags) {
@@ -34,10 +34,10 @@ void arch_dup_thread(struct task_struct* task, struct task_struct* origin, struc
      * 内核态 fork 新线程的话(kernel_thread_helper), regs 是设定好的
     */
 
-    struct arch_regs* new_task_stack = (struct arch_regs*)(arch_process_stack_bottom(task));
+    struct arch_regs* new_task_stack = (struct arch_regs*)(arch_process_stack_top(task));
     //内核栈
     if(regs == NULL) 
-        regs = (struct arch_regs*)(arch_process_stack_bottom(origin)); 
+        regs = (struct arch_regs*)(arch_process_stack_top(origin)); 
     //用户栈CoW, 内核栈重新分配
 
     if(flags & CLONE_THREAD) { 

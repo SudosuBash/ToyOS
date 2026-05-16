@@ -2,9 +2,8 @@
 #include <kernel/task/task.h>
 
 void sem_p(sem_t* sem) {
-    struct task_struct* current = CURRENT_PROCESS();
     if(!atomic_dec_and_test(&sem->value)) {
-        current->scheduler->s_class.task_r_to_ss(current);
+        current_task_switch_stat(TASK_SIGNAL_SLEEP_STAT);
     }
 }
 

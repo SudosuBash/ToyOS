@@ -11,13 +11,17 @@
 #include <kernel/stdlib.h>
 #include <kernel/mm/mmap.h>
 #include <kernel/base/htable.h>
+#include <kernel/fault/error.h>
+#include <kernel/stdint.h>
+#include <kernel/syscall/syscall.h>
 
 extern struct sched_class rr_se;
 static struct pid_nr* glob_nr;
 struct task_struct idle = {
     .vruntime = 0,
     .kstack = NULL,
-    .name = "Idle Process"
+    .name = "Idle Process",
+    .status = TASK_RUNNING_STAT
 };
 
 DEFINE_PERCPU_VAR(current_process, struct task_struct*);
@@ -68,4 +72,14 @@ void init_task() {
 
 inline struct task_struct* get_current_process() {
     return THIS_CPU_VAR(current_process);
+}
+
+DEFINE_SYSCALL1(nice, value, int8_t) {
+    if(value < -20 || value > 20)
+        return ERR(EINVAL);
+    preempt_disable();
+    struct task_struct* current = CURRENT_PROCESS();
+    current->scheduler->s_class.task_nice_changed(current->scheduler, current, value);
+    preempt_enable();
+    return 0;
 }

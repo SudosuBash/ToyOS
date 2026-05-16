@@ -10,7 +10,8 @@
 DEFINE_PERCPU_VAR(eevdf_sched, struct sched_eevdf);
 
 #define eevdf_of(rq) container_of(rq, struct sched_eevdf, scheduler)
-#define TASK_WEIGH(task) ((task->nice_level) + 30)
+#define TASK_NICE_WEIGH(nice) ((nice) + 30)
+#define TASK_WEIGH(task) TASK_NICE_WEIGH(task->nice_level)
 
 static uint64_t weigh[41] = {
     429496729,390451572,357913941,330382099,
@@ -159,6 +160,17 @@ static struct task_struct* eevdf_sched_next_task(struct scheduler* sched) {
         eevdf->eevdf_sum_weigh -= TASK_WEIGH(last_fit); //减少权重
         last_fit->last_runtime = current_time; 
         //更新 last_runtime 的那一刻, 程序开始运行
+
+        put_str("Start:\n");
+        put_str(last_fit->name);
+        put_char('\n');
+        put_dec(last_fit->nice_level);
+        put_char('\n');
+        put_dec(last_fit->vruntime);
+        put_char('\n');
+        put_dec(eevdf->vcputime);
+        put_char('\n');
+        put_char('\n');
         return last_fit;
     }
     return NULL;
@@ -188,6 +200,19 @@ static void eevdf_smp_enqueue(struct scheduler* sched, struct task_struct* task)
 
 }
 
+static void eevdf_task_nice_changed(struct scheduler* sched, struct task_struct* task, int8_t value) {
+    struct sched_eevdf *eevdf = eevdf_of(sched);
+
+    uint64_t current = get_current_tstamp();
+    __update_vcputime(eevdf, current);
+    
+    int8_t nice_delta = task->nice_level - value;
+    eevdf->eevdf_sum_weigh -= TASK_NICE_WEIGH(nice_delta);
+
+    __update_sched_vruntime(task, current);
+    task->nice_level = value;
+}
+ 
 //这个是 schedule 推入的task_enqueue
 //此时此刻应该更新 vruntime, vdeadtime
 //因为是 schedule 推入的, 所以加入的时间是任务真实运行时间
@@ -201,6 +226,16 @@ static void eevdf_task_sched_enqueue(struct scheduler* sched, struct task_struct
 
     __insert_into_queue(task, &eevdf->run_task_queue); //插入队列
     eevdf->e_flag &= ~EEVDF_FLAG_TASK_SELECTED;
+            put_str("End:\n");
+        put_str(task->name);
+        put_char('\n');
+        put_dec(task->nice_level);
+        put_char('\n');
+        put_dec(task->vruntime);
+        put_char('\n');
+        put_dec(eevdf->vcputime);
+        put_char('\n');
+        put_char('\n');
 }
 
 static void eevdf_sched_init(struct scheduler* scheduler) {
@@ -208,41 +243,43 @@ static void eevdf_sched_init(struct scheduler* scheduler) {
     eevdf->vcputime = 0;
     eevdf->run_task_queue.rb_node = NULL;
     eevdf->sleep_task_queue.rb_node = NULL;
+    eevdf->last_timestamp = get_current_tstamp();
 }
 
 static void eevdf_task_fork_enqueue(struct scheduler* sched, struct task_struct* task) {  
     struct sched_eevdf* eevdf = eevdf_of(sched);
 
     uint64_t current = get_current_tstamp();
-    eevdf->eevdf_sum_weigh += TASK_WEIGH(task);
-    /**
-     * 这儿其实做了一点性能优化
-     * 原来的逻辑:
-     * 1. 加上旧任务的权重
-     * 2. 更新 vcputime 的记账和调度前的逻辑
-     * 3. 减去旧任务的权重
-     * 4. 加上新任务的权重
-     * 但是新任务的权重=旧任务的权重(fork), 3 4 抵消
-     * 所以 3 4 不用做
-    */
     __update_vcputime(eevdf, current); //更新虚拟时间
-
+    eevdf->eevdf_sum_weigh += TASK_WEIGH(task);
+    //fork是新任务加入它, 所以应该是在后面加权重
     task->vruntime = eevdf->vcputime;
+    //更新vruntime
     __update_vdeadtime(task);
     __insert_into_queue(task, &eevdf->run_task_queue);
     // __update_sched_vruntime(task, current); //更新sched vruntime
 }
 
+static void eevdf_smp_dequeue(struct scheduler* scheduler, struct task_struct* task)  {
+    struct sched_eevdf* eevdf = eevdf_of(scheduler);
+
+    uint64_t current = get_current_tstamp();
+    __update_vcputime(eevdf, current);
+    task->vruntime = eevdf->vcputime - task->vruntime;
+    __erase_task_queue(task, &eevdf->run_task_queue);
+    eevdf->eevdf_sum_weigh -= TASK_WEIGH(task);
+}
+
 static struct sched_class sc = {
     .task_sched_next_task = eevdf_sched_next_task,
+    .task_smp_dequeue = eevdf_smp_dequeue,
     .sched_init = eevdf_sched_init,
     .task_sched_enqueue = eevdf_task_sched_enqueue,
     .task_smp_enqueue = eevdf_smp_enqueue,
     .task_fork_enqueue = eevdf_task_fork_enqueue,
-    .task_r_to_bs = eevdf_task_r_switch,
-    .task_r_to_ss = eevdf_task_r_switch,
-    .task_bs_to_r = eevdf_task_switch_to_r,
-    .task_ss_to_r = eevdf_task_switch_to_r
+    .task_r_to_s = eevdf_task_r_switch,
+    .task_s_to_r = eevdf_task_switch_to_r,
+    .task_nice_changed = eevdf_task_nice_changed
 };
 
 void set_eevdf_sched(struct task_struct* task) {
@@ -254,7 +291,6 @@ void set_eevdf_sched(struct task_struct* task) {
 
 void register_eevdf() {
     struct sched_eevdf* eevdf = THIS_CPU_PTR(eevdf_sched);
-    eevdf->last_timestamp = get_current_tstamp();
     register_scheduler(&eevdf->scheduler, sc, SCHED_PRIO_HIIGH);
 }
 #endif

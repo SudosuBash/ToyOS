@@ -12,8 +12,8 @@ void arch_do_exec(
     struct task_struct* target
 ) {
     disable_irq();
-    struct arch_regs* regs = (struct arch_regs*)arch_process_stack_bottom(target);
-    set_tss_rsp_r0((uint64_t)arch_process_stack_bottom(target));
+    struct arch_regs* regs = (struct arch_regs*)arch_process_stack_top(target);
+    set_tss_rsp_r0((uint64_t)arch_process_stack_top(target));
     load_cr3(VADDR2PHYS(target->mm_user.pg_root));
     regs-=1;
     target->ksp = (uint64_t)regs;
