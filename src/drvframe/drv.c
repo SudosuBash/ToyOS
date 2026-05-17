@@ -6,6 +6,8 @@
 #include <kernel/put.h>
 #include <kernel/mm/mm.h>
 #include <kernel/drivers/drv_bus.h>
+#include <kernel/task/task.h>
+#include <kernel/sched/sched_drv.h>
 
 extern struct drv_class *__drv_init_start, *__drv_init_end;
 
@@ -65,18 +67,22 @@ void device_try_probe(uint16_t vendor_id, uint16_t device_id) {
         do {
             m_device_id = (*drv->drv_match_table)[index][1];
             m_vendor_id = (*drv->drv_match_table)[index][0];
+
             if(m_device_id == 0) 
                 break;
 
-            if( m_device_id == device_id && m_vendor_id == vendor_id) {
+            if(m_device_id == device_id && m_vendor_id == vendor_id) {
                 struct device *new_dev = new_device();
                 new_dev->d_op = drv->class;
                 new_dev->device_id = device_id;
                 new_dev->vendor_id = vendor_id;
-                barrier();
+                struct task_struct* task = kernel_thread(kdriver_thread_start, (void*)new_dev, "kworkerd");
+                switch_to_drv_sched(task);
+                task_switch_stat(task, TASK_SIGNAL_SLEEP_STAT);
+                new_dev->task = task;
+                barrier(); //必须加 barrier, 若先执行 probe 再赋值 task, remind 函数中会产生竞争条件
                 new_dev->d_op.probe(new_dev);
             }
-
             index++;
         } while(m_device_id != 0);
     }

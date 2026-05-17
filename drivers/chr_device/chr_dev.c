@@ -58,7 +58,7 @@ static struct drv_class chr_drv = {
     .init = chr_drv_init,
     .probe = chr_drv_probe,
     .destroy = chr_drv_destroy,
-    .msg_callback = chr_drv_callback
+    .start = chr_drv_callback
 };
 
 MODULE_SET_DRIVER_OP(chr_drv);

@@ -18,11 +18,11 @@
 #include <kernel/log/kprintf.h>
 
 static void output_stat() {
-    kprintf("Toy OS Beta 12.418.1\n");
-    kprintf("Checked Memory: %d Bytes\n", get_machine_available_mem_sz());
-    
-
+    kprintf("Toy OS Kernel - Demo 12.418.0\n");
+    kprintf("Checked Memory: %d Bytes\n", xget_machine_available_mem_sz());
+    kprintf("2026 SudosuBash\n");
 }
+
 int init() {
     device_try_probe(0x8086, 0x03f8);
     output_stat();
@@ -42,6 +42,7 @@ void kernel_start() {
 
     kernel_thread(init, NULL, "init");
     enable_irq();
+    
     while(1)
         hlt();
 }

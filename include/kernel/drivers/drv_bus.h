@@ -17,10 +17,7 @@ struct device_bus_elem {
 struct device_bus {
     struct htable_list phys_bus; //物理总线
     struct device_bus_elem typed_bus[DRV_BUS_TYPE_COUNT]; //设备类型总线
-    struct task_struct *bus_task;
 };
 
-
-
-int kdrv_reminder_daemon();
+int kdriver_thread_start(void* pdev);
 #endif

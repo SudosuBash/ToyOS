@@ -28,7 +28,7 @@ struct drv_class {
     void (*probe)(struct device* device);
     void (*destroy)(struct device* device);
 
-    void (*msg_callback)(struct device* device); //请求回调函数
+    void (*start)(struct device* device); //请求回调函数
 };
 
 struct driver {

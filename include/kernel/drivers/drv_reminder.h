@@ -10,13 +10,5 @@ struct device_wakeup_reminder {
     struct linklist_head sibling;
 };
 
-struct wakeup_queue {
-    struct linklist_head head;
-    struct linklist_head* tail;
-    
-    spinlock_t head_lock;
-    spinlock_t tail_lock;
-};
-
 void remind_device_type(drv_type type);
 #endif  
