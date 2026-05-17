@@ -14,8 +14,11 @@ void write_to_buf(struct rio_buf_queue* queue, const char* str, size_t len) {
     do {
         tail = queue->tail_counter;
         target_tail = tail + len;
-        if(target_tail - queue->head >= RIO_QUEUE_MAXLEN)
+        if(target_tail - queue->head >= RIO_QUEUE_MAXLEN) {
+            preempt_enable();
             return;
+        }
+            
     } while (atomic_cas(&queue->tail_counter, target_tail, tail) == 0);
 
     //非常巧妙

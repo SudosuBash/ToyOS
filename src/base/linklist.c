@@ -18,8 +18,7 @@ inline struct linklist_head* list_head(struct linklist_head* list) {
 inline void list_insert(struct linklist_head* h, struct linklist_head* target) {
     h->prev = target;
     h->next = target->next;
-    if(target->next!=target) 
-        target->next->prev=h;
+    target->next->prev=h;
     target->next = h;
 }
 
@@ -27,8 +26,7 @@ inline void list_insert_rcu(struct linklist_head* h, struct linklist_head* targe
     h->prev = target;
     h->next = target->next;
     smp_wmb();
-    if(target->next!=target) 
-        WRITE_ONCE(target->next->prev, h);
+    WRITE_ONCE(target->next->prev, h);
     WRITE_ONCE(target->next, h);
 }
 

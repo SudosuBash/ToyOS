@@ -75,7 +75,7 @@ static void copy_thread(
 }
 
 
-static void copy_process(struct arch_regs* regs, uint64_t flag, char* name) {
+static struct task_struct* copy_process(struct arch_regs* regs, uint64_t flag, char* name) {
     preempt_disable();
     struct task_struct* current = CURRENT_PROCESS();
 
@@ -91,14 +91,15 @@ static void copy_process(struct arch_regs* regs, uint64_t flag, char* name) {
     struct scheduler* se = new_task->scheduler;
     se->s_class.task_fork_enqueue(se, new_task);
     preempt_enable();
+    return new_task;
 }
 
-static void do_fork(struct arch_regs* regs, uint64_t flag, char* name) {
-    copy_process(regs, flag, name);
+static struct task_struct* do_fork(struct arch_regs* regs, uint64_t flag, char* name) {
+    return copy_process(regs, flag, name);
 }
 
-void clone(struct arch_regs* regs, uint64_t flag, char* name) {
-    do_fork(regs, flag, name);
+struct task_struct* clone(struct arch_regs* regs, uint64_t flag, char* name) {
+    return do_fork(regs, flag, name);
 }
 
 DEFINE_SYSCALL(fork) {

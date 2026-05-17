@@ -22,5 +22,5 @@ struct device_bus {
 
 
 
-int kdrv_minder_daemon();
+int kdrv_reminder_daemon();
 #endif

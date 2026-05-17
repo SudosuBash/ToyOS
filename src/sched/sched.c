@@ -61,7 +61,7 @@ struct task_struct* pick_next_task() {
 pick_scheduler_start:
     sched = container_of(list_head(&info->lhead), struct scheduler, s_sibling);
     list_del_init(&sched->s_sibling);
-
+    
     struct task_struct* next = sched->s_class.task_sched_next_task(sched);
 
     if(list_empty(&info->lhead)) { //几乎不可能发生, 防御性编程

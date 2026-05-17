@@ -4,6 +4,8 @@
 #include <kernel/put.h>
 #include <kernel/fault/error.h>
 #include <kernel/log/kprintf.h>
+#include <kernel/task/task.h>
+#include <asm.h>
 
 static struct drv_class chr_drv;
 
@@ -13,7 +15,6 @@ static drv_match_table table = {
 };
 
 static struct file* drv_do_open(struct directory* dir) {
-    put_str("[serial driver] opening drv...\n");
     struct file* fd = alloc_file(dir);
     if(IS_ERR(fd))
         return ERR_PTR(fd);
@@ -33,25 +34,22 @@ struct dir_operation oper = {
 };
 
 static void chr_drv_init() {
-    put_str("[serial driver] initializing....\n");
     drv_device_match(&chr_drv, &table);
 }
 
 static void chr_drv_probe(struct device* dev) {
-    put_str("[serial driver] found the device: 8086:03f8. probing...\n");
     DEVICE_BIND_FILE_OP(dev, oper);
     set_device_type(dev, DRV_CONSOLETYP);
 }
 
 static void chr_drv_destroy(struct device* dev) {
     put_str("[serial driver] serial driver destroyed.\n");
-    devicefs_unmount("/test_file", dev);
 }
 
 static void chr_drv_callback(struct device* dev) {
     char c = get_print_buf();
     while(c != 0) {
-        put_char(c);
+        outb(0x3f8,c);
         c = get_print_buf();
     }
 }

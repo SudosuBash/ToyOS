@@ -54,6 +54,6 @@ struct task_struct* get_current_process();
 extern void ret_from_fork();
 void schedule();
 void init_task();
-void kernel_thread(int (*fn)(void*), void* args, char* name);
+struct task_struct* kernel_thread(int (*fn)(void*), void* args, char* name);
 uintptr_t arch_process_stack_top(struct task_struct* task);
 #endif

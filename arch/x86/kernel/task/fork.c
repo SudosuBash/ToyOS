@@ -50,7 +50,7 @@ void arch_dup_thread(struct task_struct* task, struct task_struct* origin, struc
     task->ksp = (uintptr_t)(new_task_stack);
 }
 
-void kernel_thread(int (*fn)(void*), void* args, char* name) {
+struct task_struct* kernel_thread(int (*fn)(void*), void* args, char* name) {
     struct arch_regs regs = {0};
     regs.rip = (uint64_t)kernel_thread_helper;
     regs.rsi = (uint64_t)fn;
@@ -58,7 +58,7 @@ void kernel_thread(int (*fn)(void*), void* args, char* name) {
     regs.cs = KERNEL_CS;
     regs.ss = KERNEL_DS;
     regs.eflags |= REG_EFLAGS_IF_BIT; //开中断
-    clone(&regs, CLONE_THREAD, name);
+    return clone(&regs, CLONE_THREAD, name);
 }
 
 static inline void set_cow(pte_t* old_pte, pte_t* new_pte) {

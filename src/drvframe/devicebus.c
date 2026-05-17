@@ -4,45 +4,70 @@
 #include <kernel/drivers/drv_bus.h>
 #include <kernel/drivers/drv_reminder.h>
 #include <kernel/mm/mm.h>
+#include <kernel/fault/fault.h>
 #include <kernel/timer/timer.h>
 
-#define MAX_TIMER 10000000
+//暂时先这么定
+#define DEVICE_RESPONSE_MAX_ANSWER 1000000
+
 extern struct device_bus device_bus;
 static struct wakeup_queue queue;
 
-int kdrv_minder_daemon() {
+static inline int kdriver_thread_start(void* pdev) {
+    struct device* dev = (struct device*) pdev;
     struct task_struct* task = CURRENT_PROCESS();
-    device_bus.bus_task = task;
-    switch_to_drv_sched(task); //切换到 drv 调度器
-    
+    switch_to_drv_sched(task);
+    while(1) {
+        dev->d_op.msg_callback(dev);
+        current_task_switch_stat(TASK_SIGNAL_SLEEP_STAT);
+    }
+    return 0;
+}
+
+//唤醒进程
+static inline int wakeup_driver_kernel(struct device* dev) {
+    if(dev->task == NULL) 
+        dev->task = kernel_thread(kdriver_thread_start, (void*)dev, "Driver Idle");
+    else 
+        task_switch_stat(dev->task, TASK_RUNNING_STAT);
+    return 0;
+}
+
+int kdrv_reminder_daemon() {
     while(1) { //轮询
-        spin_lock(&queue.tail_lock);
         spin_lock(&queue.head_lock);
-        if(&queue.head == queue.tail) { //没消息了
+        if(queue.head.next == &queue.head) { //没消息了
             spin_unlock(&queue.head_lock);
-            spin_unlock(&queue.tail_lock);
             current_task_switch_stat(TASK_SIGNAL_SLEEP_STAT);
             continue;
         }
 
         struct linklist_head *head = list_head(&queue.head), *current;
+        uint64_t prev_time = get_current_tstamp(), now;
+        int64_t delta = 0;
         struct device* dev;
         struct device_wakeup_reminder* reminder;
         while(head != &queue.head) {
             reminder = container_of(head, struct device_wakeup_reminder, sibling);
             list_for_entry(&device_bus.typed_bus[reminder->type].head, current) {
                 dev = container_of(current, struct device, dev_type_node);
-                dev->d_op.msg_callback(dev);
-                //暂时先这么写
-            }
-            queue.tail = head;
+                now = get_current_tstamp();
+                delta = (int64_t)(now - prev_time);
+                //存在 task 意味着该 callback 已经变成了延时很高的函数, 直接唤醒进程
+                if(dev->task != NULL || delta > DEVICE_RESPONSE_MAX_ANSWER)
+                    wakeup_driver_kernel(dev);
+                else 
+                    dev->d_op.msg_callback(dev);
+            }           
             list_del_init(head);
             kfree(reminder);
             head = list_head(&queue.head);
         }
-        queue.tail = &queue.head;
-        spin_unlock(&queue.head_lock);
+        spin_lock(&queue.tail_lock);
+        queue.tail = head;
         spin_unlock(&queue.tail_lock);
+
+        spin_unlock(&queue.head_lock);
     }
 }
 
@@ -73,4 +98,7 @@ void init_drv() {
     init_devicebus();
     INIT_LIST_HEAD(&queue.head);
     queue.tail = &queue.head;
+    struct task_struct* task = kernel_thread(kdrv_reminder_daemon, NULL, "kdriver_workerd");
+    device_bus.bus_task = task;
+    switch_to_drv_sched(task);
 }

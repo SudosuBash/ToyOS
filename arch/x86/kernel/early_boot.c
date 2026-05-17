@@ -35,6 +35,7 @@ inline uint64_t get_kern_addr() {
 inline uint64_t get_mem_all_pages() {
     return mem_all_pages; 
 }
+
 static void init_mem_record() {
     uint64_t phys_mem_info_addr = bl->phys_mem_info_addr;
     uint32_t entries = *(uint32_t*)PHYS2VADDR(phys_mem_info_addr);

@@ -3,6 +3,7 @@
 #include <kernel/config.h>
 #include <kernel/base/math.h>
 #include <kernel/timer/timer.h>
+#include <kernel/fault/fault.h>
 #include <kernel/put.h>
 
 #if defined(CONFIG_EEVDF)
@@ -107,7 +108,7 @@ static void __eevdf_update_min_vd(struct rb_node* node, void* data) {
 static struct task_struct* eevdf_sched_next_task(struct scheduler* sched) {
     struct sched_eevdf* eevdf;
     struct rb_node *current;
-    struct task_struct *new_task, *left, *last_fit = NULL;
+    struct task_struct *new_task = NULL, *left = NULL, *last_fit = NULL;
 
     eevdf = eevdf_of(sched);
     if(RB_EMPTY_ROOT(&eevdf->run_task_queue)) {
@@ -118,6 +119,7 @@ static struct task_struct* eevdf_sched_next_task(struct scheduler* sched) {
     __update_vcputime(eevdf, current_time);
     
     current = eevdf->run_task_queue.rb_node;
+    
     while(current) {
         new_task = container_of(current,struct task_struct, rb_node);
         if(signed_bigger(new_task->vruntime, eevdf->vcputime)) 
@@ -125,8 +127,9 @@ static struct task_struct* eevdf_sched_next_task(struct scheduler* sched) {
         else
             break;
     }
+
+    last_fit = new_task;
     if(current != NULL) {
-        last_fit = new_task;
         while(current) {
             new_task = container_of(current, struct task_struct, rb_node);
             if(signed_bigger(new_task->vruntime, eevdf->vcputime)) {
@@ -152,28 +155,16 @@ static struct task_struct* eevdf_sched_next_task(struct scheduler* sched) {
                 current = current->rb_right;
         }
     
+    } else {
+        eevdf->vcputime = last_fit->vruntime;
     }
 
-    if(last_fit != NULL) {
-        eevdf->e_flag |= EEVDF_FLAG_TASK_SELECTED;
-        __erase_task_queue(last_fit,&eevdf->run_task_queue);
-        eevdf->eevdf_sum_weigh -= TASK_WEIGH(last_fit); //减少权重
-        last_fit->last_runtime = current_time; 
-        //更新 last_runtime 的那一刻, 程序开始运行
-
-        put_str("Start:\n");
-        put_str(last_fit->name);
-        put_char('\n');
-        put_dec(last_fit->nice_level);
-        put_char('\n');
-        put_dec(last_fit->vruntime);
-        put_char('\n');
-        put_dec(eevdf->vcputime);
-        put_char('\n');
-        put_char('\n');
-        return last_fit;
-    }
-    return NULL;
+    eevdf->e_flag |= EEVDF_FLAG_TASK_SELECTED;
+    __erase_task_queue(last_fit,&eevdf->run_task_queue);
+    eevdf->eevdf_sum_weigh -= TASK_WEIGH(last_fit); //减少权重
+    last_fit->last_runtime = current_time; 
+    //更新 last_runtime 的那一刻, 程序开始运行
+    return last_fit;
 }
 //从 running 切换到 sleep
 static void eevdf_task_r_switch(struct task_struct* task) {
@@ -226,16 +217,6 @@ static void eevdf_task_sched_enqueue(struct scheduler* sched, struct task_struct
 
     __insert_into_queue(task, &eevdf->run_task_queue); //插入队列
     eevdf->e_flag &= ~EEVDF_FLAG_TASK_SELECTED;
-            put_str("End:\n");
-        put_str(task->name);
-        put_char('\n');
-        put_dec(task->nice_level);
-        put_char('\n');
-        put_dec(task->vruntime);
-        put_char('\n');
-        put_dec(eevdf->vcputime);
-        put_char('\n');
-        put_char('\n');
 }
 
 static void eevdf_sched_init(struct scheduler* scheduler) {

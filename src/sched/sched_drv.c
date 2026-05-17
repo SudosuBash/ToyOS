@@ -49,6 +49,7 @@ static struct sched_class sc = {
     .sched_init = fifo_sched_init,
     .task_sched_next_task = fifo_pick_next_task,
     .task_sched_enqueue = fifo_sched_enqueue,
+    .task_fork_enqueue = fifo_sched_enqueue,
     .task_r_to_s = fifo_sched_r_to_s,
     .task_s_to_r = fifo_sched_s_to_r
 };
@@ -58,13 +59,19 @@ void register_drv_sched() {
     register_scheduler(&fifo->scheduler, sc , SCHED_PRIO_DRV);
 }
 
-void switch_to_drv_sched(struct task_struct* task) {
-    preempt_disable();
+void switch_to_drv_sched(struct task_struct* task) { 
+    struct task_struct* current = CURRENT_PROCESS();
+
     struct sched_drv_fifo *base = THIS_CPU_PTR(drv_sched);
+    if(&base->scheduler == task->scheduler)
+        return;
+    preempt_disable();
     task->scheduler->s_class.task_smp_dequeue(task->scheduler, task);
     task->scheduler = &base->scheduler;
+    if(current != task)
+        task->scheduler->s_class.task_sched_enqueue(task->scheduler,task);
     preempt_enable();
-    schedule();
+    //需要手动调用 schedule
     barrier();
 }
 

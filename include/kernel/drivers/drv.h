@@ -42,6 +42,8 @@ struct device {
     struct drv_class d_op;
     struct linklist_head dev_type_node;
     
+    struct task_struct* task;
+    
     atomic_t refcount;
     uint64_t mmio_start_addr;
     uint64_t mmio_start_vaddr;
