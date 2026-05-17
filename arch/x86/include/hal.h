@@ -1,8 +1,8 @@
-#ifndef _TOYOS_X86_SMP
-#define _TOYOS_X86_SMP
+#ifndef _TOYOS_X86_HAL
+#define _TOYOS_X86_HAL
 
-#include <kernel/cpu/smp.h>
-
+// hal.h
+// 所有架构相关的macro全部丢这
 #define ARCH_GET_PERCPU_VAR(var) ({ \
     uintptr_t __percpu_var_addr__; \
     asm volatile ( \
@@ -14,16 +14,15 @@
     ); \
     (typeof(&(var)))(__percpu_var_addr__); \
 })
+
 #define ARCH_SET_THIS_CPU_VAR(var, value) *ARCH_GET_PERCPU_VAR(var) = value;
 //C语言中var[0]严格等于*(var+0), 所以这样是合法的.
 
-void arch_barrier();
-
-inline void arch_smp_rmb() {
-    arch_barrier();
-}
-
-inline void arch_smp_wmb() {
-    arch_barrier();
-}
+#define barrier() asm volatile("" ::: "memory")
+#define smp_rmb() asm volatile("" ::: "memory")
+#define smp_wmb() asm volatile("" ::: "memory")
+#define pause() asm volatile("pause")
+#define enable_irq() asm volatile ("sti")
+#define disable_irq() asm volatile ("cli")
+#define hlt() asm volatile ("hlt")
 #endif

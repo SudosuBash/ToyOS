@@ -3,7 +3,7 @@
 */
 
 #include <kernel/fault/error.h>
-#include <kernel/log/limit.h>
+#include <kernel/limit.h>
 #include <kernel/def.h>
 #include <kernel/stdint.h>
 #include <kernel/log/kprintf.h>
@@ -119,12 +119,12 @@ static const char xdigits[16] = {
 	"0123456789ABCDEF"
 };
 
-static void out(struct rio_buf_queue* buf, const char *s, size_t l)
+static void out(struct rio_broadcast* buf, const char *s, size_t l)
 {
-	write_to_buf(buf,s, l);
+	rio_broadcast_send(buf,s, l);
 }
 
-static void pad(struct rio_buf_queue* buf, char c, int w, int l, int fl)
+static void pad(struct rio_broadcast* buf, char c, int w, int l, int fl)
 {
 	char pad[256];
 	if (fl & (LEFT_ADJ | ZERO_PAD) || l >= w) return;
@@ -165,7 +165,7 @@ static int getint(char **s) {
 	return i;
 }
 
-static int printf_core(struct rio_buf_queue* f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
+static int printf_core(struct rio_broadcast* f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
 {
 	char *a, *z, *s=(char *)fmt;
 	unsigned l10n=0, fl;
@@ -361,7 +361,7 @@ overflow:
 	return -1;
 }
 
-int vfprintf(struct rio_buf_queue* buf, const char *restrict fmt, va_list ap)
+int vfprintf(struct rio_broadcast* buf, const char *restrict fmt, va_list ap)
 {
 	va_list ap2;
 	int nl_type[NL_ARGMAX+1] = {0};
@@ -375,7 +375,7 @@ int vfprintf(struct rio_buf_queue* buf, const char *restrict fmt, va_list ap)
 	return ret;
 }
 
-int fprintf(struct rio_buf_queue* buf, const char *fmt, ...) {
+int fprintf(struct rio_broadcast* buf, const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt); 
     int result = vfprintf(buf, fmt, ap);

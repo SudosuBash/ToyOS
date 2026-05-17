@@ -10,39 +10,35 @@ static DEFINE_PERCPU_VAR(drv_sched, struct sched_drv_fifo);
 
 static void fifo_sched_init(struct scheduler* scheduler) {
     struct sched_drv_fifo *base = drv_class_of(scheduler);
-    INIT_LIST_HEAD(&base->run_queue.head);
+    INIT_LIST_HEAD(&base->run_queue);
     INIT_LIST_HEAD(&base->sleep);
-    base->run_queue.tail = &base->run_queue.head;
     scheduler->s_flag |= SCHED_FLAG_DRIVERTYPE; 
 }
 
 static struct task_struct* fifo_pick_next_task(struct scheduler* scheduler) {
     struct sched_drv_fifo *fifo = drv_class_of(scheduler);
-    if(&fifo->run_queue.head == fifo->run_queue.tail)
+    if(list_empty(&fifo->run_queue))
         return NULL;
-    struct task_struct* task = container_of(list_head(&fifo->run_queue.head), struct task_struct, sibling);
-    if(&task->sibling == fifo->run_queue.tail)
-        fifo->run_queue.tail = task->sibling.prev;
+    struct task_struct* task = container_of(list_head(&fifo->run_queue), struct task_struct, sibling);
     list_del_init(&task->sibling);
     return task;
 }
 
 static void fifo_sched_r_to_s(struct task_struct* task) {
     struct sched_drv_fifo *fifo = drv_class_of(task->scheduler);
+    list_del_init(&task->sibling);
     list_insert_rcu(&task->sibling, &fifo->sleep);
 }
 
 static void fifo_sched_s_to_r(struct task_struct* task) {
     struct sched_drv_fifo *fifo = drv_class_of(task->scheduler);
     list_del_init(&task->sibling);
-    list_insert_rcu(&task->sibling, fifo->run_queue.tail);
-    fifo->run_queue.tail = &task->sibling;
+    list_insert_rcu(&task->sibling, list_tail(&fifo->run_queue));
 }
 
 static void fifo_sched_enqueue(struct scheduler *sched, struct task_struct *t) {
     struct sched_drv_fifo *fifo = drv_class_of(sched);
-    list_insert_rcu(&t->sibling, fifo->run_queue.tail);
-    fifo->run_queue.tail = &t->sibling;
+    list_insert_rcu(&t->sibling, list_tail(&fifo->run_queue));
 }
 
 static struct sched_class sc = {

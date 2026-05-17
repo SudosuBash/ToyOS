@@ -6,8 +6,10 @@
 #include <kernel/log/kprintf.h>
 #include <kernel/task/task.h>
 #include <asm.h>
+#include <kernel/base/rio_broadcast.h>
 
 static struct drv_class chr_drv;
+static struct rio_reader reader;
 
 static drv_match_table table = {
     PCI_DEVID(0x8086, 0x03f8),
@@ -40,6 +42,7 @@ static void chr_drv_init() {
 static void chr_drv_probe(struct device* dev) {
     DEVICE_BIND_FILE_OP(dev, oper);
     set_device_type(dev, DRV_CONSOLETYP);
+    register_print_reader(&reader);
 }
 
 static void chr_drv_destroy(struct device* dev) {
@@ -47,10 +50,10 @@ static void chr_drv_destroy(struct device* dev) {
 }
 
 static void chr_drv_callback(struct device* dev) {
-    char c = get_print_buf();
+    char c = get_print_buf(&reader);
     while(c != 0) {
         outb(0x3f8,c);
-        c = get_print_buf();
+        c = get_print_buf(&reader);
     }
 }
 

@@ -11,25 +11,18 @@ inline void list_del_init(struct linklist_head* h) {
     INIT_LIST_HEAD(h);
 }
 
-inline struct linklist_head* list_head(struct linklist_head* list) {
-    return list->next;
-}
-
 inline void list_insert(struct linklist_head* h, struct linklist_head* target) {
     h->prev = target;
     h->next = target->next;
-    target->next->prev=h;
     target->next = h;
+    h->next->prev=h;
 }
 
 inline void list_insert_rcu(struct linklist_head* h, struct linklist_head* target) {
     h->prev = target;
     h->next = target->next;
     smp_wmb();
-    WRITE_ONCE(target->next->prev, h);
     WRITE_ONCE(target->next, h);
-}
-
-inline uint8_t list_empty(struct linklist_head* h) {
-    return h->next == h && h->prev == h;
+    WRITE_ONCE(h->next->prev, h);
+    
 }

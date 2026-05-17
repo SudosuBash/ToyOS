@@ -39,6 +39,7 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
 			   $(SRC_DIR)/base/hlist.o \
 			   $(SRC_DIR)/base/rbtree.o \
 			   $(SRC_DIR)/base/rio_queue.o \
+			   $(SRC_DIR)/base/rio_broadcast.o \
                $(SRC_DIR)/mm/mm_page.o \
 			   $(SRC_DIR)/mm/mm_slab.o \
 			   $(SRC_DIR)/mm/mm.o \

@@ -19,7 +19,7 @@
 
 static void output_stat() {
     kprintf("Toy OS Kernel - Demo 12.418.0\n");
-    kprintf("Checked Memory: %d Bytes\n", xget_machine_available_mem_sz());
+    kprintf("Checked Memory: %d Bytes\n", get_machine_available_mem_sz());
     kprintf("2026 SudosuBash\n");
 }
 
@@ -38,6 +38,7 @@ void kernel_start() {
     init_task();
     init_syscall();
     init_vfs();
+    init_log();
     init_drv();
 
     kernel_thread(init, NULL, "init");

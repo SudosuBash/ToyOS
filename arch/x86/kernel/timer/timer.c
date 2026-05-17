@@ -1,8 +1,7 @@
 #include <kernel/timer/timer.h>
 #include <cpu/cpu.h>
 #include <kernel/kernel.h>
-#include <cpu/smp.h>
-
+#include <hal.h>
 uint64_t get_current_tstamp() {
     uint32_t eax,edx;
     barrier();

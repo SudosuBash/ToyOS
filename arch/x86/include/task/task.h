@@ -10,7 +10,7 @@
         "pushq %%r13\n\t" \
         "pushq %%r14\n\t" \
         "pushq %%r15\n\t" \
-        "movq %%rsp, %[new_task_rsp]\n\t" \
+        "movq %%rsp, %[prev_stack]\n\t" \
         "movq %[new_stack], %%rsp\n\t" \
         "testq %[ret_from_fork_flag], %[ret_from_fork_flag]\n\t" \
         "jnz ret_from_fork\n\t" \
@@ -20,7 +20,7 @@
         "popq %%r12\n\t" \
         "popq %%rbx\n\t" \
         "popq %%rbp\n\t" \
-        : [new_task_rsp] "=m"(prev->ksp) \
+        : [prev_stack] "=m"(prev->ksp) \
         : [new_stack] "m"(next->ksp), \
           [ret_from_fork_flag] "r"((rff_flag)) \
         : "memory", "cc" \

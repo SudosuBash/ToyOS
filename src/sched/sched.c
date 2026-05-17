@@ -8,7 +8,6 @@
 
 struct se_info {
     struct linklist_head lhead;
-    struct linklist_head *ltail;
 };
 
 DEFINE_PERCPU_VAR(se_info, struct se_info);
@@ -65,8 +64,7 @@ pick_scheduler_start:
     struct task_struct* next = sched->s_class.task_sched_next_task(sched);
 
     if(list_empty(&info->lhead)) { //几乎不可能发生, 防御性编程
-        list_insert(&sched->s_sibling, info->ltail);
-        info->ltail = &sched->s_sibling;
+        list_insert(&sched->s_sibling, list_tail(&info->lhead));
         if(next == NULL) { //这是彻底没任务了
             hlt(); //那直接睡吧, 等任务
             goto pick_scheduler_start;
@@ -77,11 +75,10 @@ pick_scheduler_start:
     sched->s_count += sched->s_level;
     
     if(!next) {
-        target = container_of(info->ltail, struct scheduler, s_sibling);
+        target = container_of(list_tail(&info->lhead), struct scheduler, s_sibling);
         if(!(sched->s_flag & SCHED_FLAG_DRIVERTYPE)) {
             sched->s_count = target->s_count + 1;
-            list_insert(&sched->s_sibling, info->ltail);
-            info->ltail = &sched->s_sibling;
+            list_insert(&sched->s_sibling, list_tail(&info->lhead));
         } else {
             sched->s_flag |= SCHED_FLAG_TEMPORATORY_REMOVED;
             //逻辑是这样的, 要是调度驱动程序的调度器没任务了, 直接删了, 后续驱动触发了再挂回来
@@ -97,10 +94,8 @@ pick_scheduler_start:
             goto pick_scheduler_end;
         }
     }
-    if(curr == &info->lhead) {
-        list_insert(&sched->s_sibling, info->ltail);
-        info->ltail = &sched->s_sibling;
-    }
+    if(curr == &info->lhead)
+        list_insert(&sched->s_sibling, list_tail(&info->lhead));
 pick_scheduler_end:
     return next;
 }
@@ -114,9 +109,8 @@ void register_scheduler(struct scheduler* sched, struct sched_class sc, uint16_t
     sched->s_class = sc;
     INIT_LIST_HEAD(&sched->s_sibling);
     list_insert_rcu(&sched->s_sibling, &info->lhead);
-    if(info->ltail == &info->lhead) { //无调度器
+    if(list_empty(&info->lhead)) { //无调度器
         sched->s_count = 0;
-        info->ltail = &sched->s_sibling;
     } else { //有调度器
         tsched = container_of(list_head(&info->lhead), struct scheduler, s_sibling);
         sched->s_count = tsched->s_count;
@@ -135,7 +129,7 @@ void activate_driver_scheduler(struct scheduler* sched) {
     INIT_LIST_HEAD(&sched->s_sibling);
     list_insert_rcu(&sched->s_sibling, &info->lhead);
 
-    assert(info->ltail != &info->lhead);
+    assert(!list_empty(&info->lhead));
     //这个必定有任务，这可是激活的任务诶
     tsched = container_of(list_head(&info->lhead), struct scheduler, s_sibling);
     sched->s_count = tsched->s_count; //重置步长
@@ -146,7 +140,6 @@ void activate_driver_scheduler(struct scheduler* sched) {
 void init_scheduler() {
     struct se_info* info = THIS_CPU_PTR(se_info);
     INIT_LIST_HEAD(&info->lhead);
-    info->ltail = &info->lhead;
     register_eevdf();
     register_idle();
     register_drv_sched();

@@ -2,7 +2,7 @@
 #define _TOYOS_X86_SMP_PERCPU
 
 #include <kernel/stdint.h>
-#include <cpu/smp.h>
+#include <hal.h>
 
 #define DEFINE_PERCPU_VAR(name, type) __attribute__((section(".percpu"))) type name;
 #define DECLARE_PERCPU_VAR(name, type) extern __attribute__((section(".percpu"))) type name;
@@ -13,9 +13,6 @@
 
 #define READ_ONCE(var) (*(volatile typeof(&(var))*)&(var))
 #define WRITE_ONCE(var, val) (*(volatile typeof(&(var)))&(var)) = (val);
-#define barrier() arch_barrier()
-#define smp_rmb() arch_smp_rmb()
-#define smp_wmb() arch_smp_wmb()
 
 void set_smp_base_addr(uintptr_t base);
 uint8_t is_bsp_core();

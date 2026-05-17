@@ -3,13 +3,9 @@
 
 #include <kernel/base/linklist.h>
 #include <kernel/sched/sched.h>
-struct sched_fifo_queue {
-    struct linklist_head head;
-    struct linklist_head* tail;
-};
 
 struct sched_drv_fifo {
-    struct sched_fifo_queue run_queue;
+    struct linklist_head run_queue;
     struct linklist_head sleep;
     struct scheduler scheduler;
 };

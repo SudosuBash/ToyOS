@@ -9,7 +9,6 @@
 DEFINE_PERCPU_VAR(cpuinfo, struct cpuinfo);
 DEFINE_PERCPU_VAR(proc_id, uint8_t);
 
-
 void set_smp_base_addr(uintptr_t base) {
     *(uintptr_t*)base = base; //非常重要! 否则找不到base地址.
     uint32_t eax = base & 0xffffffff;
@@ -63,7 +62,6 @@ static void get_cpu_feature() {
     info->extended_model_id = CPUID_EXT_MODEL(eax);
     info->extended_family_id = CPUID_EXT_FAMILY(eax);
 
-    barrier();
     info->fpu_support = CPUID_FPU(edx);
     info->de_support = CPUID_DE(edx);
     info->pse_support = CPUID_PSE(edx);
@@ -78,7 +76,7 @@ static void get_cpu_feature() {
     info->sse2_support = CPUID_SSE2(edx);
     info->pbe_support = CPUID_PBE(edx);
     info->htt_support = CPUID_HTT(edx);
-    barrier();
+
     info->vmx_support = CPUID_VMX(ecx);
     info->pclmulqdq_support = CPUID_PCLMULQDQ(ecx);
     info->fma_support = CPUID_FMA(ecx);
@@ -94,10 +92,6 @@ static void get_cpu_feature() {
     :"a"(0x80000001));
 
     info->rdtscq_support = CPUID_RDTSCP(edx);
-}
-
-void arch_barrier() {
-    asm volatile("" ::: "memory");
 }
 
 inline bool cpu_feature_rdtscq() {

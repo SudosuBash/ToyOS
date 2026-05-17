@@ -6,18 +6,6 @@
 
 #define __lfence() asm volatile("lfence")
 
-inline void enable_irq() {
-    asm volatile ("sti");
-}
-
-inline void disable_irq() {
-    asm volatile ("cli");
-}
-
-inline void hlt() {
-    asm volatile ("hlt");
-}
-
 inline void outb(uint16_t port, uint8_t data) {
     asm volatile(
         "outb %0,%1"
@@ -103,8 +91,4 @@ inline void arch_enable_pge() {
     asm volatile("mov %%cr4, %0" : "=r"(cr4));
     cr4 |= (1 << 7);
     asm volatile("mov %0, %%cr4" : : "r"(cr4) : "memory");
-}
-
-inline void pause() {
-    asm volatile("pause");
 }
