@@ -68,6 +68,5 @@ void switch_to_drv_sched(struct task_struct* task) {
         task->scheduler->s_class.task_sched_enqueue(task->scheduler,task);
     preempt_enable();
     //需要手动调用 schedule
-    barrier();
 }
 

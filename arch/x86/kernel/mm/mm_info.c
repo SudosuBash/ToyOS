@@ -43,7 +43,7 @@ static void pagefault_irq(struct arch_regs* frame) {
             goto sigsegv; 
     
     //页不存在或者 CoW
-    target_addr = get_cr2();
+    target_addr = get_pf_addr();
     rwlock_read_lock(&current->mm_user.rwlock);
     area = find_vm_area(&current->mm_user, target_addr);
 

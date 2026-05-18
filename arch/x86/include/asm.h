@@ -14,6 +14,5 @@ void open_cr0_wp();
 void close_cr0_wp();
 void lgdt(struct gdtr gdtr);
 void lidt(struct idtr idtr);
-uint64_t get_cr2();
 void arch_enable_pge();
 #endif

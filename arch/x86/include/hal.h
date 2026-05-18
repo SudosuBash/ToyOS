@@ -19,8 +19,10 @@
 //C语言中var[0]严格等于*(var+0), 所以这样是合法的.
 
 #define barrier() asm volatile("" ::: "memory")
-#define smp_rmb() asm volatile("" ::: "memory")
-#define smp_wmb() asm volatile("" ::: "memory")
+#define smp_mb() asm volatile("mfence" ::: "memory")
+#define smp_rmb() asm volatile("lfence" ::: "memory")
+#define smp_wmb() asm volatile("sfence" ::: "memory")
+
 #define pause() asm volatile("pause")
 #define enable_irq() asm volatile ("sti")
 #define disable_irq() asm volatile ("cli")

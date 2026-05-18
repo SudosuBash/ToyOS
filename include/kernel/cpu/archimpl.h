@@ -5,6 +5,8 @@
 struct arch_regs;
 
 void invlpg(uint64_t addr);
+uintptr_t get_pf_addr();
+uintptr_t get_pgroot();
 
 //其他架构的页表刷新照样用这玩意
 #endif

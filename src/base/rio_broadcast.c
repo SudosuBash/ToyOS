@@ -57,6 +57,6 @@ void init_rio_broadcast(struct rio_broadcast* broadcast) {
 
 void register_reader_broadcast(struct rio_broadcast* broadcast, struct rio_reader* reader) {
     INIT_LIST_HEAD(&reader->sibling);
-    reader->head = broadcast->tail;
+    reader->head = broadcast->slowest_head;
     list_insert(&reader->sibling, &broadcast->readers);
 }

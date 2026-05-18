@@ -5,6 +5,7 @@
 #include <cpu/msr_base.h>
 #include <kernel/fault/fault.h>
 #include <kernel/kernel.h>
+#include <kernel/log/kprintf.h>
 
 DEFINE_PERCPU_VAR(cpuinfo, struct cpuinfo);
 DEFINE_PERCPU_VAR(proc_id, uint8_t);
@@ -86,17 +87,18 @@ static void get_cpu_feature() {
     info->hypv_support = CPUID_HYPV(ecx);
 
     *id = APIC_ID(ebx);
-
+    kprintf("CPU: BSP Core APICID = %d.\n", *id);
     asm volatile ("cpuid" 
     :"=b"(ebx),"=c"(ecx),"=d"(edx)
     :"a"(0x80000001));
 
-    info->rdtscq_support = CPUID_RDTSCP(edx);
+    info->rdtscp_support = CPUID_RDTSCP(edx);
+    kprintf("CPU: rdtscp feature %s.\n", info->rdtscp_support ? "supported" : "unsupported");
 }
 
-inline bool cpu_feature_rdtscq() {
+inline bool cpu_feature_rdtscp() {
     struct cpuinfo* info = THIS_CPU_PTR(cpuinfo);
-    return info->rdtscq_support;
+    return info->rdtscp_support;
 }
 
 void init_cpu() {

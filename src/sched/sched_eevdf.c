@@ -115,7 +115,7 @@ static struct task_struct* eevdf_sched_next_task(struct scheduler* sched) {
         return NULL;
     }
 
-    uint64_t current_time = get_current_tstamp();
+    uint64_t current_time = rdtsc();
     __update_vcputime(eevdf, current_time);
     
     current = eevdf->run_task_queue.rb_node;
@@ -170,7 +170,7 @@ static struct task_struct* eevdf_sched_next_task(struct scheduler* sched) {
 static void eevdf_task_r_switch(struct task_struct* task) {
     struct scheduler *sched = task->scheduler;
     struct sched_eevdf *eevdf = eevdf_of(sched);
-    uint64_t current = get_current_tstamp();
+    uint64_t current = rdtsc();
 
     __update_vcputime(eevdf, current); //vcputime 更新的原因是, 权重变少了
     // * 顺序不能换, 因为此时此刻要计算 lag, 所以 delta 就是 vcputime - vruntime
@@ -194,7 +194,7 @@ static void eevdf_smp_enqueue(struct scheduler* sched, struct task_struct* task)
 static void eevdf_task_nice_changed(struct scheduler* sched, struct task_struct* task, int8_t value) {
     struct sched_eevdf *eevdf = eevdf_of(sched);
 
-    uint64_t current = get_current_tstamp();
+    uint64_t current = rdtsc();
     __update_vcputime(eevdf, current);
     
     int8_t nice_delta = task->nice_level - value;
@@ -210,7 +210,7 @@ static void eevdf_task_nice_changed(struct scheduler* sched, struct task_struct*
 static void eevdf_task_sched_enqueue(struct scheduler* sched, struct task_struct* task) {
     struct sched_eevdf *eevdf = eevdf_of(sched);
 
-    uint64_t current = get_current_tstamp();
+    uint64_t current = rdtsc();
     eevdf->eevdf_sum_weigh += TASK_WEIGH(task);
     __update_vcputime(eevdf, current); //结束一轮执行, 更新 vcputime
     __update_sched_vruntime(task, current); //结束一轮执行, 更新 vruntime
@@ -224,13 +224,13 @@ static void eevdf_sched_init(struct scheduler* scheduler) {
     eevdf->vcputime = 0;
     eevdf->run_task_queue.rb_node = NULL;
     eevdf->sleep_task_queue.rb_node = NULL;
-    eevdf->last_timestamp = get_current_tstamp();
+    eevdf->last_timestamp = rdtsc();
 }
 
 static void eevdf_task_fork_enqueue(struct scheduler* sched, struct task_struct* task) {  
     struct sched_eevdf* eevdf = eevdf_of(sched);
 
-    uint64_t current = get_current_tstamp();
+    uint64_t current = rdtsc();
     __update_vcputime(eevdf, current); //更新虚拟时间
     eevdf->eevdf_sum_weigh += TASK_WEIGH(task);
     //fork是新任务加入它, 所以应该是在后面加权重
@@ -244,7 +244,7 @@ static void eevdf_task_fork_enqueue(struct scheduler* sched, struct task_struct*
 static void eevdf_smp_dequeue(struct scheduler* scheduler, struct task_struct* task)  {
     struct sched_eevdf* eevdf = eevdf_of(scheduler);
 
-    uint64_t current = get_current_tstamp();
+    uint64_t current = rdtsc();
     __update_vcputime(eevdf, current);
     task->vruntime = eevdf->vcputime - task->vruntime;
     __erase_task_queue(task, &eevdf->run_task_queue);

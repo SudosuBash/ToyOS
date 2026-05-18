@@ -3,5 +3,5 @@
 
 #include <kernel/stdint.h>
 
-uint64_t get_current_tstamp();
+uint64_t rdtsc();
 #endif

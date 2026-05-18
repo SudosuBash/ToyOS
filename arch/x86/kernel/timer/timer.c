@@ -2,12 +2,21 @@
 #include <cpu/cpu.h>
 #include <kernel/kernel.h>
 #include <hal.h>
-uint64_t get_current_tstamp() {
+inline uint64_t rdtsc() {
     uint32_t eax,edx;
-    barrier();
-    asm volatile (
-        "rdtsc"
-        : "=a"(eax), "=d"(edx)
-    );
+
+    if(cpu_feature_rdtscp()) {
+        asm volatile (
+            "rdtscp"
+            : "=a"(eax), "=d"(edx)
+            : : "rcx"
+        );
+    } else {
+        smp_rmb();
+        asm volatile (
+            "rdtsc"
+            : "=a"(eax), "=d"(edx) : :
+        );
+    }
     return ((uint64_t)edx << 32) | eax;
 }

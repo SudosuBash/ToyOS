@@ -5,7 +5,7 @@ qemu-system-x86_64 \
     -S -s \
     -chardev stdio,id=char0,mux=on -serial chardev:char0 -mon chardev=char0 \
     -nographic \
-    -m 1024M \
-    -smp 4 \
+    -m 512M \
     -d int,cpu_reset \
     -D qemu.log \
+    -cpu max

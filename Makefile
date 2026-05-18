@@ -9,6 +9,7 @@ ARCH = x86
 ARCH_DIR := arch/$(ARCH)
 SRC_DIR  := src
 DRV_DIR	 := drivers
+INCLUDE_DIR := include
 # --- 编译选项 ---
 CINCLUDE := -Iinclude -I$(ARCH_DIR)/include 
 CFLAGS   := -m64 -O2 -std=gnu11 -ffreestanding -fno-stack-protector -nostdlib \
@@ -58,7 +59,8 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
 			   $(SRC_DIR)/fs/fs.o \
 			   $(SRC_DIR)/drvframe/drv.o \
 			   $(SRC_DIR)/drvframe/devicebus.o \
-			   $(SRC_DIR)/sched/sched_drv.o
+			   $(SRC_DIR)/sched/sched_drv.o \
+			   $(SRC_DIR)/version.o
 
 
 ARCH_DEPENDS := $(ARCH_DIR)/boot.bin \
@@ -69,7 +71,8 @@ DRV_DEPENDS := $(DRV_DIR)/drvs.o
 
 ARCH_GENERATED := $(ARCH_DIR)/generated/syscall_id.h \
 				$(ARCH_DIR)/generated/syscall_id.inc \
-
+				${INCLUDE_DIR}/generated/version.h \
+				
 .PHONY: all clean run
 
 all: $(IMAGE)
@@ -89,7 +92,16 @@ $(SRC_DIR)/%/%.o: $(SRC_DIR)/%/%.c
 $(ARCH_DEPENDS):
 	@$(MAKE) -C $(ARCH_DIR)
 
-$(ARCH_GENERATED): tools/gen_systable.py
+$(ARCH_DIR)/generated/syscall_id.h: tools/gen_systable_header.py
+	@$(PY) $< $(ARCH)
+	@echo "	GEN" $@
+
+$(ARCH_DIR)/generated/syscall_id.inc: tools/gen_systable.py
+	@$(PY) $< $(ARCH)
+	@echo "	GEN" $@
+
+
+${INCLUDE_DIR}/generated/version.h: tools/gen_version.py
 	@$(PY) $< $(ARCH)
 	@echo "	GEN" $@
 
@@ -110,4 +122,6 @@ clean:
 	$(MAKE) -C $(ARCH_DIR) clean
 	$(MAKE) -C $(DRV_DIR) clean
 	rm -f $(IMAGE) $(KERNEL_BIN) script/*.S
+	rm -rf ${INCLUDE_DIR}/generated/*
+	rm -rf tools/__pycache__
 	find $(SRC_DIR) -name "*.o" -delete

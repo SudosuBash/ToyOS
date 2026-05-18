@@ -25,9 +25,12 @@ void write_to_buf(struct rio_buf_queue* queue, const char* str, size_t len) {
         queue->buf[(tail + index) & (RIO_QUEUE_MAXLEN - 1)] = str[index];
     }
     smp_wmb();
-    //上面的对 buf 的写入和下面的写入tail有没有关系? 没有!
-    //Write-write重排序!
-    //必须加smp_wmb
+    /**
+     * 我们的目的是在写入数据写入完前, 任何人读取 tail 指针都必须得数据写完再读.
+     * 上面的对 buf 的写入和下面的写入tail有没有关系? 没有!
+     * Write-write重排序, 下面的移动到上面, 还符合我们的目的吗?
+     * 必须加smp_wmb
+     */
     while (atomic_cas(&queue->tail, target_tail, tail) == 0) {
         pause();
     }

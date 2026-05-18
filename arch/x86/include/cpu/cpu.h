@@ -28,7 +28,7 @@ struct cpuinfo {
     uint8_t mmx_support:1;
     uint8_t sse_support:1;
     uint8_t sse2_support:1;
-    uint8_t rdtscq_support:1;
+    uint8_t rdtscp_support:1;
     uint8_t htt_support:1;
     uint8_t fxsr_support:1;
     uint8_t pbe_support:1;

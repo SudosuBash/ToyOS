@@ -98,7 +98,6 @@ void init_devicebus() {
 
     for(int i=0;i<DRV_BUS_TYPE_COUNT;i++) {
         INIT_LIST_HEAD(&device_bus.typed_bus[i].head);
-        device_bus.typed_bus[i].tail = &device_bus.typed_bus[i].head;
         device_bus.typed_bus[i].count = 0;
     }
 

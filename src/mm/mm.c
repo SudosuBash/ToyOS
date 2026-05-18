@@ -8,6 +8,8 @@
 #include <kernel/cpu/smp.h>
 #include <kernel/base/math.h>
 #include <kernel/task/task.h>
+#include <kernel/log/kprintf.h>
+#include <kernel/cpu/archimpl.h>
 
 static struct page *page_start;
 static volatile uint64_t mem_pages;
@@ -242,11 +244,15 @@ static void init_buddy() {
             build_up_buddy_sys(start_idx, end_idx);
         }   
     }
+    barrier();
+    kprintf("MEM: Buddy System Initialized.\n - Available page: %ld\n - Available mem: %ld Bytes\n", mem_pages, (mem_pages << PAGE_OFFSET));
     mem_alloc_M = ((uint64_t)1 << 32) / (mem_pages);
 }
 
 void init_mm() {
     init_mm_info(); 
+    kprintf("MEM: Physical Memory: %ld Bytes.\n", get_machine_available_mem_sz());
+    kprintf("MEM: Kernel Page Table Address: 0x%016x.\n", get_pgroot());
     mem_alloced_pages = 0;
     mem_pages = 0;
     init_page_items();

@@ -10,7 +10,6 @@
 
 struct device_bus_elem {
     struct linklist_head head;
-    struct linklist_head *tail;
     uint64_t count;
 };
 

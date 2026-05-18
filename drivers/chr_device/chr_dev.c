@@ -40,13 +40,13 @@ static void chr_drv_init() {
 }
 
 static void chr_drv_probe(struct device* dev) {
+    kprintf("DRV: character device %04x:%04x probed.\n", dev->vendor_id, dev->device_id);
     DEVICE_BIND_FILE_OP(dev, oper);
     set_device_type(dev, DRV_CONSOLETYP);
     register_print_reader(&reader);
 }
 
 static void chr_drv_destroy(struct device* dev) {
-    put_str("[serial driver] serial driver destroyed.\n");
 }
 
 static void chr_drv_callback(struct device* dev) {

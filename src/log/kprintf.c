@@ -26,5 +26,4 @@ int kprintf(const char* fmt, ...) {
 
 void init_log() {
     init_rio_broadcast(&rio_buf);
-    
 }

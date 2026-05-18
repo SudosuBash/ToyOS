@@ -68,10 +68,19 @@ inline void lidt(struct idtr idt) {
     );
 }
 
-inline uint64_t get_cr2() {
-    uint64_t pgaddr;
+inline uintptr_t get_pf_addr() {
+    uintptr_t pgaddr;
     asm volatile(
         "movq %%cr2, %0"
+        : "=r"(pgaddr)
+    );
+    return pgaddr;
+}
+
+inline uintptr_t get_pgroot() {
+    uintptr_t pgaddr;
+    asm volatile(
+        "movq %%cr3, %0"
         : "=r"(pgaddr)
     );
     return pgaddr;

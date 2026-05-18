@@ -22,10 +22,10 @@ void remind_device_type(drv_type type) {
     struct device* dev = NULL;
     struct linklist_head *current;
     barrier();
-
+    if(device_bus.typed_bus[type].head.next== NULL)  //链表为空
+        return;
     list_for_entry(&device_bus.typed_bus[type].head, current) {
         dev = container_of(current, struct device, dev_type_node);
-        //存在 task 意味着该 callback 已经变成了延时很高的函数, 直接唤醒进程
         task_switch_stat(dev->task, TASK_RUNNING_STAT);
         activate_driver_scheduler(dev->task->scheduler); //重新激活专用的 dev 调度器
     }
@@ -35,7 +35,7 @@ void set_device_type(struct device* dev, drv_type type) {
     if(type >= DRV_BUS_TYPE_COUNT)
         return;
     struct device_bus_elem* elem = &device_bus.typed_bus[type];
-    list_insert_rcu(&dev->dev_type_node ,elem->tail);
+    list_insert_rcu(&dev->dev_type_node ,list_tail(&elem->head));
     dev->type_devid = type;
     dev->sn_id = elem->count;
     elem->count += 1;
