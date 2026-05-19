@@ -18,7 +18,7 @@ global execve_to_user_mode
     pop rcx
     pop rbx
     pop rax
-    add rsp,16
+    add rsp,8
 %endmacro
 
 section .text

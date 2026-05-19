@@ -20,7 +20,7 @@ struct crash_info {
     if(!(condition)) arch_crash("assertion failed: ", (#condition)); \
 } while(0)
 void fault(struct crash_info* info, struct arch_regs* frame);
-void fault_irq(const char* name, struct arch_regs* frame);
 void fault_init();
+void fault_irq(const char* name, struct arch_regs* frame, uint64_t irq_num);
 void warn(const char* message);
 #endif

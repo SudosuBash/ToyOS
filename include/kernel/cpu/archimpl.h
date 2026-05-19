@@ -4,7 +4,6 @@
 #include <hal.h>
 struct arch_regs;
 
-void invlpg(uint64_t addr);
 uintptr_t get_pf_addr();
 uintptr_t get_pgroot();
 

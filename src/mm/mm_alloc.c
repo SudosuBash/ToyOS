@@ -3,6 +3,7 @@
 #include <kernel/fault/fault.h>
 #include <kernel/cpu/smp.h>
 #include <kernel/base/math.h>
+#include <kernel/stdlib.h>
 
 DEFINE_PERCPU_VAR(cache_per_cpu[10], struct kmem_cache);
 // struct kmem_cache* caches[10]; //2^3~2^13
@@ -37,6 +38,11 @@ void kfree(void* addr) {
     } else { //slab
         kmem_cache_free(addr);
     }
+}
+
+void* kzalloc(size_t sz, uint64_t flag) {
+    void* mem = kmalloc(sz, flag);
+    memset(mem, 0, sz);
 }
 
 void kmalloc_init() {

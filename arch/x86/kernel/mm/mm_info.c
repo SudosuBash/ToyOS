@@ -6,7 +6,7 @@
 #include <kernel/put.h>
 #include <kernel/irq/irq.h>
 #include <early_boot.h>
-#include <cpu/regs.h>
+#include <hal.h>
 #include <kernel/fault/error.h>
 #include <kernel/task/task.h>
 #include <kernel/mm/mm_user.h>
@@ -26,7 +26,7 @@ static inline void update_page_pte(void* paddr, uint16_t prot, pte_t* pte) {
     if(!(prot & PERM_X)) pte->nx = 1;
 }
 
-static void pagefault_irq(struct arch_regs* frame) {
+static void pagefault_irq(struct arch_regs* frame, uint64_t irq_num) {
     struct page *origin_pg, *new_pg;
     pte_t* target_pte;
     uint64_t target_addr, cow_addr = 0;
@@ -34,7 +34,7 @@ static void pagefault_irq(struct arch_regs* frame) {
     struct task_struct *current;
     
     if(!(frame->error_code & PG_ERR_PERM)) //内核操作
-        arch_crash_on_irq("Page Fault", frame);
+        arch_crash_on_irq("Page Fault", frame, irq_num);
     
     current = CURRENT_PROCESS();
 
@@ -96,5 +96,5 @@ void init_mm_info() {
     extern uint64_t __kernel_end;
     kernel_end = KERN_VADDR_TO_PADDR((uintptr_t)&__kernel_end);
     
-    irq_register(IRQ_PG_ERR, pagefault_irq);
+    irq_single_register(IRQ_PG_ERR, pagefault_irq);
 }

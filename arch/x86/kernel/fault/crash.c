@@ -1,6 +1,6 @@
 #include <kernel/fault/fault.h>
 #include <kernel/put.h>
-#include <cpu/regs.h>
+#include <hal.h>
 #include <kernel/irq/irq.h>
 #include <cpu/cpu.h>
 #include <kernel/mm/mm.h>
@@ -102,10 +102,10 @@ static void crash_log_position(struct crash_info* info) {
     put_char('\n');
 }
 
-static void crash_irq_position(struct crash_info* info,struct arch_regs* frame) {
+static void crash_irq_position(struct crash_info* info,struct arch_regs* frame, uint64_t irq_num) {
     put_str("on irq ");
-    put_dec(frame->irq_num);
-    if(frame->irq_num == IRQ_PG_ERR) {
+    put_dec(irq_num);
+    if(irq_num == IRQ_PG_ERR) {
         put_str(" (Page Fault on ");
         put_hex_zfill(cr2,16);
         put_str(")");
@@ -115,7 +115,7 @@ static void crash_irq_position(struct crash_info* info,struct arch_regs* frame) 
     put_str(info->message);
     put_char('\n');
 }
-static void do_fault(struct crash_info* info, struct arch_regs* frame, int irq) {
+static void do_fault(struct crash_info* info, struct arch_regs* frame, uint64_t irq) {
     spin_lock(&crash_spin);
     asm volatile(
         "movq %%cr2,%0\t\n"
@@ -132,7 +132,7 @@ static void do_fault(struct crash_info* info, struct arch_regs* frame, int irq) 
     if(irq == 0) {
         crash_log_position(info);
     } else {
-        crash_irq_position(info,frame);
+        crash_irq_position(info,frame, irq);
     }
 
     put_str("\n");
@@ -146,7 +146,7 @@ static void do_fault(struct crash_info* info, struct arch_regs* frame, int irq) 
     hlt();
 }
 
-void fault_irq(const char* name, struct arch_regs* frame) {
+void fault_irq(const char* name, struct arch_regs* frame, uint64_t irq_num) {
     disable_irq();
     struct crash_info info = {
         .message = name,
@@ -155,9 +155,12 @@ void fault_irq(const char* name, struct arch_regs* frame) {
         .func = NULL,
         .line = 0
     };
-    do_fault(&info, frame, 1);
+    do_fault(&info, frame, irq_num);
 }
 
+static void gp_fault_trigger(struct arch_regs* arch, uint64_t num) {
+    fault_irq("General Protection Fault", arch, num);
+}
 
 void fault(struct crash_info* info, struct arch_regs* frame) {
     disable_irq();
@@ -165,7 +168,7 @@ void fault(struct crash_info* info, struct arch_regs* frame) {
 }
 
 
-static void ud_irq_handler(struct arch_regs* frame) {
+static void ud_irq_handler(struct arch_regs* frame, uint64_t irq_num) {
     uint32_t cs = frame->cs;
     if(IS_IN_KERN_MODE(cs)) { //内核模式直接嘎
         struct crash_info* msg = (struct crash_info*)frame->r15;
@@ -181,7 +184,8 @@ void warn(const char* message) {
 }
 
 void fault_init() {
-    irq_register(IRQ_UD_ERR, ud_irq_handler);
+    irq_single_register(IRQ_UD_ERR, ud_irq_handler);
+    irq_single_register(IRQ_GP_ERR, gp_fault_trigger);
 }
 
 

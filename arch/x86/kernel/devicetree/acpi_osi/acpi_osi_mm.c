@@ -1,4 +1,5 @@
 #include <devicetree/acpica/acpiosxf.h>
+#include <devicetree/acpica/acexcep.h>
 #include <kernel/fault/error.h>
 #include <kernel/mm/mm.h>
 #include <kernel/mm/mmap.h>
@@ -15,7 +16,10 @@ AcpiOsAllocate (
 void *
 AcpiOsAllocateZeroed (
     ACPI_SIZE               Size) {
-    
+    void* mem = kzalloc(Size, GFP_KERNEL);
+    if(IS_ERR(mem))
+        return ERR_PTR(mem);
+    return mem;
 }
 
 void
@@ -28,22 +32,15 @@ void *
 AcpiOsMapMemory (
     ACPI_PHYSICAL_ADDRESS   Where,
     ACPI_SIZE               Length) {
+    
 }
 
 void
 AcpiOsUnmapMemory (
     void                    *LogicalAddress,
     ACPI_SIZE               Size) {
-
+    
 }
-
-ACPI_STATUS
-AcpiOsGetPhysicalAddress (
-    void                    *LogicalAddress,
-    ACPI_PHYSICAL_ADDRESS   *PhysicalAddress) {
-
-}
-
 ACPI_STATUS
 AcpiOsCreateCache (
     char                    *CacheName,
@@ -72,12 +69,12 @@ AcpiOsPurgeCache (
 void *
 AcpiOsAcquireObject (
     ACPI_CACHE_T            *Cache) {
-    
+    return kmem_cache_alloc(Cache, GFP_ATOMIC);
 }
 
 ACPI_STATUS
 AcpiOsReleaseObject (
     ACPI_CACHE_T            *Cache,
     void                    *Object) {
-
+    kmem_cache_free(Object);
 }

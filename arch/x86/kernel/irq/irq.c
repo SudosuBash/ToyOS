@@ -7,27 +7,13 @@
 #include <irq/pic/apic.h>
 #include <kernel/irq/irq.h>
 #include <kernel/fault/fault.h>
-#include <cpu/regs.h>
+#include <hal.h>
 #include <cpu/cpu.h>
-
-#define IRQ_MAX_CNT 256
+#include <kernel/kernel.h>
 
 static volatile struct idt_gate gate[IRQ_MAX_CNT];
-extern irq_entry_t irq_entry_table[IRQ_MAX_CNT];
-volatile irq_handler_t irq_handler_fns[IRQ_MAX_CNT];
-
-static void default_irq_handler(struct arch_regs* frame) {
-    fault_irq("IRQ Triggered.",frame);
-}
-
-int irq_register(
-    uint64_t num,
-    irq_handler_t fn
-) {
-    if(num >= IRQ_MAX_CNT) return 0;
-    irq_handler_fns[num] = fn;
-    return 1;
-}
+extern void* irq_entry_table[IRQ_MAX_CNT];
+volatile irq_entry_t irq_entrance_gate[IRQ_MAX_CNT];
 
 void init_idt() {
     for(int i=0;i<IRQ_MAX_CNT;i++) {
@@ -40,7 +26,7 @@ void init_idt() {
         
         gate[i].offset_low =  irq_entry_ptr & 0xffff;
         gate[i].offset = irq_entry_ptr  >> 16;
-        irq_handler_fns[i] = default_irq_handler;
+        irq_entrance_gate[i] = irq_entrance_fn;
     }
     gate[IRQ_DF_ERR].ist = DF_IRQ_IST_IDX;
 
@@ -59,6 +45,11 @@ void init_idt() {
     lidt(idt);
 }
 
+inline void irq_single_register(uint64_t num, irq_entry_t func) {
+    if(num >= IRQ_MAX_CNT)
+        return;
+    irq_entrance_gate[num] = func;
+}
 
 inline int irqs_disabled() {
     uint64_t rfl;
@@ -69,10 +60,9 @@ inline int irqs_disabled() {
     return (rfl & (1 << 9));
 }
 
-void init_irq() {
-    disable_irq();
+void init_irq_arch() {
     init_idt();
     init_pic();
     init_apic();
     fault_init();
-} 
+}

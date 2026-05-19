@@ -2,6 +2,7 @@
 #define _TOYOS_X86_IRQ
 
 #include <kernel/stdint.h>
+#include <hal.h>
 
 #define IRQ_DIV_ERR 0
 #define IRQ_DBG_ERR 3
@@ -32,7 +33,7 @@ struct idtr {
     uint64_t base;
 }__attribute__((packed));
 
-
-typedef void (*irq_entry_t)();
+typedef void (*irq_entry_t)(struct arch_regs* arch, uint64_t num);
+void irq_single_register(uint64_t num, irq_entry_t func);
 //这个就一个入口函数
 #endif

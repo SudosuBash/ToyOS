@@ -4,14 +4,52 @@
 
 #define CR0_WP_MASK 0xf000
 
-#define __lfence() asm volatile("lfence")
-
 inline void outb(uint16_t port, uint8_t data) {
     asm volatile(
         "outb %0,%1"
         :
-        : "a"(data), "Nd"(port)
+        : "a"(data), "d"(port)
     );
+}
+
+inline void outw(uint16_t port, uint16_t data) {
+    asm volatile(
+        "outw %0,%1"
+        :
+        : "a"(data), "d"(port)
+    );
+}
+
+inline void outl(uint16_t port, uint32_t data) {
+    asm volatile(
+        "outl %0,%1"
+        :
+        : "a"(data), "d"(port)
+    );
+}
+
+inline uint8_t inb(uint16_t port) {
+    uint8_t value;
+    asm volatile (
+        "inb %1, %0" : "=a"(value) : "d"(port)
+    );
+    return value;
+}
+
+inline uint16_t inw(uint16_t port) {
+    uint16_t value;
+    asm volatile (
+        "inw %1, %0" : "=a"(value) : "d"(port)
+    );
+    return value;
+}
+
+inline uint32_t inl(uint16_t port) {
+    uint32_t value;
+    asm volatile (
+        "inl %1, %0" : "=a"(value) : "d"(port)
+    );
+    return value;
 }
 
 inline void load_cr3(uint64_t addr) {
@@ -84,15 +122,6 @@ inline uintptr_t get_pgroot() {
         : "=r"(pgaddr)
     );
     return pgaddr;
-}
-
-inline void invlpg(uint64_t addr) {
-    asm volatile(
-        "invlpg (%[addr])"
-        :
-        :
-        [addr] "r"(addr)
-    );
 }
 
 inline void arch_enable_pge() {

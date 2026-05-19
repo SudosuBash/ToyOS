@@ -1,7 +1,7 @@
 [bits 64]
 #include <asm-offset.h>
-extern irq_handler_fns
 
+extern irq_entrance_gate
 %macro IRQ_JMP_PUSHAD 0
     push rax
     push rbx
@@ -36,7 +36,7 @@ extern irq_handler_fns
     pop rcx
     pop rbx
     pop rax
-    add rsp,16 
+    add rsp,8
     iretq
 %endmacro
 
@@ -44,7 +44,6 @@ extern irq_handler_fns
 %macro IRQ_ERR 1
     global irq_entry_%1
     irq_entry_%1:
-        push %1
         IRQ_JMP_PUSHAD
         
         mov rsi, [rsp + IRQ_CS_OFFSET]
@@ -54,7 +53,8 @@ extern irq_handler_fns
 
     irq_entry_call_%1:
         mov rdi,rsp ;传入指针
-        call [irq_handler_fns + %1 * 8]
+        mov rsi, %1
+        call [irq_entrance_gate + %1 * 8]
         mov rdi,rsp
         
         mov rsi, [rsp + IRQ_CS_OFFSET]
@@ -70,7 +70,6 @@ extern irq_handler_fns
     global irq_entry_%1
     irq_entry_%1:
         push 0
-        push %1
         IRQ_JMP_PUSHAD
 
         mov rsi, [rsp + IRQ_CS_OFFSET]
@@ -79,9 +78,9 @@ extern irq_handler_fns
         swapgs
 
     irq_entry_call_%1:
-
-        mov rdi,rsp
-        call [irq_handler_fns + %1 * 8]
+        mov rdi,rsp ;传入指针
+        mov rsi, %1
+        call [irq_entrance_gate + %1 * 8]
         mov rdi,rsp
 
         mov rsi, [rsp + IRQ_CS_OFFSET]

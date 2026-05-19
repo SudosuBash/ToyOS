@@ -2,12 +2,12 @@
 
 ACPI_STATUS AcpiOsCreateLock (
     ACPI_SPINLOCK           *OutHandle) {
-
+    spin_init(OutHandle);
 }
 
 
 void AcpiOsDeleteLock (ACPI_SPINLOCK Handle) {
-
+    
 }
 
 ACPI_CPU_FLAGS

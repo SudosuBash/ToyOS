@@ -1,5 +1,5 @@
 [bits 64]
-extern irq_handler_fns
+extern irq_entrance_gate
 %macro IRQ_JMP_PUSHAD 0
     push rax
     push rbx
@@ -33,23 +33,23 @@ extern irq_handler_fns
     pop rcx
     pop rbx
     pop rax
-    add rsp,16
+    add rsp,8
     iretq
 %endmacro
 %macro IRQ_ERR 1
     global irq_entry_%1
     irq_entry_%1:
-        push %1
         IRQ_JMP_PUSHAD
-        mov rsi, [rsp + (18 * 8)]
+        mov rsi, [rsp + (17 * 8)]
         and rsi, 3
         jz irq_entry_call_%1
         swapgs
     irq_entry_call_%1:
         mov rdi,rsp ;传入指针
-        call [irq_handler_fns + %1 * 8]
+        mov rsi, %1
+        call [irq_entrance_gate + %1 * 8]
         mov rdi,rsp
-        mov rsi, [rsp + (18 * 8)]
+        mov rsi, [rsp + (17 * 8)]
         and rsi, 3
         jz irq_entry_end_%1
         swapgs
@@ -60,17 +60,17 @@ extern irq_handler_fns
     global irq_entry_%1
     irq_entry_%1:
         push 0
-        push %1
         IRQ_JMP_PUSHAD
-        mov rsi, [rsp + (18 * 8)]
+        mov rsi, [rsp + (17 * 8)]
         and rsi, 3
         jz irq_entry_call_%1
         swapgs
     irq_entry_call_%1:
+        mov rdi,rsp ;传入指针
+        mov rsi, %1
+        call [irq_entrance_gate + %1 * 8]
         mov rdi,rsp
-        call [irq_handler_fns + %1 * 8]
-        mov rdi,rsp
-        mov rsi, [rsp + (18 * 8)]
+        mov rsi, [rsp + (17 * 8)]
         and rsi, 3
         jz irq_entry_end_%1
         swapgs

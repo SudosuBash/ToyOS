@@ -53,10 +53,32 @@ static void init_mem_record() {
             }
             avl_mem+=area.to - area.from;
             mem_all_pages = (edr[i].base_addr +edr[i].leng) >> PAGE_OFFSET;
+        } else if(edr[i].type != 1) {
+            uint64_t start = edr[i].base_addr & PAGE_MASK;
+            uint64_t end = PAGE_ROUND_UP(edr[i].base_addr + edr[i].leng);
+            
+            if(end - start >= PG_BIG_PAGE_SZ) {
+                start = edr[i].base_addr & PG_BIG_PAGE_MASK;
+                end = PAGE_BIG_ROUND_UP(edr[i].base_addr + edr[i].leng);
+                for(uint64_t addr = start; addr < end; addr += PG_BIG_PAGE_SZ) {
+                    uint64_t new_addr = PHYS2VADDR_MMIO(addr);
+                    link_new_pte_bigpage_addr(addr ,new_addr);
+                    
+                    set_pde_pcd_bigpage(new_addr, 1);
+                    set_pde_pwt_bigpage(new_addr, 1);
+                }
+            } else {
+                for(uint64_t addr = start; addr < end; addr += PAGE_SZ) {
+                    uint64_t new_addr = PHYS2VADDR_MMIO(addr);
+                    link_new_pte_addr(addr ,new_addr);
+                    
+                    set_pte_pcd(new_addr, 1);
+                    set_pte_pwt(new_addr, 1);
+                }
+            }
+            //宁可多也不能少, 否则直接炸了
         }
     }
-
-    
     link_new_pte_bigpage_addr(0, PHYS2VADDR(0));
     record.area[0].from = LOW_MEM; //手动设置为低端内存
 }

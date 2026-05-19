@@ -5,12 +5,9 @@
 #include <kernel/atomic/atomic.h>
 DEFINE_PERCPU_VAR(percpu_preempt_count, atomic_t);
 
-static void smp_percpu_init() {
-    if(is_bsp_core()) {
-        extern uint64_t __bsp_percpu_start;
-        set_smp_base_addr((uintptr_t)&__bsp_percpu_start);
-        return;
-    }
+static void bsp_percpu_init() {
+    extern uint64_t __bsp_percpu_start;
+    set_smp_base_addr((uintptr_t)&__bsp_percpu_start);
 }
 
 inline void preempt_enable() {
@@ -23,9 +20,8 @@ inline void preempt_disable() {
     atomic_inc(preempt_count);
 }
 
-void init_smp() {
-    smp_percpu_init();
+void init_bst_smp() {
+    bsp_percpu_init();
     atomic_t* preempt_count = THIS_CPU_PTR(percpu_preempt_count);
     atomic_set(preempt_count, 0);
-    
 }

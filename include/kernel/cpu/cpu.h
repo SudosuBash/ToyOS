@@ -5,6 +5,6 @@
 bool cpu_feature_rdtscp();
 uint16_t smp_processor_id();
 
-void init_smp();
+void init_bst_smp();
 void init_cpu();
 #endif

@@ -6,6 +6,7 @@
 #include <kernel/mm/mmap.h>
 #include <kernel/mm/mm_user.h>
 #include <kernel/stdlib.h>
+#include <asm.h>
 //申请的pte数量(base_addr)
 static volatile void* pte_start_addr;
 static volatile void* pde_start_addr;
@@ -112,7 +113,6 @@ static void link_addr(uint64_t paddr,uint64_t vaddr, uint8_t big_page) {
     }
     barrier();
 }
-
 
 void link_new_pte_addr(uint64_t paddr, uint64_t vaddr) {
     link_addr(paddr,vaddr,0);

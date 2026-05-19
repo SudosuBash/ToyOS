@@ -1,7 +1,7 @@
 #include <kernel/task/exec.h>
 #include <kernel/task/task.h>
 #include <kernel/mm/mmap.h>
-#include <cpu/regs.h>
+#include <hal.h>
 #include <cpu/gdt.h>
 #include <kernel/mm/mm.h>
 #include <kernel/stdlib.h>

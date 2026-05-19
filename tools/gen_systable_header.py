@@ -1,18 +1,14 @@
 import csv
 import sys
-import os
- 
-from header_generator import HeaderGenerator
 
-syscalls = 512
-rootdir = os.getcwd()
+from header_generator import HeaderGenerator
 
 class SystableHeaderGenerator(HeaderGenerator):
     def __init__(self, arch):
         HeaderGenerator.__init__(self, "syscall_id", "syscall_id.h", arch)
         self.syscalls = 512
-        self.systables = [0] * syscalls
-        table_path = "{rootdir}/arch/{arch}/systable.csv".format(rootdir=rootdir, arch = arch)
+        self.systables = [0] * self.syscalls
+        table_path = "{rootdir}/arch/{arch}/systable.csv".format(rootdir=self.rootdir, arch = arch)
 
         with open(table_path, 'r' ,encoding = "utf-8") as f:
             r = csv.reader(f)

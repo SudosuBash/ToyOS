@@ -24,4 +24,5 @@
 #define APIC_LVT_PERODIC_VALUE (1<<17)
 //设置 LVT 为 Perodic
 void init_apic();
+void lapic_handle_ok();
 #endif

@@ -9,6 +9,7 @@
 #include <kernel/fs/devicefs.h>
 #include <kernel/log/kprintf.h>
 #include <kernel/version.h>
+#include <kernel/timer/timer.h>
 
 int init() {
     kprintf("Init thread launched, pid = %ld\n", pid_of(CURRENT_PROCESS()));
@@ -19,11 +20,13 @@ int init() {
 void kernel_start() {
     init_log();
     log_version_info();
-    init_irq();
-    init_smp();
+    init_bst_smp();
     init_cpu();
     init_mm();
+    init_irq();
     
+    init_timer();
+
     init_syscall();
     init_task();
 

@@ -6,7 +6,7 @@
 #include <kernel/cpu/smp.h>
 #include <kernel/irq/irq.h>
 #include <kernel/sched/sched.h>
-#include <kernel/irq/timer.h>
+#include <kernel/timer/timer.h>
 #include <kernel/task/pid.h>
 #include <kernel/stdlib.h>
 #include <kernel/mm/mmap.h>
@@ -27,10 +27,6 @@ struct task_struct idle = {
 DEFINE_PERCPU_VAR(current_process, struct task_struct*);
 DEFINE_PERCPU_VAR(user_rsp, uintptr_t);
 DEFINE_PERCPU_VAR(kernel_rsp, uintptr_t);
-
-static void timer_irq_handler(struct arch_regs* frame) {
-    schedule();
-}
 
 static void init_pid() {
     uint64_t pid_sz = sizeof(struct pid) + sizeof(struct pid_ns_layer);
@@ -67,7 +63,6 @@ void init_task() {
     init_pid();
     init_userspace_mm();
     init_scheduler();
-    timer_irq_register(timer_irq_handler);
 }
 
 inline struct task_struct* get_current_process() {

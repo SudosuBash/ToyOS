@@ -6,6 +6,7 @@ struct kern_version {
     const char* version_number;
     const char* build_time;
     const char* platform;
+    const char* maintainer;
 };
 void log_version_info();
 #endif

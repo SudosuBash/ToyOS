@@ -3,7 +3,7 @@
 #include <task/task.h>
 #include <kernel/mm/mm.h>
 #include <kernel/config.h>
-#include <cpu/regs.h>
+#include <hal.h>
 #include <cpu/gdt.h>
 #include <pgtable/pgtable_kern.h>
 #include <kernel/mm/mm_user.h>

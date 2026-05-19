@@ -369,14 +369,6 @@ AcpiOsUnmapMemory (
     ACPI_SIZE               Size);
 #endif
 
-#ifndef ACPI_USE_ALTERNATE_PROTOTYPE_AcpiOsGetPhysicalAddress
-ACPI_STATUS
-AcpiOsGetPhysicalAddress (
-    void                    *LogicalAddress,
-    ACPI_PHYSICAL_ADDRESS   *PhysicalAddress);
-#endif
-
-
 /*
  * Memory/Object Cache
  */

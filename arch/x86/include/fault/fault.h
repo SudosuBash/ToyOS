@@ -20,8 +20,8 @@
     ); \
 } while(0);
 
-#define arch_crash_on_irq(msg,irq_info) do { \
-    fault_irq(msg,irq_info); \
+#define arch_crash_on_irq(msg,irq_info,irq_num) do { \
+    fault_irq(msg,irq_info,(irq_num)); \
 }while(0);
 
 #endif

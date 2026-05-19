@@ -68,4 +68,5 @@ uint64_t get_kern_addr();
 uint64_t get_system_mem_alloced();
 uint64_t get_system_mem_sum();
 struct mm_area_record* get_mem_records();
+void* kzalloc(size_t sz, uint64_t flag);
 #endif

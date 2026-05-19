@@ -3,9 +3,10 @@
 #include <config_arch.h>
 #include <asm.h>
 #include <kernel/cpu/smp.h>
-#include <kernel/irq/timer.h>
+#include <kernel/timer/timer.h>
 #include <kernel/irq/irq.h>
 #include <kernel/mm/mm.h>
+#include <kernel/ptable/ptable.h>
 #include <cpu/msr_base.h>
 
 static volatile uint64_t apic_status;
@@ -82,21 +83,8 @@ static inline void init_lvt() {
     lapic_write(APIC_LVT_OFFSET, (APIC_LVT_PERODIC_VALUE) | APIC_LVT_IVT);
 }
 
-static inline void lapic_handle_ok() {
+inline void lapic_handle_ok() {
     lapic_write(APIC_EOI_OFFSET, 0);
-}
-
-static inline void default_timer_irq_fn(struct arch_regs* frame) {
-    fault_irq("Timer IRQ Triggered!",frame);
-}
-
-static inline void timer_irq_reg_fn(struct arch_regs* frame) {
-    lapic_handle_ok();
-    handler(frame);
-}
-
-void timer_irq_register(timer_handler_t fn) {
-    handler = fn;
 }
 
 void init_apic() {
@@ -104,10 +92,13 @@ void init_apic() {
     apic_status = apic_current_info();
     uint64_t base_addr = APIC_BASE_MEM(apic_status);
     base_addr <<= 12;
+    
     link_new_pte_addr(base_addr,PHYS2VADDR_MMIO(base_addr));
     apic_vaddr = PHYS2VADDR_MMIO(base_addr);
-    set_pte_pcd(apic_vaddr,0);
-    set_pte_pwt(apic_vaddr,0);
+    set_pde_pcd_bigpage(apic_vaddr,0);
+    set_pde_pwt_bigpage(apic_vaddr,0);
+    
+    invlpg(base_addr);
 
     write_ivt(APIC_IVT);
 
@@ -115,7 +106,4 @@ void init_apic() {
     init_dcr();
     init_lvt();
     init_freq();
-
-    irq_register(APIC_LVT_IVT, timer_irq_reg_fn);
-    timer_irq_register(default_timer_irq_fn);
 }
