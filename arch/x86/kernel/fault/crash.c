@@ -1,12 +1,12 @@
 #include <kernel/fault/fault.h>
 #include <kernel/put.h>
-#include <hal.h>
+#include <hal/hal.h>
 #include <kernel/irq/irq.h>
-#include <cpu/cpu.h>
+#include <hal/cpu/cpu.h>
 #include <kernel/mm/mm.h>
 #include <kernel/atomic/spinlock.h>
 #include <kernel/cpu/archimpl.h>
-#include <irq/irq.h>
+#include <hal/irq/irq.h>
 
 static uint64_t cr2;
 static uint64_t cr3;

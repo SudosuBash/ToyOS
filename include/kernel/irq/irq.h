@@ -3,7 +3,7 @@
 
 #include <kernel/stdint.h>
 #include <kernel/base/linklist.h>
-#include <hal.h>
+#include <hal/hal.h>
 
 #define IRQ_MAX_CNT 256
 
@@ -30,4 +30,5 @@ void init_irq_arch();
 int irqs_disabled();
 void irq_entrance_fn(struct arch_regs* args, uint64_t irq_number);
 void irq_remove(uint64_t num, void* dev_data);
+void init_irq_early();
 #endif

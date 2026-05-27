@@ -1,4 +1,5 @@
 global rd_disc
+[bits 32]
 ;保护模式诶, int 13h就别想用了
 ;32位通过栈传参
 ;void rd_disc(u8 rd_count, u32 sector, void* data)

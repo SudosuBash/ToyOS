@@ -2,7 +2,7 @@ from header_generator import *
 from datetime import datetime, timezone, timedelta
 
 version = "Alpha 12.418.0"
-version_number = "Y26V02"
+version_number = "Y26V03"
 maintainer = "Sudo-su-Bash"
 
 class VersionGenerator(HeaderGenerator):

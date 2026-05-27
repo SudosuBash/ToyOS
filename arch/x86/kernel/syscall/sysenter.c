@@ -1,7 +1,7 @@
 #include <kernel/stdint.h>
-#include <syscall/syscall.h>
-#include <asm.h>
-#include <cpu/msr_base.h>
+#include <hal/syscall/syscall.h>
+#include <hal/asm.h>
+#include <hal/cpu/msr_base.h>
 #include <kernel/mm/mm.h>
 
 #include <kernel/cpu/smp.h>

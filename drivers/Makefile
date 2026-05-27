@@ -1,26 +1,20 @@
-CC      := gcc-7
-LD      := ld
-OBJCOPY := objcopy
-MAKE    := make
+include $(TOP_DIR)/config.mk
 
-DRV_DIR  := .
+MODULE_OBJS := \
+	chr_device/driver.o
 
-ARCH := x86
-ARCH_DIR := ../arch/$(ARCH)
-# --- 编译选项 ---
-CINCLUDE := -I../include -I$(ARCH_DIR)/include
-CFLAGS   := -m64 -O2 -std=gnu11 -ffreestanding -fno-stack-protector -nostdlib \
-            $(CINCLUDE) -g  -mcmodel=kernel -fno-pic -fno-omit-frame-pointer -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow -mno-red-zone -Wall
+TARGET_OBJS := drvs.o
 
-DRIVER_OBJS := chr_device/chr_dev.o
+all: $(TARGET_OBJS)
 
-$(DRV_DIR)/%.o: $(DRV_DIR)/%.c
-	@$(CC) $(CFLAGS) -c $< -o $@
-	@echo "	CC" $<
+chr_device/driver.o:
+	@$(MAKE) -C chr_device
 
-drvs.o: $(DRIVER_OBJS)
-	@$(LD) -r $(DRIVER_OBJS) -o $@
+$(TARGET_OBJS): $(MODULE_OBJS)
+	@$(LD) $(LDFLAGS_OBJ) $@ $^
 	@echo "	LD" $<
+
 clean:
 	@rm -f *.o *.bin *.elf */**/*.o **/*.lds **/*.o */*.asm klinker.lds generated/*
 	@find . -name "*.o" -delete
+

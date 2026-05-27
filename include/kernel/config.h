@@ -1,10 +1,8 @@
 #ifndef _TOYOS_CONFIG
 #define _TOYOS_CONFIG
 
-#include <config_arch.h>
-
+#include <hal/config_arch.h>
 #define CONFIG_GROUP_MAX_CNT 327680
-#define SCHED_RR_TS 10000000
 #define PROCESS_STACK_PAGE 2
 
 #define PAGE_PTE_ENTRIES 512
@@ -17,4 +15,6 @@
 #define SYSCALL_COUNT 512
 
 #define CONFIG_EEVDF 1
+#define CONFIG_IRQ_MS 4
+#define CONFIG_PERCPU_SZ 0x100000
 #endif

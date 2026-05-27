@@ -1,25 +1,8 @@
-# --- 工具链配置 ---
-AS      := nasm
-CC      := gcc-7
-LD      := ld
-OBJCOPY := objcopy
-PY      := python3
-# --- 编译选项 ---
-CINCLUDE := -I. -Iinclude -I../../include -Itools/include
-CFLAGS   := -ffreestanding -fno-stack-protector -nostdlib $(CINCLUDE) -g 
-CFLAGS_M32 := -m32 $(CFLAGS) -O0 -Wall -Werror
-CFLAGS_M64 := -m64 -O2 -mcmodel=kernel -fno-pic -fno-omit-frame-pointer $(CFLAGS)  -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow -mno-red-zone -Wall
+include $(TOP_DIR)/config.mk
+LDFLAGS  :=
 
-# --- 目标文件列表 ---
-
-# kloader 需要的文件 (32位)
-KLOADER_OBJS := kloader/kloader.o \
-                kloader/pgtable.o \
-                kloader/elf_loader.o \
-                kloader/rddisk.o \
-                kloader/64bit_mode.o
-				
-
+TOOLS_DIR := tools
+KLOADER_DIR := kloader
 # pt.o 需要的文件 (64位)
 PT_OBJS      := kernel/kern_start.o \
                 kernel/kstart.o \
@@ -30,8 +13,6 @@ PT_OBJS      := kernel/kern_start.o \
 				kernel/cpu/gdt.o \
 				kernel/irq/irq_handler.o \
 				kernel/irq/irq.o \
-				kernel/irq/pic/apic.o \
-				kernel/irq/pic/pic.o \
 				kernel/timer/timer.o \
 				kernel/mm/mm_info.o \
 				kernel/early_boot.o \
@@ -40,37 +21,42 @@ PT_OBJS      := kernel/kern_start.o \
 				kernel/task/fork.o \
 				kernel/task/exec.o \
 				kernel/task/switch.o \
+				kernel/task/switch_task.o \
 				kernel/syscall/sysenter.o \
 				kernel/syscall/sysenter_fn.o \
-				kernel/stdlib.o 
+				kernel/devicetree/dt.o \
+				kernel/devicetree/dt_smp.o \
+				kernel/devicetree/dt_pm.o \
+				kernel/stdlib.o \
+				kernel/acpi/acpi_apic.o
+
+# TOOLS_OBJS := tools/libtools.o
 				
 .PHONY: all clean
 
-all: boot.bin kloader.bin pt.o
-
-kloader/%.lds: kloader/%.lds.proc
-	@$(CC) -E -P -x c $(CINCLUDE) $< -o $@
-	@echo "	GEN" $@
+all: boot.bin kloader/kloader.bin pt.o
+	@dd if=/dev/zero of=$(IMAGE) count=20480
+	@dd if=$(ARCH_DIR)/boot.bin of=$(IMAGE) conv=notrunc
+	@dd if=$(ARCH_DIR)/kloader/kloader.bin of=$(IMAGE) seek=4 conv=notrunc
+	@echo "	DD" $(IMAGE)
 
 kernel/%.lds: kernel/%.lds.proc
 	@$(CC) -E -P -x c $(CINCLUDE) $< -o $@
 	@echo "	GEN" $@
 
-%.bin: %.S
-	@$(AS) -f bin $< -o $@
+./%.bin: ./%.S
+	@$(CC) -E -P $(CINCLUDE) $< > $@.asm
+	@$(AS) -f bin $@.asm -o $@
 	@echo "	AS" $<
 
-kloader/%.o: kloader/%.S
-	@$(CC) -m32 -E -P $(CINCLUDE) $< > $@.asm
-	@$(AS) -f elf32 $@.asm -o $@
-	@echo "	AS" $<
+boot.bin: bspBoot.bin ap.bin
+	@cat $^ > boot.bin
+	@rm -rf $^
+	@echo "	CAT" $@
 
-kloader/%.o: kloader/%.c
-	@$(CC) $(CFLAGS_M32) -c $< -o $@
-	@echo "	CC" $<
-
+ap.bin: ap.S
 kernel/%.o: kernel/%.c
-	@$(CC) $(CFLAGS_M64) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "	CC" $<
 
 kernel/%.o: kernel/%.S
@@ -79,7 +65,7 @@ kernel/%.o: kernel/%.S
 	@echo "	AS" $<
 
 kernel/%/%.o: kernel/%/%.c
-	@$(CC) $(CFLAGS_M64) -c $< -o $@
+	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "	CC" $<
 
 kernel/%/%.o: kernel/%/%.S
@@ -87,15 +73,18 @@ kernel/%/%.o: kernel/%/%.S
 	@$(AS) -f elf64 syscall/sysenter_fn.asm -o $@
 	@echo "	CC" $<
 
-kloader.bin: $(KLOADER_OBJS) kloader/linker.lds
-	@$(LD) -T kloader/linker.lds -m elf_i386 -e _start $(KLOADER_OBJS) -o kloader.elf
-	@$(OBJCOPY) -O binary kloader.elf $@
+kloader/kloader.bin: 
+	@$(MAKE) -C $(KLOADER_DIR)
+
+pt.o:  $(PT_OBJS) kernel/klinker.lds 
+	@$(LD) $(LDFLAGS) -r $(PT_OBJS) -o $@
 	@echo "	LD" $<
 
-pt.o: $(PT_OBJS) kernel/klinker.lds
-	@$(LD) -r $(PT_OBJS) -o $@
-	@echo "	LD" $<
+# tools/libtools.o: 
+# 	@$(MAKE) -C $(TOOLS_DIR)
 
 clean:
-	rm -f *.o *.bin *.elf */**/*.o **/*.lds **/*.o */*.asm klinker.lds generated/*
+	rm -f *.o *.a *.bin *.elf */**/*.o **/*.lds **/*.o */*.asm klinker.lds include/generated/* *.asm
 	find . -name "*.o" -delete
+	find . -name "*.elf" -delete
+	find . -name "*.a" -delete

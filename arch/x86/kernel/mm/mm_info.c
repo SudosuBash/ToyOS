@@ -1,12 +1,12 @@
-#include <pgtable/pgtable_kern.h>
-#include <packed_e820.h>
-#include <asm.h>
-#include <cpu/cpu.h>
+#include <hal/pgtable/pgtable_kern.h>
+#include <hal/packed_e820.h>
+#include <hal/asm.h>
+#include <hal/cpu/cpu.h>
 #include <kernel/mm/mm.h>
 #include <kernel/put.h>
 #include <kernel/irq/irq.h>
-#include <early_boot.h>
-#include <hal.h>
+#include <hal/early_boot.h>
+#include <hal/hal.h>
 #include <kernel/fault/error.h>
 #include <kernel/task/task.h>
 #include <kernel/mm/mm_user.h>
@@ -15,9 +15,7 @@
 #include <kernel/mm/mm_page.h>
 #include <kernel/stdlib.h>
 
-static struct e820_entry* edr_table;
-static uint32_t edr_entry;
-static uint64_t kernel_end;
+extern struct system_static_data sysdata;
 static uint64_t kernel_vstart;
 
 
@@ -83,18 +81,7 @@ go_back:
     return;
 }
 
-uintptr_t get_kernel_end() {
-    return kernel_end;
-}
-//返回可用的字节
-
 void init_mm_info() {
-    uint32_t* mem_info_addr = (uint32_t*)PHYS2VADDR(get_mem_info_paddr());
-    edr_entry = *mem_info_addr;
-    edr_table = (struct e820_entry*)(mem_info_addr+1);
-    kernel_vstart = get_kern_vaddr();
-    extern uint64_t __kernel_end;
-    kernel_end = KERN_VADDR_TO_PADDR((uintptr_t)&__kernel_end);
-    
+    kernel_vstart = sysdata.kernel_load_vaddr;
     irq_single_register(IRQ_PG_ERR, pagefault_irq);
 }

@@ -1,7 +1,7 @@
 #ifndef _TOYOS_FAULT_H
 #define _TOYOS_FAULT_H
 
-#include <fault/fault.h>
+#include <hal/hal.h>
 #include <kernel/irq/irq.h>
 
 struct crash_info {

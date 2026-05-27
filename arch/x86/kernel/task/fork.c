@@ -1,17 +1,18 @@
 #include <kernel/task/fork.h>
 #include <kernel/task/task.h>
-#include <task/task.h>
+#include <hal/task/task.h>
 #include <kernel/mm/mm.h>
 #include <kernel/config.h>
-#include <hal.h>
-#include <cpu/gdt.h>
-#include <pgtable/pgtable_kern.h>
+#include <hal/hal.h>
+#include <hal/cpu/gdt.h>
+#include <hal/pgtable/pgtable_kern.h>
 #include <kernel/mm/mm_user.h>
 #include <kernel/stdlib.h>
 #include <kernel/mm/mmap.h>
 #include <kernel/mm/mm_page.h>
 #include <kernel/ptable/ptable.h>
 #include <kernel/cpu/archimpl.h>
+#include <hal/asm.h>
 
 extern void kernel_thread_helper(
     void* args,

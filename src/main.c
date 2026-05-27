@@ -10,6 +10,9 @@
 #include <kernel/log/kprintf.h>
 #include <kernel/version.h>
 #include <kernel/timer/timer.h>
+#include <kernel/acpi/acpi.h>
+
+void init_smp_data_early_arch();
 
 int init() {
     kprintf("Init thread launched, pid = %ld\n", pid_of(CURRENT_PROCESS()));
@@ -17,14 +20,33 @@ int init() {
     return 0;
 }
 
-void kernel_start() {
+static void init_resource_early() {
+    extern struct system_static_data sysdata;
+    uint64_t cores = sysdata.smp_info->local_apic_count;
+    sysdata.percpu_start_addr = sysdata.kernel_end;
+    sysdata.kernel_end += cores * CONFIG_PERCPU_SZ;
+    sysdata.ap_sp = sysdata.kernel_end;
+    sysdata.kernel_end += (cores - 1) * STACK_SZ;
+    sysdata.page_start = (struct page*)sysdata.kernel_end;
+    sysdata.kernel_end += (sysdata.mem_all_pages * sizeof(struct page));
+    init_smp_data_early_arch();
+}
+
+void kern_early_init() {
     init_log();
     log_version_info();
-    init_bst_smp();
+    init_irq_early();
+    init_resource_early();
+    init_mm_early();
+}
+
+void kernel_start() { 
+    kern_early_init();
+    
+    init_smp();
     init_cpu();
     init_mm();
     init_irq();
-    
     init_timer();
 
     init_syscall();
@@ -37,7 +59,6 @@ void kernel_start() {
     device_try_probe(0x8086, 0x03f8);
     
     enable_irq();
-    
     while(1)
         hlt();
 }

@@ -1,10 +1,15 @@
-#include <config_arch.h>
+#include <hal/config_arch.h>
 ENTRY(_start)
 SECTIONS {
     . = KERNEL_FINAL_LDR_VADDR;
+    .text_ap_start KERNEL_FINAL_LDR_VADDR : AT(KERNEL_FINAL_LDR_VADDR) {
+        KEEP(*(.text_ap_start))
+    }
+
     .text : {
         *(.text)
     }
+
     . = ALIGN(0x1000);
     .data : {
         *(.data)
@@ -51,40 +56,19 @@ SECTIONS {
     
     __percpu_sz = __percpu_end - __percpu_start;
     . = __percpu_seg_start + __percpu_sz;
-    . = ALIGN(4096);
-    .bsp_percpu (NOLOAD): ALIGN(4096) {
-        __bsp_percpu_start = .;
-        . += __percpu_sz;
-    }
-    . = ALIGN(4096);
-
-    .bsp_ist0 (NOLOAD): ALIGN(4096) {
-        __bsp_ist0 = .;
-        . += 8192;
-    }
-    .bsp_ist1 (NOLOAD): ALIGN(4096) {
-        __bsp_ist1 = .;
-        . += 8192;
-    }
-    .bsp_ist2 (NOLOAD): ALIGN(4096) {
-        __bsp_ist2 = .;
-        . += 8192;
-    }
-    .bsp_ist3 (NOLOAD): ALIGN(4096) {
-        __bsp_ist3 = .;
-        . += 8192;
-    }
-    .bsp_ist4 (NOLOAD): ALIGN(4096) {
-        __bsp_ist4 = .;
-        . += 8192;
-    }
-    . = ALIGN(4096);
-
     .drv_init : {
         __drv_init_start = .;
         KEEP(*(.drv_init))
         KEEP(*(.drv_init.*))
         __drv_init_end = .;
+    }
+    . = ALIGN(4096);
+    .smp_apic_data : {
+        __smp_apic_data = .;
+        . += 8 * 3;
+        . += 8 * MAX_SUPPORTED_CORES;
+        . += 8 * MAX_IO_APICS;
+        . += 8 * MAX_IRQ_OVERRIDE_ENTRIES;
     }
     . = ALIGN(4096);
     __kernel_end = .;

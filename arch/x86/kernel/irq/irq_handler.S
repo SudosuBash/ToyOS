@@ -1,5 +1,5 @@
 [bits 64]
-#include <asm-offset.h>
+#include <hal/asm-offset.h>
 
 extern irq_entrance_gate
 %macro IRQ_JMP_PUSHAD 0

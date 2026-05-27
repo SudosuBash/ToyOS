@@ -2,7 +2,8 @@
 #include <kloader/elf_bl.h>
 #include <kernel/config.h>
 #include <kloader/kloader.h>
-#include <packed_e820.h>
+#include <hal/packed_e820.h>
+#include <kloader/acpi_initializer.h>
 
 #define DISC_SECTOR 34
 #define RD_COUNT 3000
@@ -153,6 +154,7 @@ void set_bl_info(struct boot_info* bl) {
     bl->kloader_pg_base_addr = KERNEL_TEMP_PG_ADDR;
     bl->kern_ldr_addr = KERNEL_FINAL_LDR_ADDR;
     bl->kern_ldr_vaddr = KERNEL_FINAL_LDR_VADDR;
+    bl->acpi_rsdp_pos = find_acpi_pointer();
 }
 
 //rsp 初始值 64-bit
@@ -178,7 +180,7 @@ void prepare_gdt() { //临时页表
     gdt.access_byte = 0b10010110;
     *gaddr = gdt;
     gaddr+=1; //16
-
+    
     gdtr.limit = (uint16_t)((uint32_t)gaddr - KERNEL_GDT_ADDR)-1;
     gdtr.base = KERNEL_GDT_TEMP_VADDR;
 }

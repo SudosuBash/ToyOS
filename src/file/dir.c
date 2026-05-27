@@ -69,7 +69,7 @@ struct directory* dir_cache_find(char* name, struct directory* dir) {
     uint64_t hash = hlist_calc_hash((uint64_t)dir);
     list_for_entry(&dir_cache.bucket[hash], h) {
         struct directory* d = directory_of(h);
-        if(strcmp(name, d->d_inode->f_name) == 0 && d->d_parent == dir) {
+        if(strcmp(name, d->d_inode->f_name) == 0 && d->d_parent == &dir->d_sibling) {
             return d;
         }
     }

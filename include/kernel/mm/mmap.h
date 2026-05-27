@@ -23,5 +23,11 @@ void user_cow_remap(
     void* paddr, 
     pte_t* pte);
 
+void* iomap(
+    void* paddr,
+    uint64_t sz
+);
+
+
 pgd_t* alloc_pgd();
 #endif

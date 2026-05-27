@@ -5,7 +5,7 @@
 #include <kernel/fault/error.h>
 #include <kernel/log/kprintf.h>
 #include <kernel/task/task.h>
-#include <asm.h>
+#include <hal/asm.h>
 #include <kernel/base/rio_broadcast.h>
 
 static struct drv_class chr_drv;

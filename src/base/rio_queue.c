@@ -16,13 +16,13 @@ void write_to_buf(struct rio_buf_queue* queue, const char* str, size_t len) {
         target_tail = tail + len;
     } while (atomic_cas(&queue->tail_counter, target_tail, tail) == 0);
     
-    if(target_tail - queue->head >= RIO_QUEUE_MAXLEN) {
+    if(target_tail - queue->head >= PRINT_BUF_LEN) {
         return;
     }
     //非常巧妙
     //head 和 tail 都不用取mod, 只需要在这取mod就好了
     for(int index = 0; index < len; index++) {
-        queue->buf[(tail + index) & (RIO_QUEUE_MAXLEN - 1)] = str[index];
+        queue->buf[(tail + index) & (PRINT_BUF_LEN - 1)] = str[index];
     }
     smp_wmb();
     /**
@@ -47,7 +47,7 @@ char read_from_buf(struct rio_buf_queue* queue) {
             return 0;
     } while(atomic_cas(&queue->head_counter, buf_head, head) == 0);
 
-    char ch = queue->buf[(head) & (RIO_QUEUE_MAXLEN - 1)];
+    char ch = queue->buf[(head) & (PRINT_BUF_LEN - 1)];
     smp_rmb();
 
     while(atomic_cas(&queue->head, buf_head, head) == 0) 

@@ -43,6 +43,7 @@ void kfree(void* addr) {
 void* kzalloc(size_t sz, uint64_t flag) {
     void* mem = kmalloc(sz, flag);
     memset(mem, 0, sz);
+    return mem;
 }
 
 void kmalloc_init() {

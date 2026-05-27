@@ -1,16 +1,22 @@
-#include <cpu/cpu.h>
+#include <hal/cpu/cpu.h>
 #include <kernel/cpu/smp.h>
-#include <asm.h>
-#include <cpu/gdt.h>
-#include <cpu/msr_base.h>
+#include <hal/asm.h>
+#include <hal/cpu/gdt.h>
+#include <hal/cpu/msr_base.h>
 #include <kernel/fault/fault.h>
 #include <kernel/kernel.h>
 #include <kernel/log/kprintf.h>
+#include <kernel/acpi/acpi_apic.h>
+#include <kernel/acpi/acpi_hpet.h>
+#include <kernel/cpu/archimpl.h>
+#include <kernel/cpu/smp.h>
 
 DEFINE_PERCPU_VAR(cpuinfo, struct cpuinfo);
 DEFINE_PERCPU_VAR(proc_id, uint8_t);
 
-void set_smp_base_addr(uintptr_t base) {
+extern struct system_static_data sysdata;
+
+void set_smp_percpu_addr(uintptr_t base) {
     *(uintptr_t*)base = base; //非常重要! 否则找不到base地址.
     uint32_t eax = base & 0xffffffff;
     uint32_t edx = base >> 32;
@@ -20,23 +26,13 @@ void set_smp_base_addr(uintptr_t base) {
     asm volatile (
         "wrmsr": : "a"(eax), "d"(edx), "c"(ecx):
     );
-    
 }
 
 void init_ist() {
-    if(is_bsp_core()) {
-        extern uint64_t __bsp_ist0,
-                    __bsp_ist1,
-                    __bsp_ist2,
-                    __bsp_ist3,
-                    __bsp_ist4;
-                    
-        set_tss_ist(0, (uint64_t)&__bsp_ist0);
-        set_tss_ist(1, (uint64_t)&__bsp_ist1);
-        set_tss_ist(2, (uint64_t)&__bsp_ist2);
-        set_tss_ist(3, (uint64_t)&__bsp_ist3);
-        set_tss_ist(4, (uint64_t)&__bsp_ist4);
-    }
+    uint64_t smpid = smp_processor_id();
+    uint64_t cpu_base_ist = sysdata.kernel_exception_stack + smpid * BST_STACK_SZ * BST_STACK_COUNT_PERCPU;
+    for(int i=0;i<BST_STACK_COUNT_PERCPU;i++) 
+        set_tss_ist(i, cpu_base_ist + BST_STACK_SZ * i);
 }
 
 static void efer_set() {
@@ -87,13 +83,12 @@ static void get_cpu_feature() {
     info->hypv_support = CPUID_HYPV(ecx);
 
     *id = APIC_ID(ebx);
-    kprintf("CPU: BSP Core APICID = %d.\n", *id);
     asm volatile ("cpuid" 
     :"=b"(ebx),"=c"(ecx),"=d"(edx)
     :"a"(0x80000001));
 
     info->rdtscp_support = CPUID_RDTSCP(edx);
-    kprintf("CPU: rdtscp feature %s.\n", info->rdtscp_support ? "supported" : "unsupported");
+    kprintf("CPU %d: rdtscp feature %s.\n",smp_processor_id(), info->rdtscp_support ? "supported" : "unsupported");
 }
 
 inline bool cpu_feature_rdtscp() {
@@ -103,13 +98,20 @@ inline bool cpu_feature_rdtscp() {
 
 void init_cpu() {
     init_gdt();
-    init_ist();
     get_cpu_feature();
+    init_ist();
     open_cr0_wp();
     efer_set();
     arch_enable_pge();
 }
 
+void arch_ap_boot(uint8_t cpuid) {
+    lapic_write(APIC_ICR_HIGH_OFFSET, cpuid << 24);
+    lapic_write(APIC_ICR_LOW_OFFSET, APIC_ICR_LOW_DELIVERY_INIT | APIC_ICR_LOW_LEVEL_ASSERT);
+    hpet_spin_wait(10000);
+    lapic_write(APIC_ICR_LOW_OFFSET, APIC_ICR_LOW_DELIVERY_SIPI | APIC_ICR_LOW_LEVEL_ASSERT | (AP_START_ADDR >> 12));
+    hpet_spin_wait(10);
+}
 
 inline uint16_t smp_processor_id() {
     return THIS_CPU_VAR(proc_id);

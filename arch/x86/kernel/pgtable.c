@@ -2,11 +2,11 @@
 #include <kernel/stdint.h>
 #include <kernel/mm/mm.h>
 #include <kernel/cpu/smp.h>
-#include <pgtable/pgtable_kern.h>
+#include <hal/pgtable/pgtable_kern.h>
 #include <kernel/mm/mmap.h>
 #include <kernel/mm/mm_user.h>
 #include <kernel/stdlib.h>
-#include <asm.h>
+#include <hal/asm.h>
 //申请的pte数量(base_addr)
 static volatile void* pte_start_addr;
 static volatile void* pde_start_addr;
@@ -46,23 +46,23 @@ static inline pdpt_t* get_pdpt(uint64_t vaddr) {
 }
 
 static inline pde_t* get_pde(uint64_t vaddr) {
-    pdpt_t* pte = get_pdpt(vaddr);
-    uint64_t pte_index = PTE_OF(vaddr);
-    if(pte->present == 0) return 0;
-    if(pte->ps == 1) return 0;
-    return GET_ENTRY_TABLE(KERN_PADDR_TO_VADDR((uint64_t)pte->base_addr << 12), pte_index, pde_t);
+    pdpt_t* pdpt = get_pdpt(vaddr);
+    uint64_t pte_index = PDE_OF(vaddr);
+    if(pdpt->present == 0) return 0;
+    if(pdpt->ps == 1) return 0;
+    return GET_ENTRY_TABLE(KERN_PADDR_TO_VADDR((uint64_t)pdpt->base_addr << 12), pte_index, pde_t);
 }
 
 
 static inline pte_t* get_pte(uint64_t vaddr) {
     pde_t* pde = get_pde(vaddr);
-    uint64_t pde_index = PDE_OF(vaddr);
+    uint64_t pte_index = PTE_OF(vaddr);
     if(pde->present == 0) return 0;
-    return GET_ENTRY_TABLE(KERN_PADDR_TO_VADDR((uint64_t)pde->base_addr << 12), pde_index, pte_t);
+    return GET_ENTRY_TABLE(KERN_PADDR_TO_VADDR((uint64_t)pde->base_addr << 12), pte_index, pte_t);
 }
 
 //这部分为了加速, 就不用上面的函数了
-static void link_addr(uint64_t paddr,uint64_t vaddr, uint8_t big_page) {
+static bool link_addr(uint64_t paddr,uint64_t vaddr, uint8_t flag) {
     uint64_t pml4_index = PML4_OF(vaddr);
     uint64_t pdpt_index = PDPT_OF(vaddr);
     uint64_t pde_index = PDE_OF(vaddr);
@@ -86,8 +86,12 @@ static void link_addr(uint64_t paddr,uint64_t vaddr, uint8_t big_page) {
         ALLOC_NEW_PTE();
     }
     pnum = KERN_PADDR_TO_VADDR(pdpt_tab->base_addr << 12);
-    if(!big_page) {
+    if(!(flag & FLAG_BIG_PAGE)) {
         pde_t* pde_tab = GET_ENTRY_TABLE(pnum, pde_index, pde_t);
+        if(pde_tab->present && (flag & FLAG_NON_OP_IF_EXIST)) {
+            return 1;
+        }
+
         if(pde_tab->present == 0) { 
             *pde_tab = *pde_default;
             pde_tab->present = 1;
@@ -103,6 +107,10 @@ static void link_addr(uint64_t paddr,uint64_t vaddr, uint8_t big_page) {
         pte_tab->base_addr = paddr >> 12;
     } else {
         pde_t* pde_tab = GET_ENTRY_TABLE(pnum, pde_index, pde_t);
+        if(pde_tab->present && (flag & FLAG_NON_OP_IF_EXIST)) {
+            return 1;
+        }
+
         *pde_tab = *pde_default;
         pde_tab->present = 1;
         pde_tab->ps = 1; //2MB大页
@@ -111,11 +119,17 @@ static void link_addr(uint64_t paddr,uint64_t vaddr, uint8_t big_page) {
         //坑人时刻: C语言的位域
         // C语言的位域也是小端字节序(更准确的说小端比特序)，成员排列从低到高，成员内部排列从高到低
     }
+    invlpg(vaddr);
     barrier();
+    return 0;
 }
 
 void link_new_pte_addr(uint64_t paddr, uint64_t vaddr) {
     link_addr(paddr,vaddr,0);
+}
+
+bool link_new_pte_addr_if_nonexist(uint64_t paddr, uint64_t vaddr) {
+    return link_addr(paddr,vaddr,FLAG_NON_OP_IF_EXIST);
 }
 
 void link_new_pte_bigpage_addr(uint64_t paddr,uint64_t vaddr) {
@@ -125,6 +139,7 @@ void link_new_pte_bigpage_addr(uint64_t paddr,uint64_t vaddr) {
 void set_pgd_us(uint64_t vaddr, uint8_t us) {
     pgd_t* pml4 = get_pgd(vaddr);
     pml4->us = us;
+    invlpg(vaddr);
 }
 
 void set_pde_us_bigpage(uint64_t vaddr, uint8_t us) {
@@ -132,12 +147,14 @@ void set_pde_us_bigpage(uint64_t vaddr, uint8_t us) {
     if(pde == 0) return;
     if(pde->ps == 0) return;
     pde->us = us;
+    invlpg(vaddr);
 }
 
 void set_pte_us(uint64_t vaddr, uint8_t us) {
     pte_t* pte = get_pte(vaddr);
     if(pte == 0) return;
     pte->us = us;
+    invlpg(vaddr);
 }
 
 void set_pde_nx_bigpage(uint64_t vaddr, uint8_t nx) {
@@ -145,12 +162,14 @@ void set_pde_nx_bigpage(uint64_t vaddr, uint8_t nx) {
     if(pde == 0) return;
     if(pde->ps == 0) return;
     pde->nx = nx;
+    invlpg(vaddr);
 }
 
 void set_pte_nx(uint64_t vaddr, uint8_t nx) {
     pte_t* pte = get_pte(vaddr);
     if(pte == 0) return;
     pte->nx = nx;
+    invlpg(vaddr);
 }
 
 void set_pde_rw_bigpage(uint64_t vaddr, uint8_t nx) {
@@ -158,12 +177,14 @@ void set_pde_rw_bigpage(uint64_t vaddr, uint8_t nx) {
     if(pde == 0) return;
     if(pde->ps == 0) return;
     pde->nx = nx;
+    invlpg(vaddr);
 }
 
 void set_pte_rw(uint64_t vaddr, uint8_t rw) {
     pte_t* pte = get_pte(vaddr);
     if(pte == 0) return;
     pte->rw = rw;
+    invlpg(vaddr);
 }
 
 void set_pde_pcd_bigpage(uint64_t vaddr, uint8_t pcd) {
@@ -171,12 +192,14 @@ void set_pde_pcd_bigpage(uint64_t vaddr, uint8_t pcd) {
     if(pde == 0) return;
     if(pde->ps == 0) return;
     pde->pcd = pcd;
+    invlpg(vaddr);
 }
 
 void set_pte_pcd(uint64_t vaddr, uint8_t pcd) {
     pte_t* pte = get_pte(vaddr);
     if(pte == 0) return;
     pte->pcd = pcd;
+    invlpg(vaddr);
 }
 
 void set_pde_pwt_bigpage(uint64_t vaddr, uint8_t pwt) {
@@ -184,12 +207,14 @@ void set_pde_pwt_bigpage(uint64_t vaddr, uint8_t pwt) {
     if(pde == 0) return;
     if(pde->ps == 0) return;
     pde->pwt = pwt;
+    invlpg(vaddr);
 }
 
 void set_pte_pwt(uint64_t vaddr, uint8_t pwt) {
     pte_t* pte = get_pte(vaddr);
     if(pte == 0) return;
     pte->pwt = pwt;
+    invlpg(vaddr);
 }
 
 void prepare_pde(void* pde_start) { //准备最基本的页表
@@ -208,6 +233,7 @@ void delete_link(uint64_t vaddr) {
         pte_t* pte = get_pte(vaddr);
         pte->present = 0;
     }
+    invlpg(vaddr);
 }
 
 //高半部分直接复制
@@ -224,6 +250,7 @@ static struct pagetable_64* user_set_pgd(struct pagetable_64* pagetable) {
     pagetable->rw = 1;
     pagetable->us = 1;
     pagetable->base_addr = VADDR2PHYS(vaddr) >> PAGE_OFFSET;
+    invlpg(vaddr);
     return (struct pagetable_64*)vaddr;
 }
 

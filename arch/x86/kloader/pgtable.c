@@ -21,6 +21,7 @@ struct pagetable_64 pg_default = {
     .nx = 0
 };
 
+
 static void link_addr(uint64_t paddr,uint64_t vaddr, uint8_t big_page) {
     uint64_t pml4_index = PML4_OF(vaddr);
     uint64_t pdpt_index = PDPT_OF(vaddr);

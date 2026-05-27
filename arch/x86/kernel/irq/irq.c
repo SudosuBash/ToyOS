@@ -1,19 +1,19 @@
-#include <irq/irq.h>
-#include <irq/pic/pic.h>
-#include <asm.h>
+#include <hal/irq/irq.h>
+#include <hal/asm.h>
 #include <kernel/stdint.h>
 #include <kernel/cpu/smp.h>
 #include <kernel/cpu/archimpl.h>
-#include <irq/pic/apic.h>
 #include <kernel/irq/irq.h>
 #include <kernel/fault/fault.h>
-#include <hal.h>
-#include <cpu/cpu.h>
+#include <hal/hal.h>
+#include <hal/cpu/cpu.h>
 #include <kernel/kernel.h>
+#include <hal/hal.h>
 
 static volatile struct idt_gate gate[IRQ_MAX_CNT];
 extern void* irq_entry_table[IRQ_MAX_CNT];
 volatile irq_entry_t irq_entrance_gate[IRQ_MAX_CNT];
+extern struct system_static_data sysdata;
 
 void init_idt() {
     for(int i=0;i<IRQ_MAX_CNT;i++) {
@@ -62,7 +62,5 @@ inline int irqs_disabled() {
 
 void init_irq_arch() {
     init_idt();
-    init_pic();
-    init_apic();
     fault_init();
 }

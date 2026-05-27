@@ -2,7 +2,7 @@
 #define _TOYOS_KLOADER_PGTABLE
 
 #include <kernel/stdint.h>
-#include <config_arch.h>
+#include <hal/config_arch.h>
 
 #define PML4_OF(addr) (((addr) >> 39 ) & 511)
 #define PDPT_OF(addr) (((addr) >> 30) & 511)

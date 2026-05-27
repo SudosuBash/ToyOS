@@ -3,7 +3,7 @@
 
 #include <kernel/stdint.h>
 #include <kernel/irq/irq.h>
-#include <hal.h>
+#include <hal/hal.h>
 
 typedef void (*timer_handler_t)(struct arch_regs* frame);
 uint64_t rdtsc();

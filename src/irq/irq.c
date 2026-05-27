@@ -52,9 +52,13 @@ void irq_remove(uint64_t num, void* dev_data) {
 void init_irq() {
     struct kmem_cache* cache = THIS_CPU_PTR(irq_allocator);
     kmem_cache_init(cache, sizeof(struct irq_behavior));
+}
+
+
+void init_irq_early() {
     disable_irq();
+    init_irq_arch();
     for(int i=0;i<IRQ_MAX_CNT;i++) {
         INIT_LIST_HEAD(&irq_entries[i].head);
     }
-    init_irq_arch();
 }

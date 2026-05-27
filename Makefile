@@ -1,37 +1,21 @@
-# --- 工具链配置 ---
-CC      := gcc-7
-LD      := ld
-MAKE    := make
-PY      := python3
+export TOP_DIR := $(shell pwd)
+include $(TOP_DIR)/config.mk
 
-# --- 路径配置 ---
-ARCH = x86
-ARCH_DIR := arch/$(ARCH)
-SRC_DIR  := src
-DRV_DIR	 := drivers
-INCLUDE_DIR := include
-# --- 编译选项 ---
-CINCLUDE := -Iinclude -I$(ARCH_DIR)/include 
-CFLAGS   := -m64 -O2 -std=gnu11 -ffreestanding -fno-stack-protector -nostdlib \
-            $(CINCLUDE) -g  -mcmodel=kernel -fno-pic -fno-omit-frame-pointer -mno-sse -mno-mmx -mno-sse2 -mno-sse3 -mno-3dnow -mno-red-zone -Wall
-
-# --- 目标文件列表 ---
-
-# 最终镜像和内核名称
-IMAGE      := myos.img
+.PHONY: all clean
 KERNEL_BIN := kernel
 
-# 内核通用的对象文件 (根据你的目录结构提取)
 KERNEL_OBJS := $(SRC_DIR)/main.o \
 			   $(SRC_DIR)/log/vfprintf.o \
 			   $(SRC_DIR)/log/kprintf.o \
                $(SRC_DIR)/base/math.o \
+			   $(SRC_DIR)/acpi/acpi_rsdp.o \
+			   $(SRC_DIR)/acpi/acpi_apic.o \
+			   $(SRC_DIR)/acpi/acpi_hpet_timer.o \
                $(SRC_DIR)/stdlib.o \
 			   $(SRC_DIR)/sched/sched_eevdf.o \
 			   $(SRC_DIR)/sched/sched_idle.o \
 			   $(SRC_DIR)/task/fork.o \
 			   $(SRC_DIR)/sched/sched.o \
-			   $(SRC_DIR)/task/switch_task.o \
 			   $(SRC_DIR)/task/task.o \
 			   $(SRC_DIR)/task/pid.o \
 			   $(SRC_DIR)/task/exec.o \
@@ -44,6 +28,7 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
                $(SRC_DIR)/mm/mm_page.o \
 			   $(SRC_DIR)/mm/mm_slab.o \
 			   $(SRC_DIR)/mm/mm.o \
+			   $(SRC_DIR)/mm/mm_early.o \
 			   $(SRC_DIR)/mm/mmap.o \
 			   $(SRC_DIR)/mm/mm_alloc.o \
 			   $(SRC_DIR)/mm/mm_user_vma.o \
@@ -61,25 +46,27 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
 			   $(SRC_DIR)/drvframe/devicebus.o \
 			   $(SRC_DIR)/sched/sched_drv.o \
 			   $(SRC_DIR)/version.o \
-			   $(SRC_DIR)/irq/irq.o
+			   $(SRC_DIR)/irq/irq.o \
+			   $(SRC_DIR)/kernel.o
+ 
 
-
-ARCH_DEPENDS := $(ARCH_DIR)/boot.bin \
-                $(ARCH_DIR)/kloader.bin \
-                $(ARCH_DIR)/pt.o
+ARCH_DEPENDS := $(ARCH_DIR)/pt.o
 
 DRV_DEPENDS := $(DRV_DIR)/drvs.o
 
-ARCH_GENERATED := $(ARCH_DIR)/generated/syscall_id.h \
-				$(ARCH_DIR)/generated/syscall_id.inc \
+ARCH_GENERATED := $(ARCH_GENERATED_DIR)/syscall_id.h \
+				$(ARCH_GENERATED_DIR)/syscall_id.inc \
 				${INCLUDE_DIR}/generated/version.h \
+				$(INCLUDE_DIR)/generated/offset.h
 				
 .PHONY: all clean run
 
-all: $(IMAGE)
+all: $(ARCH_GENERATED) $(ARCH_DEPENDS) $(KERNEL_BIN)
+	@dd if=$(KERNEL_BIN) of=$(IMAGE) seek=34 conv=notrunc
+	@echo "	DD" $@
 
 $(KERNEL_BIN): $(KERNEL_OBJS) $(DRV_DEPENDS) $(ARCH_DIR)/pt.o
-	@$(LD) -z max-page-size=4096 -m elf_x86_64 -T $(ARCH_DIR)/kernel/klinker.lds -e _start $^ -o $@
+	@$(LD) $(LDFLAGS_KERNEL) $^ -o $@
 	@echo "	LD" $<
 
 $(SRC_DIR)/%.o: $(SRC_DIR)/%.c
@@ -90,31 +77,34 @@ $(SRC_DIR)/%/%.o: $(SRC_DIR)/%/%.c
 	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "	CC" $<
 
+.PHONY: $(ARCH_DEPENDS)
 $(ARCH_DEPENDS):
 	@$(MAKE) -C $(ARCH_DIR)
 
-$(ARCH_DIR)/generated/syscall_id.h: tools/gen_systable_header.py
+$(ARCH_GENERATED_DIR)/syscall_id.h: tools/gen_systable_header.py
 	@$(PY) $< $(ARCH)
 	@echo "	GEN" $@
 
-$(ARCH_DIR)/generated/syscall_id.inc: tools/gen_systable.py
+$(ARCH_GENERATED_DIR)/syscall_id.inc: tools/gen_systable.py
 	@$(PY) $< $(ARCH)
 	@echo "	GEN" $@
 
+$(INCLUDE_DIR)/generated/offset.h: tools/gen_offset
+	@./$< > $@
+	@rm -rf $<
+	@echo "	GEN" $@
+
+tools/gen_offset: tools/gen_offset.c
+	@$(CC) $(CINCLUDE) $< -o $@
+	@echo "	GEN" $@
 
 ${INCLUDE_DIR}/generated/version.h: tools/gen_version.py
 	@$(PY) $< $(ARCH)
 	@echo "	GEN" $@
 
+.PHONY: $(DRV_DEPENDS)
 $(DRV_DEPENDS): 
 	@$(MAKE) -C $(DRV_DIR)
-
-$(IMAGE): $(ARCH_GENERATED) $(ARCH_DEPENDS) $(KERNEL_BIN)
-	@dd if=/dev/zero of=$(IMAGE) bs=512 count=20480
-	@dd if=$(ARCH_DIR)/boot.bin of=$(IMAGE) conv=notrunc
-	@dd if=$(ARCH_DIR)/kloader.bin of=$(IMAGE) seek=4 conv=notrunc
-	@dd if=$(KERNEL_BIN) of=$(IMAGE) seek=34 conv=notrunc
-	@echo "	DD" $@
 
 run: $(IMAGE)
 	bash qemu.sh
@@ -124,5 +114,6 @@ clean:
 	$(MAKE) -C $(DRV_DIR) clean
 	rm -f $(IMAGE) $(KERNEL_BIN) script/*.S
 	rm -rf ${INCLUDE_DIR}/generated/*
+	rm -rf ${ARCH_GENERATED_DIR}/generated/*
 	rm -rf tools/__pycache__
 	find $(SRC_DIR) -name "*.o" -delete

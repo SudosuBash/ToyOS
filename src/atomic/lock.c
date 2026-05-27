@@ -8,7 +8,9 @@ inline void spin_init(spinlock_t* lk) {
 
 void spin_lock(spinlock_t* lk) {
     preempt_disable();
-    while(!atomic_cas(&lk->value,1,0));
+    while(!atomic_cas(&lk->value,1,0)) {
+        pause();
+    }
     barrier();
 }
 

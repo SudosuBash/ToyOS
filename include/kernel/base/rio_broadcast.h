@@ -4,7 +4,8 @@
 #include <kernel/stdint.h>
 #include <kernel/base/linklist.h>
 
-#define RIO_QUEUE_MAXLEN 1024
+#define PRINT_BUF_LEN 1024
+#define RIO_QUEUE_MAX_LEN 8192
 
 struct rio_reader {
     struct linklist_head sibling;
@@ -12,7 +13,7 @@ struct rio_reader {
 };
 
 struct rio_broadcast {
-    char buf[RIO_QUEUE_MAXLEN];
+    char buf[RIO_QUEUE_MAX_LEN];
     uint64_t tail_counter; //锁机制抢的
     uint64_t tail; 
 

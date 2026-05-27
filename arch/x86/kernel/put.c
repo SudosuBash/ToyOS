@@ -1,5 +1,5 @@
 #include <kernel/put.h>
-#include <asm.h>
+#include <hal/asm.h>
 #include <kernel/stdint.h>
 #include <kernel/base/math.h>
 #include <kernel/stdlib.h>

@@ -71,7 +71,7 @@ uint8_t strcmp(char* c1, char* c2) {
     else return -1;
 }
 
-uint8_t strcmp_l(char* c1, char* c2, size_t sz) {
+uint8_t strncmp(char* c1, char* c2, size_t sz) {
     char* c1_ori = c1;
     while(*c1 == *c2 && ((size_t)(c1 - c1_ori) < sz) && *c1 && *c2) {
         c1++;

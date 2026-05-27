@@ -11,7 +11,7 @@ class HeaderGenerator:
             self.path = f"{self.rootdir}/include/generated/{filename}"
             self.headname = f"_TOYOS_GENERATED_{name.upper()}"
         else:
-            self.path = f"{self.rootdir}/arch/{arch}/generated/{filename}"
+            self.path = f"{self.rootdir}/arch/{arch}/include/generated/{filename}"
             self.headname = f"_TOYOS_{arch.upper()}_GENERATED_{name.upper()}"
 
         self.fobject = os.fdopen(os.open(self.path, os.O_CREAT | os.O_WRONLY | os.O_TRUNC | os.O_APPEND, 0o644), 'w') 

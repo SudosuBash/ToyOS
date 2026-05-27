@@ -119,20 +119,25 @@ static const char xdigits[16] = {
 	"0123456789ABCDEF"
 };
 
-static void out(struct rio_broadcast* buf, const char *s, size_t l)
+static void out(char buf[PRINT_BUF_LEN], size_t* ptr, const char *s, size_t l)
 {
-	rio_broadcast_send(buf,s, l);
+	size_t end = *ptr + l;
+	if((end) > PRINT_BUF_LEN) return;
+	for(int i = 0; i < l; i++) {
+		buf[*ptr+i] = s[i];
+	}
+	*ptr = end;
 }
 
-static void pad(struct rio_broadcast* buf, char c, int w, int l, int fl)
+static void pad(char buf[PRINT_BUF_LEN], size_t* ptr, char c, int w, int l, int fl)
 {
 	char pad[256];
 	if (fl & (LEFT_ADJ | ZERO_PAD) || l >= w) return;
 	l = w - l;
 	memset(pad, c, l>sizeof pad ? sizeof pad : l);
 	for (; l >= sizeof pad; l -= sizeof pad)
-		out(buf, pad, sizeof pad);
-	out(buf, pad, l);
+		out(buf,ptr, pad, sizeof pad);
+	out(buf,ptr, pad, l);
 }
 
 
@@ -165,7 +170,7 @@ static int getint(char **s) {
 	return i;
 }
 
-static int printf_core(struct rio_broadcast* f, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
+static int printf_core(char f[PRINT_BUF_LEN],size_t* sz, const char *fmt, va_list *ap, union arg *nl_arg, int *nl_type)
 {
 	char *a, *z, *s=(char *)fmt;
 	unsigned l10n=0, fl;
@@ -194,7 +199,7 @@ static int printf_core(struct rio_broadcast* f, const char *fmt, va_list *ap, un
 		for (z=s; s[0]=='%' && s[1]=='%'; z++, s+=2);
 		if (z-a > INT_MAX-cnt) goto overflow;
 		l = z-a;
-		if (f) out(f, a, l);
+		if (f) out(f,sz, a, l);
 		if (l) continue;
 
 		if (isdigit(s[1]) && s[2]=='$') {
@@ -336,12 +341,12 @@ static int printf_core(struct rio_broadcast* f, const char *fmt, va_list *ap, un
 		if (w < pl+p) w = pl+p;
 		if (w > INT_MAX-cnt) goto overflow;
 
-		pad(f, ' ', w, pl+p, fl);
-		out(f, prefix, pl);
-		pad(f, '0', w, pl+p, fl^ZERO_PAD);
-		pad(f, '0', p, z-a, 0);
-		out(f, a, z-a);
-		pad(f, ' ', w, pl+p, fl^LEFT_ADJ);
+		pad(f, sz, ' ', w, pl+p, fl);
+		out(f, sz, prefix, pl);
+		pad(f, sz, '0', w, pl+p, fl^ZERO_PAD);
+		pad(f, sz, '0', p, z-a, 0);
+		out(f, sz, a, z-a);
+		pad(f, sz, ' ', w, pl+p, fl^LEFT_ADJ);
 
 		l = w;
 	}
@@ -361,7 +366,7 @@ overflow:
 	return -1;
 }
 
-int vfprintf(struct rio_broadcast* buf, const char *restrict fmt, va_list ap)
+int vfprintf(char buf[PRINT_BUF_LEN],size_t* len, const char *restrict fmt, va_list ap)
 {
 	va_list ap2;
 	int nl_type[NL_ARGMAX+1] = {0};
@@ -370,7 +375,7 @@ int vfprintf(struct rio_broadcast* buf, const char *restrict fmt, va_list ap)
 
 	/* the copy allows passing va_list* even if va_list is an array */
 	va_copy(ap2, ap);
-	ret = printf_core(buf, fmt, &ap2, nl_arg, nl_type);
+	ret = printf_core(buf, len, fmt, &ap2, nl_arg, nl_type);
 	va_end(ap2);
 	return ret;
 }
@@ -378,7 +383,12 @@ int vfprintf(struct rio_broadcast* buf, const char *restrict fmt, va_list ap)
 int fprintf(struct rio_broadcast* buf, const char *fmt, ...) {
     va_list ap;
     va_start(ap, fmt); 
-    int result = vfprintf(buf, fmt, ap);
+
+    char chrbuf[PRINT_BUF_LEN] = {0};
+    size_t sz = 0;
+    int result = vfprintf(chrbuf, &sz, fmt, ap);
+
+	rio_broadcast_send(buf, chrbuf, sz);
     va_end(ap); 
     return result;
 }

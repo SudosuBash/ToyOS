@@ -2,7 +2,7 @@
 #define _TOYOS_LOG_LIMITS_H
 /* Support signed or unsigned plain-char */
 
-#include <limit.h>
+#include <hal/limit.h>
 
 #define CHAR_MIN (-128)
 #define CHAR_MAX 127

@@ -2,9 +2,9 @@
 #define _TOYOS_RIO_QUEUE_H
 
 #include <kernel/stdint.h>
-#define RIO_QUEUE_MAXLEN 1024
+#define PRINT_BUF_LEN 1024
 struct rio_buf_queue {
-    char buf[RIO_QUEUE_MAXLEN];
+    char buf[PRINT_BUF_LEN];
     uint64_t tail_counter; //锁机制抢的
     uint64_t tail; 
     uint64_t head;

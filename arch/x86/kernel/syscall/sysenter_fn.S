@@ -1,4 +1,4 @@
-#include <cpu/gdt_config.h>
+#include <hal/cpu/gdt_config.h>
 #include <kernel/config.h>
 #include <kernel/fault/errno.h>
 [bits 64]

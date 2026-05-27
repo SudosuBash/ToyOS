@@ -1,7 +1,8 @@
-#include <config_arch.h>
+#include <hal/config_arch.h>
 
 global enter_64bit_mode
 global open_pg_mode
+[bits 32]
 enter_64bit_mode:
     mov eax,cr4
     or eax, 32
@@ -32,12 +33,4 @@ open_pg_mode:
 switch_to_64:
     shl rdi,32
     or rdi,rbx ;edi: kernel
-    mov [seg_data], rdi
-    mov word [seg_data+8], 8 ;CS
-    
-    lea rdi,[seg_data]
-    jmp far [rdi]
-
-seg_data:
-    dw 0
-    dq 0
+    jmp rdi

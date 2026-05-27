@@ -2,13 +2,10 @@
 #define _TOYOS_PAGE_TABLE
 
 #include <kernel/stdint.h>
-#include <pgtable/pgtable_kern.h>
+#include <hal/hal.h>
 
-struct pagetable_64;
-typedef struct pagetable_64 pgd_t;
-typedef struct pagetable_64 pdpt_t;
-typedef struct pagetable_64 pte_t;
-typedef struct pagetable_64 pde_t;
+#define FLAG_BIG_PAGE 1
+#define FLAG_NON_OP_IF_EXIST 2
 
 pgd_t* get_pgd(uint64_t vaddr);
 struct pagetable_64* get_user_pte(uint64_t addr, pgd_t* pgd);

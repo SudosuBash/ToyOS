@@ -8,6 +8,8 @@
 #include <kernel/fault/error.h>
 #include <kernel/fault/fault.h>
 #include <kernel/cpu/archimpl.h>
+#include <kernel/ptable/ptable.h>
+#include <kernel/ptable/ptable.h>
 
 //这个函数的目的是设置 pte 指向的地址, 还有就是增加 paddr 对应 page 的 refcount.
 void user_cow_remap(void* paddr, pte_t* pte) {
@@ -85,6 +87,23 @@ void* do_remap(
     return (void*)(addr & PAGE_MASK);
 }
 
+void* iomap(
+    void* paddr,
+    uint64_t sz
+) {
+    uintptr_t pst = ((uint64_t)paddr & PAGE_MASK);
+    uintptr_t ed = PAGE_ROUND_UP((uint64_t)paddr + sz);
+
+    for(uintptr_t st = pst; st < ed;st+=PAGE_SZ) {
+        uint64_t vaddr = PHYS2VADDR_MMIO(st);
+        bool exist = link_new_pte_addr_if_nonexist(st,PHYS2VADDR_MMIO(st));
+        if(!exist) {
+            set_pte_pcd(vaddr,1);
+            set_pte_pwt(vaddr,1);
+        }
+    }
+    return (void*)PHYS2VADDR_MMIO(paddr);
+}
 
 //这个页表是两套的, 内核态的就不应该变
 //但是用户态怎么映射的话, 还得靠上面的 do_mmap 记录的区域来管理的

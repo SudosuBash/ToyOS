@@ -1,13 +1,12 @@
-#include <asm.h>
+#include <hal/asm.h>
 #include <kernel/cpu/smp.h>
 #include <kernel/stdlib.h>
-#include <cpu/gdt.h>
+#include <hal/cpu/gdt.h>
 #include <kernel/cpu/smp.h>
 
 DEFINE_PERCPU_VAR(gdts[5],union x86_gdt_tss_desc);
 DEFINE_PERCPU_VAR(tss, struct tss);
 
-static struct gdtr gdtr;
 static struct gdt_desc gdt_desc = {
     .limit = 0xffff,
     .base_1 = 0,
@@ -52,6 +51,9 @@ static inline void prepare_gdt() {
     cpu_desc[1].gdts[1].access_byte = 0b11110110;
     cpu_desc[2].gdts[0].access_byte = 0b11111010;
 
+    //这儿构建一个额外的 gdt, 用于和 32 位兼容
+    cpu_desc[2].gdts[1].access_byte = 0b10011010;
+    cpu_desc[2].gdts[1].flags = 0xC; //
     cpu_desc[3].tss = tss_gdt_desc;
 
     struct tss* cpu_tss = THIS_CPU_PTR(tss);
@@ -64,6 +66,7 @@ static inline void prepare_gdt() {
 
 void reload_gdt() {
     union x86_gdt_tss_desc* cpu_gdt = THIS_CPU_VAR(gdts);
+    struct gdtr gdtr = {0};
     gdtr.limit = sizeof(gdts) - 1;
     gdtr.base = (uintptr_t)cpu_gdt;
     barrier();

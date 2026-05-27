@@ -14,7 +14,7 @@ void rio_broadcast_send(struct rio_broadcast* broadcast, const char* str, size_t
         tail = broadcast->tail_counter;
         new_tail = tail + len;
         
-        if(new_tail - broadcast->slowest_head >= RIO_QUEUE_MAXLEN - RIO_DANGER_DELTA) {
+        if(new_tail - broadcast->slowest_head >= PRINT_BUF_LEN - RIO_DANGER_DELTA) {
             struct linklist_head *curr;
             uint64_t slowest = ULLONG_MAX;
             //这个能保证遍历的时候不出错, 因为只有插入, 插入的逻辑保证链表不断.
@@ -28,11 +28,11 @@ void rio_broadcast_send(struct rio_broadcast* broadcast, const char* str, size_t
         }
     } while(atomic_cas(&broadcast->tail_counter, new_tail, tail) == 0);
 
-    if(new_tail - broadcast->slowest_head >= RIO_QUEUE_MAXLEN)
+    if(new_tail - broadcast->slowest_head >= PRINT_BUF_LEN)
         return;
 
     for(int i=0;i<len;i++)
-        broadcast->buf[(tail+i) & (RIO_QUEUE_MAXLEN - 1)] = str[i];
+        broadcast->buf[(tail+i) & (PRINT_BUF_LEN - 1)] = str[i];
 
     smp_wmb();
     while(atomic_cas(&broadcast->tail, new_tail, tail) == 0)
@@ -43,7 +43,7 @@ char rio_broadcast_recv(struct rio_broadcast* broadcast, struct rio_reader* read
     uint64_t head = reader->head;
     if(broadcast->tail == head)
         return 0;
-    char ch = broadcast->buf[(head) & (RIO_QUEUE_MAXLEN - 1)];
+    char ch = broadcast->buf[(head) & (PRINT_BUF_LEN - 1)];
     reader->head++;
     return ch;
 }

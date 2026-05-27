@@ -18,7 +18,12 @@ char get_print_buf(struct rio_reader* reader) {
 int kprintf(const char* fmt, ...) {
     va_list ap;
     va_start(ap, fmt); 
-    int result = vfprintf(&rio_buf, fmt, ap);
+
+    char chr[PRINT_BUF_LEN] = {0};
+    size_t sz = 0;
+    barrier();
+    int result = vfprintf(chr,&sz, fmt, ap);
+    rio_broadcast_send(&rio_buf, chr, sz);
     remind_device_type(DRV_CONSOLETYP);
     va_end(ap); 
     return result;

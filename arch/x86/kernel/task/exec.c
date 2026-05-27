@@ -1,11 +1,11 @@
 #include <kernel/task/exec.h>
 #include <kernel/task/task.h>
 #include <kernel/mm/mmap.h>
-#include <hal.h>
-#include <cpu/gdt.h>
+#include <hal/hal.h>
+#include <hal/cpu/gdt.h>
 #include <kernel/mm/mm.h>
 #include <kernel/stdlib.h>
-#include <asm.h>
+#include <hal/asm.h>
 #include <kernel/cpu/archimpl.h>
 void arch_do_exec(
     int (*fn)(void*),

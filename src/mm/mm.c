@@ -11,9 +11,9 @@
 #include <kernel/log/kprintf.h>
 #include <kernel/cpu/archimpl.h>
 
+extern struct system_static_data sysdata;
 static struct page *page_start;
 static volatile uint64_t mem_pages;
-static volatile uint64_t mem_side_pages;
 static volatile uint64_t mem_alloced_pages;
 static struct mm_buddy buddy;
 static uint64_t mem_alloc_M;
@@ -25,7 +25,7 @@ struct page* find_head_page(struct page* page) {
     struct page* cur = page;
     while(level < MM_BUDDY_MAX_LEVEL && !(cur->page_flags & MM_BUDDY_FLAG_HEAD)) {
         index = index & (index - 1); //第i位清空
-        cur =page_start + index;
+        cur =sysdata.page_start + index;
         level++;
     }
     if(level == MM_BUDDY_MAX_LEVEL) {
@@ -36,12 +36,12 @@ struct page* find_head_page(struct page* page) {
 }
 
 static void init_page_items() {
-    uint64_t ptr_kend = PHYS2VADDR(get_kernel_end());
-    page_start = (struct page*)PAGE_ROUND_UP(ptr_kend);
+    uint64_t ptr_kend = sysdata.kernel_end;
+    sysdata.page_start = (struct page*)PAGE_ROUND_UP(ptr_kend);
 }
 
 static uint64_t get_page_index(struct page* page) {
-    return (uint64_t)(page - page_start);
+    return (uint64_t)(page - sysdata.page_start);
 }
 
 inline uint64_t get_system_mem_alloced() {
@@ -75,8 +75,8 @@ static inline struct page* buddy_page(struct page** page) {
     uint64_t bit_mask = (1 << ((*page)->buddy_level-1));
     uint64_t high_page = (page_index | bit_mask);
     uint64_t low_page = page_index & ~bit_mask;
-    (*page) = page_start + low_page;
-    return page_start + high_page;
+    (*page) = sysdata.page_start + low_page;
+    return sysdata.page_start + high_page;
 }
 
 void free_page(struct page* page) {
@@ -174,28 +174,28 @@ func_return:
 
 inline struct page* find_page_by_paddr(uintptr_t ptr) {
     uint32_t index = MM_PAGE_PINDEX(ptr);
-    if(index >= mem_side_pages) return 0;
+    if(index >= sysdata.mem_all_pages) return 0;
     if(index < 0) return 0;
-    return &page_start[index];
+    return &sysdata.page_start[index];
 }
 
 inline struct page* find_page_by_vaddr(uintptr_t ptr) {
     uint32_t index = MM_PAGE_VINDEX(ptr);
-    if(index >= mem_side_pages) return 0;
+    if(index >= sysdata.mem_all_pages) return 0;
     if(index < 0) return 0;
-    return &page_start[index];
+    return &sysdata.page_start[index];
 }
 
 inline void* get_page_paddr(struct page* page) {
-    uintptr_t index = (uintptr_t)(page - page_start);
-    if(index >= mem_side_pages) return 0;
+    uintptr_t index = (uintptr_t)(page - sysdata.page_start);
+    if(index >= sysdata.mem_all_pages) return 0;
     if(index < 0) return 0;
     return (void*)(index << PAGE_OFFSET);
 }
 
 inline void* get_page_vaddr(struct page* page) {
-    uintptr_t index = (uintptr_t)(page - page_start);
-    if(index >= mem_side_pages) return 0;
+    uintptr_t index = (uintptr_t)(page - sysdata.page_start);
+    if(index >= sysdata.mem_all_pages) return 0;
     if(index < 0) return 0;
     uintptr_t ptr = PHYS2VADDR(index << PAGE_OFFSET);
     return (void*)ptr;
@@ -203,7 +203,7 @@ inline void* get_page_vaddr(struct page* page) {
 
 static inline void build_up_buddy_sys(uint64_t index_left,uint64_t index_right) {
     static const uint64_t mem_buddy_pages = MM_BUDDY_MAX_LEVEL_PAGES();
-    struct page *p_start = page_start + index_left, *p_end = page_start + index_right, *pg;
+    struct page *p_start = sysdata.page_start + index_left, *p_end = sysdata.page_start + index_right, *pg;
     p_start = (struct page*)(((uint64_t)p_start + mem_buddy_pages) & ~(mem_buddy_pages-1));
     for(pg = p_start; pg <= p_end - mem_buddy_pages;pg+=mem_buddy_pages) {
         barrier();
@@ -216,7 +216,7 @@ static inline void build_up_buddy_sys(uint64_t index_left,uint64_t index_right) 
 
 //现在不会获得
 static void init_buddy() {
-    struct mm_area_record* mem_record = get_mem_records();
+    struct mm_area_record* mem_record = sysdata.mm_area;
     
     spin_init(&buddy.buddy_lock);
     //计算开始的page
@@ -224,9 +224,8 @@ static void init_buddy() {
         INIT_LIST_HEAD(&buddy.groups[i]);
     }
 
-    uint64_t kern_start_idx = MM_PAGE_PINDEX(get_kern_addr()); //内核开始页
-    mem_side_pages = get_mem_all_pages();
-    uint64_t kern_end_idx = MM_PAGE_VINDEX(PAGE_ROUND_UP((uint64_t)(page_start + mem_side_pages)));
+    uint64_t kern_start_idx = MM_PAGE_PINDEX(sysdata.kernel_load_address); //内核开始页
+    uint64_t kern_end_idx = MM_PAGE_VINDEX(PAGE_ROUND_UP(sysdata.kernel_end));
     barrier();
 
     for(int i=0;i<mem_record->num;i++) {
@@ -251,7 +250,7 @@ static void init_buddy() {
 
 void init_mm() {
     init_mm_info(); 
-    kprintf("MEM: Physical Memory: %ld Bytes.\n", get_machine_available_mem_sz());
+    kprintf("MEM: Physical Memory: %ld Bytes.\n", sysdata.mem_sz);
     kprintf("MEM: Kernel Page Table Address: 0x%016x.\n", get_pgroot());
     mem_alloced_pages = 0;
     mem_pages = 0;
