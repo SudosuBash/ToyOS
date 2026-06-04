@@ -5,6 +5,7 @@
 #include <kernel/fault/error.h>
 #include <acpica/acexcep.h>
 #include <kernel/acpi/acpi_hpet.h>
+#include <kernel/timer/timer.h>
 
 struct acpi_osi_convertor {
     ACPI_OSD_HANDLER handler;
@@ -65,7 +66,7 @@ AcpiOsTableOverride (
 
 void AcpiOsStall (
     uint32_t                  Microseconds) {
-    hpet_spin_wait(Microseconds);
+    spin_wait(Microseconds);
 }
 
 void AcpiOsWaitEventsComplete(void) {

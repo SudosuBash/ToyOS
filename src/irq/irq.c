@@ -6,10 +6,9 @@
 #include <kernel/mm/mm.h>
 
 DEFINE_PERCPU_VAR(irq_allocator, struct kmem_cache);
-static struct irq_entrance irq_entries[IRQ_MAX_CNT];
+struct irq_entrance irq_entries[IRQ_MAX_CNT];
 
 void irq_entrance_fn(struct arch_regs* args, uint64_t irq_number) {
-    
     if(irq_number >= IRQ_MAX_CNT) {
         return;
     }
@@ -49,13 +48,14 @@ void irq_remove(uint64_t num, void* dev_data) {
         list_del_init(&target->sibling);
 }
 
-void init_irq() {
+void init_irq_cpu() {
     struct kmem_cache* cache = THIS_CPU_PTR(irq_allocator);
     kmem_cache_init(cache, sizeof(struct irq_behavior));
+    init_irq_arch_cpu();
 }
 
 
-void init_irq_early() {
+void init_irq() {
     disable_irq();
     init_irq_arch();
     for(int i=0;i<IRQ_MAX_CNT;i++) {

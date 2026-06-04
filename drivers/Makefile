@@ -11,7 +11,7 @@ chr_device/driver.o:
 	@$(MAKE) -C chr_device
 
 $(TARGET_OBJS): $(MODULE_OBJS)
-	@$(LD) $(LDFLAGS_OBJ) $@ $^
+	@$(LD) $(LDFLAGS_OBJ) -o $@ $^
 	@echo "	LD" $<
 
 clean:

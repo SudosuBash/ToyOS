@@ -8,7 +8,7 @@ all: $(TARGET)
 # 链接成静态库
 $(TARGET): $(OBJS)
 	@echo "	LD $@"
-	@$(LD) $(LDFLAGS) -r -o $@ $^
+	@$(LD) $(LDFLAGS_OBJ) -r -o $@ $^
 
 # 编译每个 .c 文件
 $(TOOLS_SRC_DIR)/%.o: $(TOOLS_SRC_DIR)/%.c

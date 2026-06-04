@@ -12,6 +12,8 @@
 #include <kernel/timer/timer.h>
 #include <kernel/acpi/acpi.h>
 
+struct system_static_data sysdata;
+
 void init_smp_data_early_arch();
 
 int init() {
@@ -35,20 +37,24 @@ static void init_resource_early() {
 void kern_early_init() {
     init_log();
     log_version_info();
-    init_irq_early();
+    init_irq();
     init_resource_early();
     init_mm_early();
 }
 
 void kernel_start() { 
     kern_early_init();
+    init_mm(); //未来这个会根据 NUMA 分配, 这个暂时先全局
+    init_timer();
     
     init_smp();
-    init_cpu();
-    init_mm();
-    init_irq();
-    init_timer();
 
+    init_cpu();
+    init_irq_cpu(); 
+    init_timer_cpu();
+    
+    init_mm_cpu();
+    
     init_syscall();
     init_task();
 
@@ -61,4 +67,12 @@ void kernel_start() {
     enable_irq();
     while(1)
         hlt();
+}
+
+void kern_ap_start() {
+    init_cpu();
+    init_irq_cpu();
+    init_timer_cpu();
+    init_mm_cpu();
+    while(1);
 }

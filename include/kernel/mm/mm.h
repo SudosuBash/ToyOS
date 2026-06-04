@@ -60,10 +60,11 @@ struct page* find_head_page(struct page* page);
 void ref_page(struct page* page);
 uint8_t unref_and_test_page(struct page* page);
 uint64_t get_mem_alloc_percentage();
-void init_mm_info();
+void init_mm_arch();
 uint64_t get_system_mem_alloced();
 uint64_t get_system_mem_sum();
 void* kzalloc(size_t sz, uint64_t flag);
 void* early_kmalloc(size_t sz);
 void init_mm_early();
+void init_mm_cpu();
 #endif

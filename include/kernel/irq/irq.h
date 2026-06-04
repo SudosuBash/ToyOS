@@ -25,10 +25,11 @@ int irq_register(
     irq_handler_t fn,
     void* device_data
 );
-void init_irq();
+void init_irq_cpu();
 void init_irq_arch();
 int irqs_disabled();
 void irq_entrance_fn(struct arch_regs* args, uint64_t irq_number);
 void irq_remove(uint64_t num, void* dev_data);
-void init_irq_early();
+void init_irq();
+void init_irq_arch_cpu();
 #endif

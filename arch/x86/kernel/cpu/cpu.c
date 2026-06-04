@@ -7,7 +7,7 @@
 #include <kernel/kernel.h>
 #include <kernel/log/kprintf.h>
 #include <kernel/acpi/acpi_apic.h>
-#include <kernel/acpi/acpi_hpet.h>
+#include <kernel/timer/timer.h>
 #include <kernel/cpu/archimpl.h>
 #include <kernel/cpu/smp.h>
 
@@ -108,9 +108,9 @@ void init_cpu() {
 void arch_ap_boot(uint8_t cpuid) {
     lapic_write(APIC_ICR_HIGH_OFFSET, cpuid << 24);
     lapic_write(APIC_ICR_LOW_OFFSET, APIC_ICR_LOW_DELIVERY_INIT | APIC_ICR_LOW_LEVEL_ASSERT);
-    hpet_spin_wait(10000);
+    spin_wait(10000);
     lapic_write(APIC_ICR_LOW_OFFSET, APIC_ICR_LOW_DELIVERY_SIPI | APIC_ICR_LOW_LEVEL_ASSERT | (AP_START_ADDR >> 12));
-    hpet_spin_wait(10);
+    spin_wait(10);
 }
 
 inline uint16_t smp_processor_id() {

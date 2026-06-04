@@ -10,12 +10,20 @@
 #include <kernel/kernel.h>
 #include <hal/hal.h>
 
+/**
+ * Interrupt:  
+ *      公共资源: 1)idt 门, 2)idt 门对应的物理中断入口点 3) 中断仲裁器
+ *      私有资源: irq 真正的入口点函数
+ */
+
 static volatile struct idt_gate gate[IRQ_MAX_CNT];
+static struct idtr idt_global;
+
 extern void* irq_entry_table[IRQ_MAX_CNT];
-volatile irq_entry_t irq_entrance_gate[IRQ_MAX_CNT];
+DEFINE_PERCPU_VAR(irq_entrance_gate_percpu[IRQ_MAX_CNT], irq_entry_t);
 extern struct system_static_data sysdata;
 
-void init_idt() {
+static void init_idt() {
     for(int i=0;i<IRQ_MAX_CNT;i++) {
         uintptr_t irq_entry_ptr = (uintptr_t)irq_entry_table[i];
         gate[i].dpl= 0;
@@ -26,7 +34,6 @@ void init_idt() {
         
         gate[i].offset_low =  irq_entry_ptr & 0xffff;
         gate[i].offset = irq_entry_ptr  >> 16;
-        irq_entrance_gate[i] = irq_entrance_fn;
     }
     gate[IRQ_DF_ERR].ist = DF_IRQ_IST_IDX;
 
@@ -37,18 +44,25 @@ void init_idt() {
 
     gate[IRQ_DBG_ERR].ist = DBG_IRQ_IST_IDX;
     //单独设置ist
-    struct idtr idt;
-    idt.base = (uintptr_t)gate;
-    idt.limit = sizeof(struct idt_gate) * IRQ_MAX_CNT - 1;
-    
+
+    idt_global.base = (uintptr_t)gate;
+    idt_global.limit = sizeof(struct idt_gate) * IRQ_MAX_CNT - 1;
+
     barrier();
-    lidt(idt);
+}
+
+static void init_irq_entry() {
+    irq_entry_t (*irq_entrance_gate)[IRQ_MAX_CNT] = THIS_CPU_PTR(irq_entrance_gate_percpu);
+    for(int i=0;i<IRQ_MAX_CNT;i++) {
+        (*irq_entrance_gate)[i] = irq_entrance_fn;
+    }
 }
 
 inline void irq_single_register(uint64_t num, irq_entry_t func) {
+    irq_entry_t (*irq_entrance_gate)[IRQ_MAX_CNT] = THIS_CPU_PTR(irq_entrance_gate_percpu);
     if(num >= IRQ_MAX_CNT)
         return;
-    irq_entrance_gate[num] = func;
+    (*irq_entrance_gate)[num] = func;
 }
 
 inline int irqs_disabled() {
@@ -62,5 +76,12 @@ inline int irqs_disabled() {
 
 void init_irq_arch() {
     init_idt();
+}
+
+void init_irq_arch_cpu() {
+    init_irq_entry();
     fault_init();
+    lidt(idt_global);
+    //中断表格是 percpu 的
+    //但是 irq_entry 这个中断响应函数是全局的
 }

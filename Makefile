@@ -46,9 +46,8 @@ KERNEL_OBJS := $(SRC_DIR)/main.o \
 			   $(SRC_DIR)/drvframe/devicebus.o \
 			   $(SRC_DIR)/sched/sched_drv.o \
 			   $(SRC_DIR)/version.o \
-			   $(SRC_DIR)/irq/irq.o \
-			   $(SRC_DIR)/kernel.o
- 
+			   $(SRC_DIR)/irq/irq.o 
+
 
 ARCH_DEPENDS := $(ARCH_DIR)/pt.o
 

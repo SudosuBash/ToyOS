@@ -249,15 +249,17 @@ static void init_buddy() {
 }
 
 void init_mm() {
-    init_mm_info(); 
     kprintf("MEM: Physical Memory: %ld Bytes.\n", sysdata.mem_sz);
     kprintf("MEM: Kernel Page Table Address: 0x%016x.\n", get_pgroot());
     mem_alloced_pages = 0;
     mem_pages = 0;
     init_page_items();
     init_buddy();
-    
+}
+
+void init_mm_cpu() {
     init_mm_slab();
     init_vma_area();
     kmalloc_init();
+    init_mm_arch(); 
 }

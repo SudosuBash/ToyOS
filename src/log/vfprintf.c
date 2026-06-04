@@ -370,7 +370,7 @@ int vfprintf(char buf[PRINT_BUF_LEN],size_t* len, const char *restrict fmt, va_l
 {
 	va_list ap2;
 	int nl_type[NL_ARGMAX+1] = {0};
-	union arg nl_arg[NL_ARGMAX+1];
+	union arg nl_arg[NL_ARGMAX+1] = {0};
 	int ret;
 
 	/* the copy allows passing va_list* even if va_list is an array */

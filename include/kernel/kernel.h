@@ -31,6 +31,7 @@ struct system_static_data {
      uint64_t kernel_exception_stack;
      uintptr_t percpu_start_addr;
      uintptr_t ap_sp;
+     uint64_t tsc_us;
      struct page* page_start;
      struct mm_area_record* mm_area;
      struct smp_data_acpi_info* smp_info;

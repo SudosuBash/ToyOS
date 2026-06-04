@@ -7,5 +7,7 @@
 
 typedef void (*timer_handler_t)(struct arch_regs* frame);
 uint64_t rdtsc();
+void init_timer_cpu();
+void spin_wait(uint64_t useconds);
 void init_timer();
 #endif

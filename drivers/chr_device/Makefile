@@ -6,9 +6,10 @@ SOURCE_OBJS := chr_dev.o
 all: $(TARGET_OBJS)
 
 chr_dev.o: chr_dev.c
-	@$(CC) $(CFLAGS) -c $< -o $@
 	@echo "	CC" $<
+	@$(CC) $(CFLAGS) -c $< -o $@
+	
 
 $(TARGET_OBJS): $(SOURCE_OBJS)
-	@$(LD) $(LDFLAGS_OBJ) $@ $^ 
 	@echo "	LD" $<
+	@$(LD) $(LDFLAGS_OBJ) -o $@ $<

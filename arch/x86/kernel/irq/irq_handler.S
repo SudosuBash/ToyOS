@@ -1,7 +1,7 @@
 [bits 64]
 #include <hal/asm-offset.h>
 
-extern irq_entrance_gate
+extern irq_entrance_gate_percpu
 %macro IRQ_JMP_PUSHAD 0
     push rax
     push rbx
@@ -54,7 +54,7 @@ extern irq_entrance_gate
     irq_entry_call_%1:
         mov rdi,rsp ;传入指针
         mov rsi, %1
-        call [irq_entrance_gate + %1 * 8]
+        call [gs:irq_entrance_gate_percpu + %1 * 8]
         mov rdi,rsp
         
         mov rsi, [rsp + IRQ_CS_OFFSET]
@@ -80,7 +80,7 @@ extern irq_entrance_gate
     irq_entry_call_%1:
         mov rdi,rsp ;传入指针
         mov rsi, %1
-        call [irq_entrance_gate + %1 * 8]
+        call [gs:irq_entrance_gate_percpu + %1 * 8]
         mov rdi,rsp
 
         mov rsi, [rsp + IRQ_CS_OFFSET]

@@ -1,6 +1,5 @@
 qemu-system-x86_64 \
     -drive format=raw,file=myos.img,if=ide \
-    -drive format=raw,file=extra.img,if=ide \
 	-cpu qemu64,+cmov \
     -S -s \
     -chardev stdio,id=char0,mux=on -serial chardev:char0 -mon chardev=char0 \

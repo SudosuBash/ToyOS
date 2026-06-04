@@ -8,18 +8,15 @@
 
 extern struct ap_resource_pack* ap_respack;
 
-int kernel_x86_start() {
+void kernel_x86_start() {
     clear_screen();
     early_init();
     init_pgtable(); //应该在这初始化
     init_early_acpi();
     kernel_start(); //正式的内核启动
-    return 0;
 }
 
-int kernel_x86_ap_start(uint64_t cpuid) {
-    kprintf("CPU %d: AP core waked up.\n", cpuid);
+void kernel_x86_ap_start(uint64_t cpuid) {
     set_smp_percpu_addr(ap_respack[cpuid].percpu_address);
-    init_cpu();
-    while(1);
+    kern_ap_start();
 }

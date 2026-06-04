@@ -11,5 +11,5 @@
 uint64_t hpet_current_time();
 uint32_t hpet_period();
 void acpi_hpet_init();
-void hpet_spin_wait(uint64_t milleseconds);
+void hpet_spin_wait(uint64_t useconds);
 #endif

@@ -1,5 +1,6 @@
 import os
 import sys
+from pathlib import Path
 
 class HeaderGenerator:
     def __init__(self, name, filename, arch = None):
@@ -8,13 +9,13 @@ class HeaderGenerator:
         self.rootdir = os.getcwd()
 
         if arch == None:
-            self.path = f"{self.rootdir}/include/generated/{filename}"
+            self.path = f"{self.rootdir}/include/generated"
             self.headname = f"_TOYOS_GENERATED_{name.upper()}"
         else:
-            self.path = f"{self.rootdir}/arch/{arch}/include/generated/{filename}"
+            self.path = f"{self.rootdir}/arch/{arch}/include/generated"
             self.headname = f"_TOYOS_{arch.upper()}_GENERATED_{name.upper()}"
-
-        self.fobject = os.fdopen(os.open(self.path, os.O_CREAT | os.O_WRONLY | os.O_TRUNC | os.O_APPEND, 0o644), 'w') 
+        os.makedirs(self.path, exist_ok=True)
+        self.fobject = os.fdopen(os.open(f"{self.path}/{filename}", os.O_CREAT | os.O_WRONLY | os.O_TRUNC | os.O_APPEND, 0o644), 'w') 
 
     def write(self, content):
         self.fobject.write(content)

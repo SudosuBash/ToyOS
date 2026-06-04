@@ -16,8 +16,6 @@
 #include <kernel/stdlib.h>
 
 extern struct system_static_data sysdata;
-static uint64_t kernel_vstart;
-
 
 static inline void update_page_pte(void* paddr, uint16_t prot, pte_t* pte) {
     if(prot & PERM_W) pte->rw = 1;
@@ -81,7 +79,6 @@ go_back:
     return;
 }
 
-void init_mm_info() {
-    kernel_vstart = sysdata.kernel_load_vaddr;
+void init_mm_arch() {
     irq_single_register(IRQ_PG_ERR, pagefault_irq);
 }

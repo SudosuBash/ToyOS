@@ -1,5 +1,4 @@
 include $(TOP_DIR)/config.mk
-LDFLAGS  :=
 
 TOOLS_DIR := tools
 KLOADER_DIR := kloader
@@ -61,7 +60,7 @@ kernel/%.o: kernel/%.c
 
 kernel/%.o: kernel/%.S
 	@$(CC) -m64 -E -P $(CINCLUDE) $< > $@.asm
-	@$(AS) -f elf64 $@.asm -o $@
+	@$(AS) $(ASFLAGS) -f elf64 $@.asm -o $@
 	@echo "	AS" $<
 
 kernel/%/%.o: kernel/%/%.c
@@ -70,14 +69,14 @@ kernel/%/%.o: kernel/%/%.c
 
 kernel/%/%.o: kernel/%/%.S
 	@$(CC) -m64 -E -P $(CINCLUDE) $< > syscall/sysenter_fn.asm
-	@$(AS) -f elf64 syscall/sysenter_fn.asm -o $@
+	@$(AS) $(ASFLAGS) -f elf64 syscall/sysenter_fn.asm -o $@
 	@echo "	CC" $<
 
 kloader/kloader.bin: 
 	@$(MAKE) -C $(KLOADER_DIR)
 
 pt.o:  $(PT_OBJS) kernel/klinker.lds 
-	@$(LD) $(LDFLAGS) -r $(PT_OBJS) -o $@
+	@$(LD) $(LDFLAGS_OBJ) -r $(PT_OBJS) -o $@
 	@echo "	LD" $<
 
 # tools/libtools.o: 
