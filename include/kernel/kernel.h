@@ -36,5 +36,4 @@ struct system_static_data {
      struct mm_area_record* mm_area;
      struct smp_data_acpi_info* smp_info;
 };
-
 #endif

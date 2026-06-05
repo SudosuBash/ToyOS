@@ -17,7 +17,6 @@ struct pid_nr {
 
 struct pid_ns_layer {
     int pid_num;
-    struct task_struct* target_task; //目标的进程
     struct linklist_head sibling;
     struct pid_nr* nr;
 };
@@ -27,7 +26,7 @@ struct pid {
     struct pid_ns_layer layer[];
 };
 
-void init_pid_ns_layer(struct pid_ns_layer* layer, struct task_struct* target);
+void init_pid_ns_layer(struct pid_ns_layer* layer);
 void init_new_pid_nr(struct pid_nr* nr);
 void alloc_pid(struct task_struct* task, uint64_t flags);
 uint64_t pid_of(struct task_struct* task);

@@ -54,18 +54,17 @@ static uint32_t check_apic() { //校准 APIC 时钟
 }
 
 void init_apic_timer() {
-    lapic_write(APIC_SVR_OFFSET,APIC_SVR_VALUE(APIC_IVT));
-    lapic_write(APIC_TPR_OFFSET, 0);
-    lapic_write(APIC_DCR_OFFSET, APIC_FREQ_NUM);
-    
     uint32_t check = check_apic();
     sysdata.tsc_us = check;
     kprintf("TSC: 1us equals cpu tsc %llu.\n", check);
-    lapic_write(APIC_LVT_OFFSET, (APIC_LVT_PERODIC_VALUE) | APIC_LVT_IVT);
 }
 
 void init_timer_cpu() {
+    lapic_write(APIC_SVR_OFFSET,APIC_SVR_VALUE(APIC_IVT));
+    lapic_write(APIC_TPR_OFFSET, 0);
+    lapic_write(APIC_DCR_OFFSET, APIC_FREQ_NUM);
     irq_single_register(APIC_LVT_IVT, timer_irq); 
+    lapic_write(APIC_LVT_OFFSET, (APIC_LVT_PERODIC_VALUE) | APIC_LVT_IVT);
     lapic_write(APIC_INITIAL_COUNT_OFFSET, lapic_us  * CONFIG_IRQ_MS * 1000);
     //这个快一点
 }

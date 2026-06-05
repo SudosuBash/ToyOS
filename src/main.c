@@ -46,18 +46,17 @@ void kernel_start() {
     kern_early_init();
     init_mm(); //未来这个会根据 NUMA 分配, 这个暂时先全局
     init_timer();
-    
+    init_task();
+
     init_smp();
 
     init_cpu();
     init_irq_cpu(); 
     init_timer_cpu();
-    
     init_mm_cpu();
+    init_task_cpu();
     
     init_syscall();
-    init_task();
-
     kernel_thread(init, NULL, "init");
 
     init_vfs();
@@ -74,5 +73,9 @@ void kern_ap_start() {
     init_irq_cpu();
     init_timer_cpu();
     init_mm_cpu();
+    init_task_cpu();
+    init_syscall();
+
+    enable_irq();
     while(1);
 }

@@ -16,11 +16,11 @@ AP_BL_START:
     mov cr0,eax
     db 0x66, 0xea
     dd AP_INTO_64BIT_MODE
-    dw 0x08
+    dw 0x18
 [org 0x20000]
 [bits 32]
 AP_INTO_64BIT_MODE:
-    mov ax, 0x18
+    mov ax, 0x10
     mov ds, ax
     mov ss, ax
     mov eax, [AP_REAL_MODE_DATA_ADDR]
@@ -39,29 +39,26 @@ AP_INTO_64BIT_MODE:
     or eax,0x80000000
     mov cr0,eax
     
-    jmp 0x10:AP_64BIT_MODE
+    jmp 0x08:AP_64BIT_MODE
 [bits 64]
 
 AP_64BIT_MODE:
     mov rax,(KERNEL_FINAL_LDR_VADDR)
     jmp rax
 
-seg_data:
-    dw 0
-    dq 0
 align 8
 gdt:
     gdt_null: dd 0x00000000
               dd 0x00000000 ;第一个段描述符是0，强制规定
-    gdt_kernel_code: ;0x8
-              dd 0x0000FFFF
-              dd 0x00CF9A00
     gdt_kernel_code_64: 
               dd 0x0000FFFF
               dd 0x00AF9A00
     gdt_kernel_data:
               dd 0x0000FFFF
               dd 0x00CF9200
+    gdt_kernel_code: ;0x8
+              dd 0x0000FFFF
+              dd 0x00CF9A00
     gdt_kernel_data_64:
               dd 0x0000FFFF
               dd 0x00AF9200

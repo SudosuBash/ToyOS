@@ -17,7 +17,7 @@ void schedule() {
     struct task_struct *next, *current;
     atomic_t* preempt_count = THIS_CPU_PTR(percpu_preempt_count);
     
-    if(preempt_count->count != 0) //PREEMPT DISABLE
+    if(READ_ONCE(preempt_count->count) != 0) //PREEMPT DISABLE
         return;
     preempt_disable();
     current = CURRENT_PROCESS();
@@ -39,7 +39,6 @@ void schedule() {
 
     uint64_t kstack_top = arch_process_stack_top(next);
     set_tss_rsp_r0(kstack_top);
-    barrier();
     preempt_enable();
     switch_to(current, next, flag);
 }

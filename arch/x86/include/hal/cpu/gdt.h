@@ -8,7 +8,7 @@ struct gdt_desc {
     uint16_t limit;
     uint16_t base_1;
     uint8_t base_2;
-    uint8_t access_byte;
+    uint8_t access;
     uint8_t limit_2:4;
     uint8_t flags:4;
     uint8_t base_3;

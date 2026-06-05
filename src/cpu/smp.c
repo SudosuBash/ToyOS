@@ -15,6 +15,7 @@ extern struct system_static_data sysdata;
 struct ap_resource_pack* ap_respack;
 
 inline void preempt_enable() {
+    barrier();
     atomic_t* preempt_count = THIS_CPU_PTR(percpu_preempt_count);
     atomic_dec_and_test(preempt_count);
 }
@@ -22,6 +23,7 @@ inline void preempt_enable() {
 inline void preempt_disable() {
     atomic_t* preempt_count = THIS_CPU_PTR(percpu_preempt_count);
     atomic_inc(preempt_count);
+    barrier();
 }
 
 void ap_boot() {

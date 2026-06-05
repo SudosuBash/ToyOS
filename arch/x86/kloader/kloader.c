@@ -169,7 +169,7 @@ void prepare_gdt() { //临时页表
         .limit = 0xffff,
         .base_1 = 0,
         .base_2 = 0,
-        .access_byte = 0b10011010,
+        .access = 0b10011010,
         .limit_2 = 0b1111,
         .flags = 0b0010,
         .base_3 = 0
@@ -177,7 +177,7 @@ void prepare_gdt() { //临时页表
     
     *gaddr = gdt;
     gaddr+=1; //8 Kernel Data
-    gdt.access_byte = 0b10010110;
+    gdt.access = 0b10010110;
     *gaddr = gdt;
     gaddr+=1; //16
     

@@ -11,7 +11,7 @@ static struct gdt_desc gdt_desc = {
     .limit = 0xffff,
     .base_1 = 0,
     .base_2 = 0,
-    .access_byte = 0b10011010,
+    .access = 0b10011010,
     .limit_2 = 0b1111,
     .flags = 0b0010,
     .base_3 = 0
@@ -21,7 +21,7 @@ static struct tss_gdt_desc tss_gdt_desc = {
     .desc.limit = 0xffff,
     .desc.base_1 = 0,
     .desc.base_2 = 0,
-    .desc.access_byte = 0b10001001,
+    .desc.access = 0x89,
     .desc.limit_2 = 0b1111,
     .desc.flags = 0b0010,
     .desc.base_3 = 0,
@@ -46,13 +46,14 @@ static inline void prepare_gdt() {
     union x86_gdt_tss_desc* cpu_desc = THIS_CPU_VAR(gdts);
     cpu_desc[0].gdts[1] = cpu_desc[1].gdts[0] = cpu_desc[1].gdts[1] = cpu_desc[2].gdts[0] = gdt_desc;
 
-    cpu_desc[0].gdts[1].access_byte = 0b10011010;
-    cpu_desc[1].gdts[0].access_byte = 0b10010110;
-    cpu_desc[1].gdts[1].access_byte = 0b11110110;
-    cpu_desc[2].gdts[0].access_byte = 0b11111010;
+    cpu_desc[0].gdts[1].access = 0b10011010;
+    cpu_desc[0].gdts[1].limit = 0;
+    cpu_desc[1].gdts[0].access = 0b10010110;
+    cpu_desc[1].gdts[1].access = 0b11110110;
+    cpu_desc[2].gdts[0].access = 0b11111010;
 
     //这儿构建一个额外的 gdt, 用于和 32 位兼容
-    cpu_desc[2].gdts[1].access_byte = 0b10011010;
+    cpu_desc[2].gdts[1].access = 0b10011010;
     cpu_desc[2].gdts[1].flags = 0xC; //
     cpu_desc[3].tss = tss_gdt_desc;
 

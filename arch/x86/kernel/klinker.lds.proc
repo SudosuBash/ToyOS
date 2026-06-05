@@ -26,12 +26,6 @@ SECTIONS {
         __stack_top = .;
     }
     . = ALIGN(4096);
-    .pid_0_stack (NOLOAD): ALIGN(4096)
-    {
-        __pid_0_stack_bottom = .;
-        . += 0x2000;
-    }
-    . = ALIGN(4096);
     .mem_info (NOLOAD): ALIGN(4096) {
         __mem_info_bottom = .;
         . += 0x1000;

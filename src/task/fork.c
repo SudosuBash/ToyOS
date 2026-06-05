@@ -12,7 +12,7 @@
 #include <kernel/sched/sched_eevdf.h>
 #include <kernel/fault/error.h>
 
-extern struct task_struct idle;
+DECLARE_PERCPU_VAR(idle_percpu, struct task_struct);
 
 static void dup_task_struct(struct task_struct* dst,struct task_struct* src) {
     *dst = *src;
@@ -56,7 +56,9 @@ static void copy_thread(
     struct arch_regs* regs, 
     uint64_t flag,
     char* name ) {
-        
+    
+    struct task_struct* idle = THIS_CPU_PTR(idle_percpu);
+    
     memcpy(task->name, name, 30);
     if(flag & CLONE_THREAD) {
         task->flags |= TASK_KERNEL_THREAD_FLAG;
@@ -66,7 +68,7 @@ static void copy_thread(
     INIT_LIST_HEAD(&task->sibling);
     task->kstack = kmalloc(PAGE_SZ * PROCESS_STACK_PAGE, GFP_KERNEL);
 #if defined(CONFIG_EEVDF)
-    if(origin == &idle) { //idle 进程的 fork 直接变成 eevdf
+    if(origin == idle) { //idle 进程的 fork 直接变成 eevdf
         set_eevdf_sched(task);
     }
     task->vdeadtime = 0;

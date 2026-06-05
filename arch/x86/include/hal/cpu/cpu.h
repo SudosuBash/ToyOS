@@ -83,4 +83,8 @@ struct cpuinfo {
 #define CPUID_RDTSCP(edx) (((edx) >> 27) & 1)
 
 #define APIC_ID(ebx) (((ebx) >> 24))
+
+#define lfence() asm volatile ("lfence")
+#define sfence() asm volatile ("sfence")
+#define mfence() asm volatile ("mfence")
 #endif

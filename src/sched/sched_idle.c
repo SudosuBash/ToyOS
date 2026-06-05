@@ -2,11 +2,11 @@
 #include <kernel/cpu/smp.h>
 
 DEFINE_PERCPU_VAR(sched, struct scheduler);
-
-extern struct task_struct idle;
+DECLARE_PERCPU_VAR(idle_percpu, struct task_struct);
 
 static struct task_struct* idle_next_task(struct scheduler* sched) {
-    return &idle;
+    struct task_struct* idle = THIS_CPU_PTR(idle_percpu);
+    return idle;
 }
 
 static void idle_swc_stat_empty(struct task_struct* task) {
@@ -22,8 +22,8 @@ static void idle_nice_change_empty(struct scheduler* sched, struct task_struct* 
 }
 
 static void idle_sched_init(struct scheduler* sched) {
-    idle.scheduler = sched;
-    return;
+    struct task_struct* idle = THIS_CPU_PTR(idle_percpu);
+    idle->scheduler = sched;
 }
 
 static struct sched_class idle_class = {

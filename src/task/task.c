@@ -15,54 +15,65 @@
 #include <kernel/stdint.h>
 #include <kernel/syscall/syscall.h>
 
-extern struct sched_class rr_se;
-static struct pid_nr* glob_nr;
-struct task_struct idle = {
-    .vruntime = 0,
-    .kstack = NULL,
-    .name = "Idle Process",
-    .status = TASK_RUNNING_STAT
+static struct pid_nr glob_nr;
+static struct pid idle_pid = {
+    .layer= {{0}}
 };
+static uint64_t root_bitmap[CONFIG_GROUP_MAX_CNT>>3] = {0};
 
+DEFINE_PERCPU_VAR(idle_percpu, struct task_struct);
 DEFINE_PERCPU_VAR(current_process, struct task_struct*);
 DEFINE_PERCPU_VAR(user_rsp, uintptr_t);
 DEFINE_PERCPU_VAR(kernel_rsp, uintptr_t);
 
-static void init_pid() {
-    uint64_t pid_sz = sizeof(struct pid) + sizeof(struct pid_ns_layer);
-    glob_nr = kmalloc(sizeof(struct pid_nr), GFP_KERNEL);
-    struct pid* new = kmalloc(pid_sz, GFP_KERNEL);
+/**
+ * 共享资源: Idle 的 PID
+ * 独有资源: Idle 的 PCB
+ */
 
-    memset(glob_nr, 0, sizeof(struct pid_nr));
+static void init_idle_pid() {
+    glob_nr.pid_bitmap.size = CONFIG_GROUP_MAX_CNT;
+    uint64_t blocks = BITMAP_BLOCKS(&glob_nr.pid_bitmap);
+    glob_nr.pid_bitmap.need_space = blocks * sizeof(uint64_t);
+    bitmap_bit_to_1(&glob_nr.pid_bitmap, 0);
+    glob_nr.pid_bitmap.start_addr = root_bitmap;
 
-    init_new_pid_nr(glob_nr);
-    new->layer[0].nr = glob_nr;
-    new->layer[0].pid_num = 0;
-    init_pid_ns_layer(&new->layer[0], &idle);
-    new->pid_layers = 1;
-    hlist_insert(&new->layer[0].nr->task_hash, &new->layer[0].sibling, 0);
-    idle.pid = new;
+    bitmap_bit_to_1(&glob_nr.pid_bitmap, 0);
+    hlist_init(&glob_nr.task_hash);
+
+    idle_pid.layer[0].nr = &glob_nr;
+    idle_pid.layer[0].pid_num = 0;
+
+    init_pid_ns_layer(&idle_pid.layer[0]);
+    idle_pid.pid_layers = 1;
+    hlist_insert(&idle_pid.layer[0].nr->task_hash, &idle_pid.layer[0].sibling, 0);
 }
 
 static void init_userspace_mm() {
-    INIT_LIST_HEAD(&idle.mm_user.vm_area_link);
-    rwlock_init(&idle.mm_user.rwlock);
-    idle.mm_user.vm_area_root.rb_node = NULL;
-    idle.mm_user.brk = 0;
+    struct task_struct* idle = THIS_CPU_PTR(idle_percpu);
+    INIT_LIST_HEAD(&idle->mm_user.vm_area_link);
+    rwlock_init(&idle->mm_user.rwlock);
+    idle->mm_user.vm_area_root.rb_node = NULL;
+    idle->mm_user.brk = 0;
+}
+
+void init_task_cpu() {
+    struct task_struct* idle = THIS_CPU_PTR(idle_percpu);
+    SET_THIS_CPU_VAR(current_process,idle);
+    struct task_struct* current_task = THIS_CPU_VAR(current_process);
+    current_task->kstack = alloc_page(2);
+    INIT_LIST_HEAD(&idle->sibling);
+    barrier();
+    rwlock_init(&idle->rwlock);
+    init_userspace_mm();
+    init_scheduler();
+    idle->pid = &idle_pid;
+    idle->status = TASK_RUNNING_STAT;
+    memcpy(idle->name, "Idle Process", sizeof("Idle Process"));
 }
 
 void init_task() {
-    SET_THIS_CPU_VAR(current_process,&idle);
-    struct task_struct* current_task = THIS_CPU_VAR(current_process);
-    extern void* __pid_0_stack_bottom;
-    current_task->kstack = (void*)PHYS2VADDR(KERN_VADDR_TO_PADDR(&__pid_0_stack_bottom));
-    
-    INIT_LIST_HEAD(&idle.sibling);
-    barrier();
-    rwlock_init(&idle.rwlock);
-    init_pid();
-    init_userspace_mm();
-    init_scheduler();
+    init_idle_pid();
 }
 
 inline struct task_struct* get_current_process() {

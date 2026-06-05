@@ -11,8 +11,8 @@
 #define THIS_CPU_VAR(var) *(THIS_CPU_PTR(var))
 #define SET_THIS_CPU_VAR(name, value) ARCH_SET_THIS_CPU_VAR(name, value)
 
-#define READ_ONCE(var) (*(volatile typeof(&(var))*)&(var))
-#define WRITE_ONCE(var, val) (*(volatile typeof(&(var)))&(var)) = (val);
+#define READ_ONCE(var) (*(volatile typeof((var))*)&(var))
+#define WRITE_ONCE(var, val) (*(volatile typeof((var))*)&(var)) = (val);
 
 struct acpi_madt_local_apic; 
 typedef struct acpi_madt_local_apic ACPI_MADT_LOCAL_APIC;
@@ -40,6 +40,7 @@ struct ap_resource_pack {
 struct ap_necessary_resource {
     uint64_t pgroot;
 }__attribute__((packed));
+
 
 void set_smp_percpu_addr(uintptr_t base);
 void preempt_enable();
