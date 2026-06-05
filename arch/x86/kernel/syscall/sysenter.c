@@ -26,7 +26,7 @@ static inline void set_syscall_addr() {
         "c"(MSR_IA32_LSTAR)
     );
 }
-void init_syscall() {
+void init_syscall_cpu() {
     set_syscall_addr();
     set_syscall_star();
 }

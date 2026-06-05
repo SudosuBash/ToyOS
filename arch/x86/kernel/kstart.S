@@ -1,6 +1,7 @@
 #include <generated/offset.h>
 #include <hal/config_arch.h>
 
+[bits 64]
 extern __stack_top
 extern kernel_x86_start
 extern kernel_x86_ap_start
@@ -40,11 +41,12 @@ _ap_start:
     mov rsp, [rbx + offset_ap_resource_rsp]
 
     mov rdi, rax
-    mov ax,0x20
+    mov ax, 0x10
     mov ds, ax
     mov es, ax
     mov fs, ax
     mov gs, ax
+    mov ss, ax
     mov rax, 0
     mov rbx, 0
     mov rcx, 0

@@ -1,6 +1,7 @@
 #ifndef _TOYOS_X86_SMP_PERCPU
 #define _TOYOS_X86_SMP_PERCPU
 
+#include <kernel/atomic/atomic.h>
 #include <kernel/stdint.h>
 #include <hal/hal.h>
 
@@ -29,7 +30,9 @@ struct smp_data_acpi_info {
     ACPI_MADT_LOCAL_APIC* localapic[MAX_SUPPORTED_CORES];
     ACPI_MADT_INTERRUPT_OVERRIDE* override[MAX_IRQ_OVERRIDE_ENTRIES];
     ACPI_MADT_IO_APIC* ioapic[MAX_IO_APICS];
-} __attribute__((packed));
+
+    atomic_t cpu_ready_count;
+} __attribute__((aligned(64)));
 
 struct ap_resource_pack {
     uint64_t rsp;
@@ -46,4 +49,6 @@ void set_smp_percpu_addr(uintptr_t base);
 void preempt_enable();
 void preempt_disable();
 void arch_ap_boot(uint8_t cpuid);
+
+void cpu_prepared();
 #endif

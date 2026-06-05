@@ -95,7 +95,6 @@ $(INCLUDE_DIR)/generated/offset.h: tools/gen_offset
 
 tools/gen_offset: tools/gen_offset.c
 	@$(CC) $(CINCLUDE) $< -o $@
-	@echo "	GEN" $@
 
 ${INCLUDE_DIR}/generated/version.h: tools/gen_version.py
 	@$(PY) $< $(ARCH)

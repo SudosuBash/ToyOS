@@ -22,5 +22,5 @@
 long empty_syscall();
 typedef long (*syscall_fn)(void*);
 void ret_to_user();
-void init_syscall();
+void init_syscall_cpu();
 #endif

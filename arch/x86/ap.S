@@ -17,10 +17,9 @@ AP_BL_START:
     db 0x66, 0xea
     dd AP_INTO_64BIT_MODE
     dw 0x18
-[org 0x20000]
 [bits 32]
 AP_INTO_64BIT_MODE:
-    mov ax, 0x10
+    mov ax, 0x20
     mov ds, ax
     mov ss, ax
     mov eax, [AP_REAL_MODE_DATA_ADDR]
@@ -53,15 +52,15 @@ gdt:
     gdt_kernel_code_64: 
               dd 0x0000FFFF
               dd 0x00AF9A00
-    gdt_kernel_data:
-              dd 0x0000FFFF
-              dd 0x00CF9200
-    gdt_kernel_code: ;0x8
-              dd 0x0000FFFF
-              dd 0x00CF9A00
     gdt_kernel_data_64:
               dd 0x0000FFFF
               dd 0x00AF9200
+    gdt_kernel_code: ;0x8
+              dd 0x0000FFFF
+              dd 0x00CF9A00
+    gdt_kernel_data:
+              dd 0x0000FFFF
+              dd 0x00CF9200
 gdt_end:
 gdt_desc:
     dw (gdt_end - gdt - 1) ;cpu按照限制长度+1来计算的

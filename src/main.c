@@ -11,6 +11,7 @@
 #include <kernel/version.h>
 #include <kernel/timer/timer.h>
 #include <kernel/acpi/acpi.h>
+#include <kernel/cpu/smp.h>
 
 struct system_static_data sysdata;
 
@@ -56,12 +57,14 @@ void kernel_start() {
     init_mm_cpu();
     init_task_cpu();
     
-    init_syscall();
+    init_syscall_cpu();
     kernel_thread(init, NULL, "init");
 
     init_vfs();
     init_drv();
     device_try_probe(0x8086, 0x03f8);
+
+    cpu_prepared();
     
     enable_irq();
     while(1)
@@ -74,8 +77,10 @@ void kern_ap_start() {
     init_timer_cpu();
     init_mm_cpu();
     init_task_cpu();
-    init_syscall();
+    init_syscall_cpu();
 
+    cpu_prepared();
     enable_irq();
-    while(1);
+    while(1)
+        hlt();
 }

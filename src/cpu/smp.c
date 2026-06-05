@@ -49,3 +49,10 @@ void init_smp() {
     atomic_t* preempt_count = THIS_CPU_PTR(percpu_preempt_count);
     atomic_set(preempt_count, 0);
 }
+
+void cpu_prepared() {
+    barrier();
+    atomic_inc(&sysdata.smp_info->cpu_ready_count);
+    while(READ_ONCE(sysdata.smp_info->cpu_ready_count.count) != sysdata.smp_info->local_apic_count);
+    barrier();
+}
